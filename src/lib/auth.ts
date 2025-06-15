@@ -3,9 +3,9 @@ import type { NextAuthOptions, User as NextAuthUser } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from '@/lib/db';
-import bcrypt from 'bcryptjs';
+// import bcrypt from 'bcryptjs'; // bcrypt usage removed as Firebase handles passwords
 import type { Role } from '@prisma/client';
-import admin from '@/lib/firebaseAdmin'; // Firebase Admin SDK
+import admin from '@/lib/firebaseAdmin';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -13,23 +13,23 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       async profile(profile) {
-        // profile contains user info from Google
-        // Here, we find or create a user in our own database
         try {
+          // Google's 'sub' is a unique identifier for the user.
           const user = await prisma.user.upsert({
             where: { email: profile.email },
             update: {
               name: profile.name,
               image: profile.picture,
-              firebaseUid: profile.sub, // Google's sub is a good candidate for firebaseUid
+              firebaseUid: profile.sub, // Use Google's 'sub' as firebaseUid
+              emailVerified: profile.email_verified ? new Date() : null,
             },
             create: {
               email: profile.email!,
               name: profile.name,
               image: profile.picture,
               emailVerified: profile.email_verified ? new Date() : null,
-              firebaseUid: profile.sub, // Store Google's unique ID
-              role: 'PARENT', // Default role
+              firebaseUid: profile.sub,
+              role: 'PARENT',
             },
           });
           return {
@@ -49,16 +49,12 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
-        // We will pass idToken for Firebase auth, or email/password for old system (if any part still uses it)
         idToken: { label: "ID Token", type: "text" },
-        email: { label: "Email", type: "email" },
-        password: {  label: "Password", type: "password" },
-        authType: { label: "Auth Type", type: "text" }, // 'FIREBASE_EMAIL' or 'LEGACY'
-        name: { label: "Name", type: "text" }, // For initial signup with Firebase email/pass
+        authType: { label: "Auth Type", type: "text" }, // Should be 'FIREBASE_EMAIL'
+        name: { label: "Name", type: "text" }, // For initial user creation in Prisma
       },
       async authorize(credentials) {
         if (credentials?.authType === 'FIREBASE_EMAIL' && credentials.idToken) {
-          // Firebase Email/Password authentication
           try {
             const decodedToken = await admin.auth().verifyIdToken(credentials.idToken);
             const firebaseUid = decodedToken.uid;
@@ -74,21 +70,26 @@ export const authOptions: NextAuthOptions = {
             });
 
             if (!user) {
-              // Create user if they don't exist (e.g., first sign-in via Firebase email/pass)
+              // Create user if they don't exist
               user = await prisma.user.create({
                 data: {
                   email: email,
-                  name: credentials.name || decodedToken.name || email.split('@')[0], // Use name from creds, token, or derive from email
+                  name: credentials.name || decodedToken.name || email.split('@')[0],
                   firebaseUid: firebaseUid,
                   emailVerified: decodedToken.email_verified ? new Date() : null,
                   role: 'PARENT',
                 },
               });
-            } else if (!user.firebaseUid) {
-              // Link Firebase UID if user exists but not linked
+            } else if (!user.firebaseUid || user.firebaseUid !== firebaseUid) {
+              // Link Firebase UID if user exists but not linked or different
               user = await prisma.user.update({
                 where: { email: email },
-                data: { firebaseUid: firebaseUid },
+                data: {
+                  firebaseUid: firebaseUid,
+                  ...(decodedToken.name && { name: decodedToken.name }),
+                  ...(decodedToken.picture && { image: decodedToken.picture }),
+                  ...(decodedToken.email_verified && !user.emailVerified && { emailVerified: new Date() }),
+                },
               });
             }
             
@@ -104,30 +105,8 @@ export const authOptions: NextAuthOptions = {
             console.error("Firebase ID token verification failed:", error);
             return null;
           }
-        } else if (credentials?.email && credentials.password && (!credentials.authType || credentials.authType === 'LEGACY')) {
-          // Legacy email/password (if you want to keep it)
-          // For a full Firebase migration, you might remove this part eventually.
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
-          });
-
-          if (!user || !user.passwordHash) {
-            return null;
-          }
-          const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash);
-          if (!isPasswordValid) {
-            return null;
-          }
-          return { 
-            id: user.id, 
-            name: user.name, 
-            email: user.email, 
-            image: user.image,
-            role: user.role,
-            firebaseUid: user.firebaseUid 
-          };
         }
-        return null; // No valid credentials path taken
+        return null; // Only Firebase email/pass via idToken is supported here now
       },
     }),
   ],
@@ -136,18 +115,22 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user, account }) {
-      if (user) { // User object from authorize or Google profile
+      if (user) { 
         token.id = user.id;
         token.role = (user as { role: Role }).role;
         token.firebaseUid = (user as { firebaseUid?: string }).firebaseUid;
-        token.picture = user.image || token.picture; // Use image from DB or Google
+        token.picture = user.image || token.picture;
       }
-      // If it's a Google sign-in, account will be present
-      // We can ensure firebaseUid is set from Google's `profile.sub` if not already
-      if (account?.provider === "google" && user) {
-        const dbUser = await prisma.user.findUnique({where: {id: user.id}});
-        if (dbUser?.firebaseUid) {
-            token.firebaseUid = dbUser.firebaseUid;
+      
+      // If sign-in was with Google via NextAuth GoogleProvider
+      if (account?.provider === "google" && user?.email) {
+        // User should have been upserted in GoogleProvider.profile, now ensure token fields are aligned
+        const dbUser = await prisma.user.findUnique({ where: { email: user.email } });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+          token.firebaseUid = dbUser.firebaseUid; // This would be Google's 'sub'
+          token.picture = dbUser.image || token.picture;
         }
       }
       return token;
@@ -157,7 +140,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         (session.user as any).role = token.role as Role; 
         (session.user as any).firebaseUid = token.firebaseUid as string | undefined;
-        // session.user.image = token.picture as string | null; // Already handled by default session
+        session.user.image = token.picture as string | undefined;
       }
       return session;
     },
@@ -166,3 +149,5 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
     signOut: '/', 
     error: '/login?error=AuthError', 
+  }, 
+}; 
