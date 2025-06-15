@@ -1,15 +1,41 @@
+
+'use client'; // Add this to use hooks like useToast
+
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Star, ShoppingCart, Eye } from 'lucide-react';
+import { Star, ShoppingCart, Eye, Heart } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast'; // Import useToast
 
 interface ProductCardProps {
   product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { toast } = useToast(); // Initialize toast
+
+  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // Prevent link navigation if button is inside a link wrapper
+    // Mock add to cart logic
+    console.log(`Added ${product.name} to cart`);
+    toast({
+      title: `${product.name} added to cart!`,
+      description: "Your little star will love it!",
+    });
+  };
+
+  const handleAddToWishlist = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    // Mock add to wishlist logic
+    console.log(`Added ${product.name} to wishlist`);
+    toast({
+      title: `${product.name} added to wishlist!`,
+      description: "Saved for later cosmic adventures.",
+    });
+  };
+
   return (
     <Card className="group flex flex-col h-full overflow-hidden shadow-card-glow hover:shadow-glow-md transition-all duration-300 transform hover:-translate-y-1">
       <CardHeader className="p-0 relative">
@@ -24,10 +50,19 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
         </Link>
         {product.tags?.includes('Bestseller') && (
-          <span className="absolute top-2 left-2 bg-accent text-accent-foreground text-xs font-semibold px-2 py-1 rounded animate-pulse-glow">
+          <span className="absolute top-2 left-2 bg-accent text-accent-foreground text-xs font-semibold px-2 py-1 rounded animate-pulse-glow z-10">
             Bestseller
           </span>
         )}
+         <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute top-2 right-2 bg-card/70 hover:bg-card text-primary hover:text-accent rounded-full z-10 h-8 w-8"
+            onClick={handleAddToWishlist}
+            aria-label="Add to wishlist"
+        >
+            <Heart className="h-4 w-4" />
+        </Button>
       </CardHeader>
       <CardContent className="p-4 flex-grow">
         <CardTitle className="text-lg font-headline mb-1 leading-tight group-hover:text-accent transition-colors">
@@ -52,7 +87,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <Eye className="mr-2 h-4 w-4 group-hover/button:text-primary transition-colors" /> View
           </Link>
         </Button>
-        <Button className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground">
+        <Button className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={handleAddToCart}>
           <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart
         </Button>
       </CardFooter>

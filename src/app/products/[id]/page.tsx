@@ -8,7 +8,7 @@ import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, ShoppingCart, CheckCircle, Info, Tag, ArrowLeft, Minus, Plus } from 'lucide-react';
+import { Star, ShoppingCart, CheckCircle, Info, Tag, ArrowLeft, Minus, Plus, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
@@ -27,7 +27,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
         <Info size={64} className="text-destructive mb-4" />
         <h1 className="text-3xl font-headline font-bold text-primary mb-2">Product Not Found</h1>
-        <p className="text-muted-foreground mb-6">Oops! We couldn&apos;t find the product you&apos;re looking for.</p>
+        <p className="text-muted-foreground mb-6">Oops! We couldn't find the product you're looking for.</p>
         <Button asChild>
           <Link href="/products">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Products
@@ -43,7 +43,15 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     toast({
       title: `${product.name} added to cart!`,
       description: `Quantity: ${quantity}. Your little star will love it!`,
-      action: <CheckCircle className="text-green-500" />,
+    });
+  };
+
+  const handleAddToWishlist = () => {
+    // Mock add to wishlist logic
+    console.log(`Added ${product.name} to wishlist`);
+    toast({
+      title: `${product.name} added to wishlist!`,
+      description: "Saved for later cosmic adventures.",
     });
   };
 
@@ -69,8 +77,16 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           </div>
           <div className="flex flex-col">
             <CardHeader className="pb-4">
-              <CardTitle className="text-3xl md:text-4xl font-headline text-primary">{product.name}</CardTitle>
-              <CardDescription className="text-lg text-muted-foreground">{product.category}</CardDescription>
+              <div className="flex justify-between items-start">
+                <div>
+                    <CardTitle className="text-3xl md:text-4xl font-headline text-primary">{product.name}</CardTitle>
+                    <CardDescription className="text-lg text-muted-foreground">{product.category}</CardDescription>
+                </div>
+                <Button variant="ghost" size="icon" onClick={handleAddToWishlist} className="text-primary hover:text-accent rounded-full ml-4 shrink-0">
+                    <Heart className="h-6 w-6"/>
+                    <span className="sr-only">Add to wishlist</span>
+                </Button>
+              </div>
               {product.averageRating && (
                 <div className="flex items-center mt-2">
                   {[...Array(5)].map((_, i) => (

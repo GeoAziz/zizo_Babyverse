@@ -1,10 +1,24 @@
+
+'use client';
+
 import Link from 'next/link';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, User, LogIn, Star, Bot } from 'lucide-react';
+import { ShoppingCart, User, LogIn, Star, Bot, Menu, X } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 
 export default function Header() {
-  // Placeholder for authentication status
-  const isLoggedIn = false; 
+  // Placeholder for authentication status - set to true for demo purposes
+  const isLoggedIn = true; 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navLinks = [
+    { href: "/products", label: "Shop" },
+    { href: "/ai-assistant", label: "AI Assistant" },
+    { href: "/chatbot", label: "Chat with Zizi" },
+    { href: "/#featured-collections", label: "Collections" },
+    { href: "/#deals", label: "Deals" },
+  ];
 
   return (
     <header className="bg-card text-card-foreground shadow-md sticky top-0 z-50">
@@ -13,10 +27,11 @@ export default function Header() {
           Zizo's BabyVerse
         </Link>
         <nav className="hidden md:flex items-center space-x-4">
-          <Link href="/products" className="hover:text-accent transition-colors">Shop</Link>
-          <Link href="/ai-assistant" className="hover:text-accent transition-colors">AI Assistant</Link>
-          <Link href="/#featured-collections" className="hover:text-accent transition-colors">Collections</Link>
-          <Link href="/#deals" className="hover:text-accent transition-colors">Deals</Link>
+          {navLinks.map(link => (
+            <Link key={link.href} href={link.href} className="hover:text-accent transition-colors">
+              {link.label}
+            </Link>
+          ))}
         </nav>
         <div className="flex items-center space-x-3">
           <Button variant="ghost" size="icon" asChild>
@@ -44,10 +59,48 @@ export default function Header() {
               </Link>
             </Button>
           )}
-           <Button variant="ghost" size="icon" className="md:hidden">
-            {/* Placeholder for mobile menu */}
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-          </Button>
+          <div className="md:hidden">
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Open menu">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px] bg-card p-6">
+                <div className="flex justify-between items-center mb-6">
+                   <h2 className="text-xl font-headline text-primary">Menu</h2>
+                   <SheetClose asChild>
+                     <Button variant="ghost" size="icon"><X className="h-5 w-5"/></Button>
+                   </SheetClose>
+                </div>
+                <nav className="flex flex-col space-y-3">
+                  {navLinks.map((link) => (
+                    <SheetClose asChild key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="text-lg hover:text-accent transition-colors py-2 border-b border-border"
+                      >
+                        {link.label}
+                      </Link>
+                    </SheetClose>
+                  ))}
+                   {isLoggedIn && (
+                    <>
+                      <SheetClose asChild>
+                        <Link href="/profile" className="text-lg hover:text-accent transition-colors py-2 border-b border-border">My Profile</Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link href="/profile/wishlist" className="text-lg hover:text-accent transition-colors py-2 border-b border-border">Wishlist</Link>
+                      </SheetClose>
+                       <SheetClose asChild>
+                        <Link href="/profile/orders" className="text-lg hover:text-accent transition-colors py-2 border-b border-border">Order History</Link>
+                      </SheetClose>
+                    </>
+                  )}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </header>
