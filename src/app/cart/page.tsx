@@ -11,74 +11,138 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ShoppingCart, Trash2, ArrowRight, PackagePlus, CreditCard, Minus, Plus, Loader2 } from 'lucide-react';
-import { mockProducts } from '@/lib/mockData'; // Keep for mock cart items if needed temporarily
 import type { Product } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from 'next-auth/react';
-
-interface CartItem extends Product {
-  quantity: number;
-}
-
-// Example: In a real app, cart might be fetched from backend or persisted in localStorage linked to user
-const initialCartItems: CartItem[] = mockProducts.slice(0, 2).map((product, index) => ({
-  ...product,
-  quantity: index + 1,
-}));
+import type { CartItemWithProduct } from '@/app/api/cart/route';
 
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState<CartItem[]>(initialCartItems); // Keep mock items for now
+  const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([]);
+  const [isLoadingCart, setIsLoadingCart] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
 
 
+  const fetchCartItems = async () => {
+    if (status !== 'authenticated') return;
+    setIsLoadingCart(true);
+    try {
+      const response = await fetch('/api/cart');
+      if (!response.ok) {
+        throw new Error('Failed to fetch cart items');
+      }
+      const data: CartItemWithProduct[] = await response.json();
+      setCartItems(data);
+    } catch (error) {
+      console.error("Error fetching cart:", error);
+      toast({ title: "Error", description: "Could not load your cart.", variant: "destructive" });
+    } finally {
+      setIsLoadingCart(false);
+    }
+  };
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       const callbackUrl = searchParams.get('callbackUrl') || '/cart';
       router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+    } else if (status === 'authenticated') {
+      fetchCartItems();
     }
-    // If status is 'authenticated', cart can be loaded/managed
-    // For now, we continue with mock cart items
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, router, searchParams]);
 
-  const handleQuantityChange = (productId: string, newQuantity: number) => {
+  const handleQuantityChange = async (cartItemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
+    
+    const originalItems = [...cartItems];
+    const itemToUpdate = cartItems.find(item => item.id === cartItemId);
+    if (!itemToUpdate) return;
+
+    // Optimistic update
     setCartItems(prevItems =>
       prevItems.map(item =>
-        item.id === productId ? { ...item, quantity: newQuantity } : item
+        item.id === cartItemId ? { ...item, quantity: newQuantity } : item
       )
     );
-  };
 
-  const handleRemoveItem = (productId: string) => {
-    const itemToRemove = cartItems.find(item => item.id === productId);
-    setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
-    if (itemToRemove) {
-       toast({ title: `${itemToRemove.name} removed from cart`, variant: 'destructive' });
+    try {
+      const response = await fetch(`/api/cart/${cartItemId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity: newQuantity }),
+      });
+      if (!response.ok) {
+        setCartItems(originalItems); // Revert optimistic update
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update quantity');
+      }
+      const updatedItem = await response.json();
+      // Update with server response to ensure consistency (e.g. if server clamps quantity due to stock)
+      setCartItems(prevItems =>
+        prevItems.map(item =>
+          item.id === updatedItem.id ? updatedItem : item
+        )
+      );
+      toast({ title: "Quantity Updated", description: `${itemToUpdate.product.name} quantity set to ${newQuantity}.` });
+    } catch (error: any) {
+      setCartItems(originalItems); // Revert optimistic update on error
+      toast({ title: "Error", description: error.message || "Could not update quantity.", variant: "destructive" });
     }
   };
 
-  const cartSubtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  const handleRemoveItem = async (cartItemId: string) => {
+    const itemToRemove = cartItems.find(item => item.id === cartItemId);
+    if (!itemToRemove) return;
+
+    const originalItems = [...cartItems];
+    // Optimistic update
+    setCartItems(prevItems => prevItems.filter(item => item.id !== cartItemId));
+
+    try {
+      const response = await fetch(`/api/cart/${cartItemId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        setCartItems(originalItems); // Revert
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to remove item');
+      }
+      toast({ title: `${itemToRemove.product.name} removed from cart`, variant: 'destructive' });
+    } catch (error: any) {
+      setCartItems(originalItems); // Revert
+      toast({ title: "Error", description: error.message || "Could not remove item.", variant: "destructive" });
+    }
+  };
+
+  const cartSubtotal = cartItems.reduce((total, item) => total + item.product.price * item.quantity, 0);
   const shippingCost = cartSubtotal > 0 ? 5.99 : 0; // Mock shipping
   const cartTotal = cartSubtotal + shippingCost;
 
   const handleCheckout = () => {
-    // In a real app, this would likely save the cart to backend before redirecting
     toast({ title: "Proceeding to Checkout!", description: "Teleporting you to the payment dimension..." });
     router.push('/checkout');
   }
 
-  if (status === 'loading' || status === 'unauthenticated') {
+  if (status === 'loading' || (status === 'authenticated' && isLoadingCart)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Preparing your cart for hyperjump...</p>
+        <p className="text-muted-foreground">Summoning your cosmic cart...</p>
       </div>
     );
   }
+  
+  if (status === 'unauthenticated') {
+     return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <p className="text-muted-foreground">Redirecting to login...</p>
+      </div>
+    );
+  }
+
 
   return (
     <div className="container mx-auto py-12">
@@ -109,19 +173,19 @@ export default function CartPage() {
                       <TableRow key={item.id}>
                         <TableCell>
                           <Image
-                            src={item.imageUrl}
-                            alt={item.name}
+                            src={item.product.imageUrl || 'https://placehold.co/80x80.png'}
+                            alt={item.product.name}
                             width={60}
                             height={60}
                             className="rounded-md object-cover border"
-                            data-ai-hint={item.dataAiHint || item.category.toLowerCase()}
+                            data-ai-hint={item.product.dataAiHint || item.product.category?.toLowerCase()}
                           />
                         </TableCell>
                         <TableCell>
-                          <Link href={`/products/${item.id}`} className="font-medium hover:text-accent transition-colors">
-                            {item.name}
+                          <Link href={`/products/${item.productId}`} className="font-medium hover:text-accent transition-colors">
+                            {item.product.name}
                           </Link>
-                          <p className="text-xs text-muted-foreground">{item.category}</p>
+                          <p className="text-xs text-muted-foreground">{item.product.category}</p>
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center border border-input rounded-md w-28 mx-auto">
@@ -134,8 +198,8 @@ export default function CartPage() {
                             </Button>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
-                        <TableCell className="text-right font-semibold">${(item.price * item.quantity).toFixed(2)}</TableCell>
+                        <TableCell className="text-right">${item.product.price.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-semibold">${(item.product.price * item.quantity).toFixed(2)}</TableCell>
                         <TableCell className="text-center">
                           <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)} className="text-destructive hover:text-destructive/80">
                             <Trash2 className="h-4 w-4" />

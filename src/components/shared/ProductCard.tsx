@@ -10,6 +10,7 @@ import { Star, ShoppingCart, Eye, Heart, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface ProductCardProps {
   product: Product;
@@ -18,24 +19,44 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const { toast } = useToast();
   const { data: session } = useSession();
+  const router = useRouter();
   const [isWishlisting, setIsWishlisting] = useState(false);
-  // const [isInWishlist, setIsInWishlist] = useState(false); // Future: check if item is already in wishlist
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleAddToCart = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    // Mock add to cart logic - will be replaced with API call for cart
-    console.log(`Added ${product.name} to cart`);
-    toast({
-      title: `${product.name} added to cart!`,
-      description: "Your little star will love it! (Cart API coming soon)",
-    });
+    if (!session) {
+      toast({ title: "Please Login", description: "You need to be logged in to add items to your cart.", variant: "destructive" });
+      router.push(`/login?callbackUrl=${window.location.pathname}`);
+      return;
+    }
+    setIsAddingToCart(true);
+    try {
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product.id, quantity: 1 }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to add to cart');
+      }
+      toast({
+        title: `${product.name} added to cart!`,
+        description: "Your little star will love it!",
+      });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Could not add to cart.", variant: "destructive" });
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const handleAddToWishlist = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (!session) {
       toast({ title: "Please Login", description: "You need to be logged in to add items to your wishlist.", variant: "destructive" });
-      // Optionally redirect to login: router.push('/login?callbackUrl=' + window.location.pathname);
+      router.push(`/login?callbackUrl=${window.location.pathname}`);
       return;
     }
     setIsWishlisting(true);
@@ -53,7 +74,6 @@ export default function ProductCard({ product }: ProductCardProps) {
         title: response.status === 201 ? "Added to Wishlist!" : "Already in Wishlist!",
         description: `${product.name} ${response.status === 201 ? 'is now in your wishlist.' : 'was already in your wishlist.'}`,
       });
-      // setIsInWishlist(true); // Future: update UI based on response
     } catch (error: any) {
       console.error("Error adding to wishlist:", error);
       toast({ title: "Error", description: error.message || "Could not add to wishlist.", variant: "destructive" });
@@ -114,8 +134,13 @@ export default function ProductCard({ product }: ProductCardProps) {
             <Eye className="mr-2 h-4 w-4 group-hover/button:text-primary transition-colors" /> View
           </Link>
         </Button>
-        <Button className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={handleAddToCart}>
-          <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart
+        <Button 
+          className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground" 
+          onClick={handleAddToCart}
+          disabled={isAddingToCart || product.stock === 0}
+        >
+          {isAddingToCart ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShoppingCart className="mr-2 h-4 w-4" />}
+          {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
         </Button>
       </CardFooter>
     </Card>

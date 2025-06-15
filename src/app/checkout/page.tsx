@@ -4,24 +4,19 @@
 import { useState, type FormEvent, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowRight, CreditCard, Rocket, ShoppingBag, User, MapPin, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import type { CartItemWithProduct } from '@/app/api/cart/route';
+import type { Order as PrismaOrder, OrderItem as PrismaOrderItem } from '@prisma/client';
 
-// Mock cart summary for display. In a real app, this would come from cart state/API.
-const mockCartSummary = {
-  items: [
-    { name: 'Cosmic Comfort Diapers', quantity: 2, price: 29.99 },
-    { name: 'Galaxy Glow Pacifier Set', quantity: 1, price: 12.50 },
-  ],
-  subtotal: (2 * 29.99) + 12.50,
-  shipping: 5.99,
-  total: (2 * 29.99) + 12.50 + 5.99,
-};
+interface CheckoutOrder extends PrismaOrder {
+  items: PrismaOrderItem[];
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -35,7 +30,7 @@ export default function CheckoutPage() {
     address: '',
     city: '',
     postalCode: '',
-    country: 'Galaxy Prime', // Default or from user profile
+    country: 'Galaxy Prime',
     email: '' 
   });
   const [paymentInfo, setPaymentInfo] = useState({ // All mock payment info
@@ -44,16 +39,47 @@ export default function CheckoutPage() {
     cvv: '',
   });
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [cartSummary, setCartSummary] = useState<{items: CartItemWithProduct[], subtotal: number, shipping: number, total: number} | null>(null);
+  const [isLoadingCart, setIsLoadingCart] = useState(true);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       const callbackUrl = searchParams.get('callbackUrl') || '/checkout';
       router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
-    } else if (status === 'authenticated' && session?.user) {
-      // Pre-fill email from session if available
-      setShippingInfo(prev => ({ ...prev, email: session.user?.email || '' , fullName: session.user?.name || ''}));
+    } else if (status === 'authenticated') {
+      if (session?.user) {
+        setShippingInfo(prev => ({ 
+          ...prev, 
+          email: session.user?.email || '', 
+          fullName: session.user?.name || ''
+        }));
+      }
+      fetchCartSummary();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session, router, searchParams]);
+
+  const fetchCartSummary = async () => {
+    setIsLoadingCart(true);
+    try {
+      const response = await fetch('/api/cart');
+      if (!response.ok) throw new Error('Failed to fetch cart summary');
+      const items: CartItemWithProduct[] = await response.json();
+      if (items.length === 0) {
+        toast({ title: "Empty Cart", description: "Your cart is empty. Add some items before checkout.", variant: "destructive" });
+        router.push('/cart');
+        return;
+      }
+      const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+      const shipping = subtotal > 0 ? 5.99 : 0;
+      setCartSummary({ items, subtotal, shipping, total: subtotal + shipping });
+    } catch (error) {
+      toast({ title: "Error", description: "Could not load cart summary.", variant: "destructive" });
+      router.push('/cart');
+    } finally {
+      setIsLoadingCart(false);
+    }
+  };
 
   const handleShippingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setShippingInfo(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -71,7 +97,7 @@ export default function CheckoutPage() {
             return;
         }
     }
-    if (currentStep === 2) { // Mock payment validation
+    if (currentStep === 2) { 
         if (!paymentInfo.cardNumber || !paymentInfo.expiryDate || !paymentInfo.cvv) {
             toast({title: "Missing Payment Info", description: "Please fill all mock payment details.", variant: "destructive"});
             return;
@@ -82,59 +108,65 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async (e: FormEvent) => {
     e.preventDefault();
+    if (!cartSummary || cartSummary.items.length === 0) {
+        toast({ title: "Empty Cart", description: "Cannot place an order with an empty cart.", variant: "destructive" });
+        return;
+    }
     setIsPlacingOrder(true);
     
-    // In a real app, you would construct the order payload:
-    // const orderPayload = {
-    //   userId: session.user.id, // if using NextAuth and session has user ID
-    //   items: mockCartSummary.items.map(item => ({ productId: 'mockProductId', name: item.name, quantity: item.quantity, price: item.price })), // Map cart items
-    //   totalAmount: mockCartSummary.total,
-    //   shippingAddress: shippingInfo,
-    //   paymentMethod: 'Mock Card', // e.g., 'Stripe Card'
-    //   // ... other details
-    // };
+    const orderPayload = {
+      shippingAddress: shippingInfo,
+      // paymentMethodId: "mock_payment_id" // For real payment
+    };
 
-    // try {
-    //   const response = await fetch('/api/orders', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(orderPayload),
-    //   });
-    //   if (!response.ok) {
-    //     const errorData = await response.json();
-    //     throw new Error(errorData.message || "Failed to place order");
-    //   }
-    //   const createdOrder = await response.json();
-      toast({
-        title: "Order Placed (Mock)!",
-        description: "Your BabyVerse goodies are preparing for launch! Redirecting to confirmation...",
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderPayload),
       });
-      router.push('/checkout/confirmation'); // Redirect to a unique confirmation page: router.push(`/checkout/confirmation?orderId=${createdOrder.id}`);
-    // } catch (error: any) {
-    //   toast({ title: "Order Error", description: error.message || "Could not place order.", variant: "destructive" });
-    // } finally {
-    //   setIsPlacingOrder(false);
-    // }
-    
-    // Mocking successful order placement for now
-    setTimeout(() => {
-        toast({
-            title: "Order Placed!",
-            description: "Your BabyVerse goodies are preparing for launch! Redirecting to confirmation...",
-        });
-        router.push('/checkout/confirmation');
-        setIsPlacingOrder(false);
-    }, 1500);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to place order");
+      }
+      const createdOrder: CheckoutOrder = await response.json();
+      toast({
+        title: "Order Placed!",
+        description: `Order ${createdOrder.id} successfully placed. Redirecting to confirmation...`,
+      });
+      router.push(`/checkout/confirmation/${createdOrder.id}`); 
+    } catch (error: any) {
+      toast({ title: "Order Error", description: error.message || "Could not place order.", variant: "destructive" });
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
 
-  if (status === 'loading' || status === 'unauthenticated') {
+  if (status === 'loading' || (status === 'authenticated' && isLoadingCart)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Verifying your cosmic credentials for checkout...</p>
+        <p className="text-muted-foreground">Preparing your cosmic launch sequence...</p>
       </div>
     );
   }
+  
+   if (status === 'unauthenticated') {
+     return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <p className="text-muted-foreground">Redirecting to login...</p>
+      </div>
+    );
+  }
+
+  if (!cartSummary) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <p className="text-muted-foreground">Loading cart details...</p>
+      </div>
+    );
+  }
+
 
   return (
     <div className="container mx-auto py-12 px-4">
@@ -239,7 +271,7 @@ export default function CheckoutPage() {
                 <div className="flex flex-col sm:flex-row gap-2">
                     <Button variant="outline" onClick={() => setCurrentStep(2)} className="w-full sm:w-auto" disabled={isPlacingOrder}>Back to Payment</Button>
                     <Button type="submit" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isPlacingOrder}>
-                      {isPlacingOrder ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Rocket className="ml-2 h-4 w-4" />}
+                      {isPlacingOrder ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Rocket className="mr-2 h-4 w-4" />}
                       {isPlacingOrder ? 'Launching Order...' : 'Place Order & Launch!'}
                     </Button>
                 </div>
@@ -250,25 +282,25 @@ export default function CheckoutPage() {
           <aside className="md:col-span-1 bg-muted/30 p-6 border-t md:border-t-0 md:border-l">
             <h3 className="text-xl font-semibold mb-4 text-primary">Order Summary</h3>
             <div className="space-y-2 mb-4">
-              {mockCartSummary.items.map(item => (
-                <div key={item.name} className="flex justify-between text-sm text-muted-foreground">
-                  <span>{item.name} (x{item.quantity})</span>
-                  <span>${(item.price * item.quantity).toFixed(2)}</span>
+              {cartSummary.items.map(item => (
+                <div key={item.id} className="flex justify-between text-sm text-muted-foreground">
+                  <span>{item.product.name} (x{item.quantity})</span>
+                  <span>${(item.product.price * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
             </div>
             <div className="space-y-2 border-t pt-4">
               <div className="flex justify-between text-muted-foreground">
                 <span>Subtotal</span>
-                <span>${mockCartSummary.subtotal.toFixed(2)}</span>
+                <span>${cartSummary.subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Shipping</span>
-                <span>${mockCartSummary.shipping.toFixed(2)}</span>
+                <span>${cartSummary.shipping.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t mt-2">
                 <span>Total</span>
-                <span>${mockCartSummary.total.toFixed(2)}</span>
+                <span>${cartSummary.total.toFixed(2)}</span>
               </div>
             </div>
              <p className="text-xs text-muted-foreground mt-4">Have a promo code? Apply it in your <Link href="/cart" className="text-accent hover:underline">cart</Link>.</p>

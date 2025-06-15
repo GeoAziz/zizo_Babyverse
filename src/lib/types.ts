@@ -1,22 +1,12 @@
-export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  imageUrl: string;
-  stock: number;
-  tags?: string[];
-  ageGroup?: string;
-  ecoTag?: boolean;
-  reviews?: Review[];
-  features?: string[]; // For AI product description
-  targetAudience?: string; // For AI product description
-  keywords?: string; // For AI product description
-  averageRating?: number;
+
+import type { User as PrismaUser, Product as PrismaProduct, Order as PrismaOrderFull, OrderItem as PrismaOrderItemFull, CartItem as PrismaCartItemFull } from '@prisma/client';
+
+export interface Product extends PrismaProduct {
+  reviews?: Review[]; // This was from an old mock, can be removed if not used or integrated with Prisma
+  // Prisma Product model should have all necessary fields like dataAiHint
 }
 
-export interface Review {
+export interface Review { // Consider integrating into Prisma Product if needed
   id: string;
   productId: string;
   userId: string;
@@ -32,57 +22,46 @@ export interface Testimonial {
   title: string;
   quote: string;
   imageUrl?: string;
+  dataAiHint?: string; // Added for consistency
   stars: number;
 }
 
-export interface User {
-  id:string;
-  name: string;
-  email: string;
-  babyProfiles?: BabyProfile[];
-  orders?: Order[];
-  wishlist?: string[]; // Array of product IDs
-  // other fields like address, etc.
+export interface User extends PrismaUser { // PrismaUser already has id, name, email, role
+  babyProfiles?: BabyProfile[]; // Prisma relation
+  orders?: Order[];           // Prisma relation
+  wishlist?: string[];        // This was mock, now handled by WishlistItem relation
 }
 
-export interface BabyProfile {
+export interface BabyProfile { // Corresponds to Prisma Baby model
   id: string;
   name: string;
   ageInMonths: number;
-  weightInKilograms: number;
-  allergies?: string; // comma-separated
+  weightInKilograms: number; // Consider if this is part of Prisma Baby model
+  allergies?: string; 
   preferences?: string;
 }
 
-export interface CartItem extends Product {
-  quantity: number;
+// CartItem is now defined by PrismaCartItemFull & CartItemWithProduct (in api/cart/route.ts)
+// export interface CartItem extends Product {
+//   quantity: number;
+// }
+
+// OrderItem is defined by PrismaOrderItemFull
+export interface OrderItem extends PrismaOrderItemFull {
+  // PrismaOrderItem already has productId, name, quantity, price
 }
 
-export interface OrderItem {
-  productId: string;
-  name: string;
-  quantity: number;
-  price: number; // price at time of order
+// Order is defined by PrismaOrderFull
+export interface Order extends PrismaOrderFull {
+  items: OrderItem[]; // Relation from Prisma
 }
 
-export interface Order {
-  id: string;
-  userId: string;
-  items: OrderItem[];
-  totalAmount: number;
-  status: 'Pending' | 'Processing' | 'Pod Packed' | 'Dispatched' | 'In Transit' | 'Delivered' | 'Cancelled';
-  orderDate: string;
-  shippingAddress: any; // Replace with actual address type
-  paymentMethod: string;
-  trackingNumber?: string;
-  estimatedDelivery?: string;
-}
 
-// For AI Baby Assistant Form
+// For AI Baby Assistant Form - this can remain as is for form handling
 export interface BabyNeedsForm {
   babyName: string;
-  ageInMonths: string; // Input as string, convert to number
-  weightInKilograms: string; // Input as string, convert to number
+  ageInMonths: string; 
+  weightInKilograms: string; 
   allergies: string;
   preferences: string;
 }

@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { mockProducts } from '@/lib/mockData'; // Will be replaced by API fetch
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,14 +11,17 @@ import { Star, ShoppingCart, CheckCircle, Info, Tag, ArrowLeft, Minus, Plus, Hea
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisting, setIsWishlisting] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { toast } = useToast();
   const { data: session } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -33,7 +35,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         setProduct(data);
       } catch (error) {
         console.error("Error fetching product:", error);
-        setProduct(null); // Ensure product is null on error
+        setProduct(null); 
       } finally {
         setIsLoadingProduct(false);
       }
@@ -44,20 +46,40 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     }
   }, [params.id]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product) return;
-    // Placeholder for actual add to cart logic - will be API call
-    console.log(`Added ${quantity} of ${product.name} to cart`);
-    toast({
-      title: `${product.name} added to cart!`,
-      description: `Quantity: ${quantity}. (Cart API coming soon)`,
-    });
+    if (!session) {
+      toast({ title: "Please Login", description: "You need to be logged in to add items to your cart.", variant: "destructive" });
+      router.push(`/login?callbackUrl=/products/${product.id}`);
+      return;
+    }
+    setIsAddingToCart(true);
+    try {
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product.id, quantity }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to add to cart');
+      }
+      toast({
+        title: `${product.name} added to cart!`,
+        description: `Quantity: ${quantity}. Your little star will love it!`,
+      });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Could not add to cart.", variant: "destructive" });
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const handleAddToWishlist = async () => {
     if (!product) return;
     if (!session) {
       toast({ title: "Please Login", description: "You need to be logged in to add items to your wishlist.", variant: "destructive" });
+      router.push(`/login?callbackUrl=/products/${product.id}`);
       return;
     }
     setIsWishlisting(true);
@@ -83,7 +105,13 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     }
   };
 
-  const incrementQuantity = () => setQuantity(prev => prev + 1);
+  const incrementQuantity = () => {
+    if (product && quantity < product.stock) {
+        setQuantity(prev => prev + 1);
+    } else if (product && quantity >= product.stock) {
+        toast({ title: "Max Stock Reached", description: `Only ${product.stock} units available.`, variant: "destructive"});
+    }
+  }
   const decrementQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
 
   if (isLoadingProduct) {
@@ -139,9 +167,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                   onClick={handleAddToWishlist} 
                   className="text-primary hover:text-accent rounded-full ml-4 shrink-0"
                   disabled={isWishlisting}
+                  aria-label="Add to wishlist"
                 >
                     {isWishlisting ? <Loader2 className="h-6 w-6 animate-spin" /> : <Heart className="h-6 w-6"/>}
-                    <span className="sr-only">Add to wishlist</span>
                 </Button>
               </div>
               {product.averageRating && (
@@ -155,7 +183,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             </CardHeader>
             <CardContent className="flex-grow space-y-4">
               <p className="text-2xl font-semibold text-accent">${product.price.toFixed(2)}</p>
-              <p className="text-foreground leading-relaxed">{product.description}</p>
+              <p className="text-foreground leading-relaxed whitespace-pre-line">{product.description}</p>
               
               {product.features && product.features.length > 0 && (
                 <div>
@@ -200,10 +228,11 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               <Button 
                 size="lg" 
                 onClick={handleAddToCart} 
-                disabled={product.stock === 0}
+                disabled={product.stock === 0 || isAddingToCart}
                 className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-glow-sm transition-all duration-300 transform hover:scale-105"
               >
-                <ShoppingCart className="mr-2 h-5 w-5" /> {product.stock > 0 ? 'Add to Cosmic Cart' : 'Out of Stock'}
+                {isAddingToCart ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShoppingCart className="mr-2 h-5 w-5" />}
+                {product.stock === 0 ? 'Out of Stock' : 'Add to Cosmic Cart'}
               </Button>
             </CardFooter>
           </div>

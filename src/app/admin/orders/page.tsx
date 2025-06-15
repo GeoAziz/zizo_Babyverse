@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,25 +7,53 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Eye, Truck, Mail, Search, Filter, Edit } from 'lucide-react';
-import { mockOrders } from '@/lib/mockData';
-import type { Order } from '@/lib/types';
+import { Eye, Truck, Mail, Search, Filter, Edit, Loader2, AlertTriangle } from 'lucide-react';
+import type { Order as PrismaOrder, OrderItem as PrismaOrderItem } from '@prisma/client'; // Use PrismaOrder
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label'; // Added Label import
+
+interface AdminOrder extends PrismaOrder {
+  items: PrismaOrderItem[];
+  user?: { name?: string | null; email?: string | null }; // Optional user details
+}
+
 
 export default function OrdersManagementPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newStatus, setNewStatus] = useState<Order['status'] | ''>('');
+  const [newStatus, setNewStatus] = useState<AdminOrder['status'] | ''>('');
 
   const { toast } = useToast();
 
+  const fetchOrders = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // In a real app, you might have an admin-specific endpoint or role check in the generic one
+      const response = await fetch('/api/orders/admin'); // Assuming an admin endpoint
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch orders');
+      }
+      const data: AdminOrder[] = await response.json();
+      setOrders(data);
+    } catch (e: any) {
+      setError(e.message || 'Could not load orders.');
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    setOrders(mockOrders); // Load mock data
+    fetchOrders();
   }, []);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,33 +62,52 @@ export default function OrdersManagementPage() {
 
   const filteredOrders = orders.filter(order =>
     (order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     order.userId.toLowerCase().includes(searchTerm.toLowerCase())) &&
+     order.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     (order.user?.name && order.user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+     (order.user?.email && order.user.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    ) &&
     (statusFilter === 'all' || order.status === statusFilter)
   );
   
-  const orderStatuses: Order['status'][] = ['Pending', 'Processing', 'Pod Packed', 'Dispatched', 'In Transit', 'Delivered', 'Cancelled'];
+  const orderStatuses: AdminOrder['status'][] = ['Pending', 'Processing', 'Pod Packed', 'Dispatched', 'In Transit', 'Delivered', 'Cancelled'];
 
-  const handleOpenModal = (order: Order) => {
+  const handleOpenModal = (order: AdminOrder) => {
     setSelectedOrder(order);
     setNewStatus(order.status);
     setIsModalOpen(true);
   };
 
-  const handleUpdateStatus = () => {
-    if (selectedOrder && newStatus) {
-      setOrders(prevOrders =>
-        prevOrders.map(o =>
-          o.id === selectedOrder.id ? { ...o, status: newStatus as Order['status'] } : o
-        )
-      );
-      toast({ title: "Order Status Updated", description: `Order ${selectedOrder.id} status changed to ${newStatus}.` });
-      setIsModalOpen(false);
-      setSelectedOrder(null);
+  const handleUpdateStatus = async () => {
+    if (selectedOrder && newStatus && newStatus !== selectedOrder.status) {
+      try {
+        const response = await fetch(`/api/orders/${selectedOrder.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to update status');
+        }
+        const updatedOrderFromServer: AdminOrder = await response.json();
+        setOrders(prevOrders =>
+          prevOrders.map(o =>
+            o.id === updatedOrderFromServer.id ? updatedOrderFromServer : o
+          )
+        );
+        toast({ title: "Order Status Updated", description: `Order ${selectedOrder.id} status changed to ${newStatus}.` });
+        setIsModalOpen(false);
+        setSelectedOrder(null);
+      } catch (error: any) {
+         toast({ title: "Error", description: error.message || "Could not update status.", variant: "destructive" });
+      }
+    } else {
+      setIsModalOpen(false); // Close if no change
     }
   };
 
 
-  const getStatusColor = (status: Order['status']) => {
+  const getStatusColor = (status: AdminOrder['status']) => {
     switch (status) {
       case 'Pending': return 'bg-yellow-500/20 text-yellow-700';
       case 'Processing': return 'bg-blue-500/20 text-blue-700';
@@ -71,6 +119,15 @@ export default function OrdersManagementPage() {
       default: return 'bg-gray-500/20 text-gray-700';
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-15rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Loading interstellar orders...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -85,7 +142,7 @@ export default function OrdersManagementPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search by Order ID or Customer ID..."
+                placeholder="Search by Order ID, Customer ID, Name, Email..."
                 value={searchTerm}
                 onChange={handleSearch}
                 className="pl-10 w-full"
@@ -108,49 +165,62 @@ export default function OrdersManagementPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Customer ID</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-mono text-primary">{order.id}</TableCell>
-                  <TableCell>{order.userId}</TableCell>
-                  <TableCell>{format(new Date(order.orderDate), 'PPpp')}</TableCell>
-                  <TableCell>${order.totalAmount.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-1">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenModal(order)} className="text-blue-500 hover:text-blue-700">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                       <Button variant="ghost" size="icon" className="text-green-500 hover:text-green-700"> {/* Placeholder for view details */}
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-orange-500 hover:text-orange-700">
-                        <Mail className="h-4 w-4" /> {/* Placeholder for contact buyer */}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {filteredOrders.length === 0 && (
-            <p className="text-center text-muted-foreground py-8">No orders found matching your criteria.</p>
+          {error && (
+             <div className="my-4 p-4 bg-destructive/10 text-destructive text-sm rounded-md flex items-center">
+                <AlertTriangle className="h-5 w-5 mr-2"/> {error}
+            </div>
           )}
+          {!error && filteredOrders.length > 0 ? (
+            <Table>
+                <TableHeader>
+                <TableRow>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                </TableRow>
+                </TableHeader>
+                <TableBody>
+                {filteredOrders.map((order) => (
+                    <TableRow key={order.id}>
+                    <TableCell className="font-mono text-primary hover:underline">
+                        {/* Link to a more detailed admin order view if needed */}
+                        {order.id.substring(0,12)}...
+                    </TableCell>
+                    <TableCell>
+                        {order.user?.name || order.userId}
+                        {order.user?.email && <div className="text-xs text-muted-foreground">{order.user.email}</div>}
+                    </TableCell>
+                    <TableCell>{format(new Date(order.createdAt), 'PPpp')}</TableCell>
+                    <TableCell>${order.totalAmount.toFixed(2)}</TableCell>
+                    <TableCell>
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
+                        {order.status}
+                        </span>
+                    </TableCell>
+                    <TableCell>
+                        <div className="flex space-x-1">
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenModal(order)} className="text-blue-500 hover:text-blue-700">
+                            <Edit className="h-4 w-4" />
+                        </Button>
+                        {/* Eye button could link to user-facing order detail or admin specific one */}
+                        <Button variant="ghost" size="icon" className="text-green-500 hover:text-green-700"> 
+                            <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="text-orange-500 hover:text-orange-700">
+                            <Mail className="h-4 w-4" />
+                        </Button>
+                        </div>
+                    </TableCell>
+                    </TableRow>
+                ))}
+                </TableBody>
+            </Table>
+            ) : (
+             !isLoading && !error && <p className="text-center text-muted-foreground py-8">No orders found matching your criteria.</p>
+            )}
         </CardContent>
       </Card>
       
@@ -165,7 +235,7 @@ export default function OrdersManagementPage() {
               <p>Current Status: <span className={`font-semibold ${getStatusColor(selectedOrder.status).split(' ')[1]}`}>{selectedOrder.status}</span></p>
               <div>
                 <Label htmlFor="newStatus">New Status</Label>
-                <Select value={newStatus || ''} onValueChange={(value) => setNewStatus(value as Order['status'])}>
+                <Select value={newStatus || ''} onValueChange={(value) => setNewStatus(value as AdminOrder['status'])}>
                   <SelectTrigger id="newStatus">
                     <SelectValue placeholder="Select new status" />
                   </SelectTrigger>
