@@ -4,51 +4,78 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Star, ArrowLeft, ShoppingCart, Trash2, PackagePlus, Loader2 } from 'lucide-react';
 import type { Product } from '@/lib/types';
-import { mockProducts } from '@/lib/mockData'; // Keep for mock items
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from 'next-auth/react';
 
-const initialWishlistItems: Product[] = mockProducts.slice(2, 5); // Mock data
-
 export default function WishlistPage() {
-  const [wishlistItems, setWishlistItems] = useState<Product[]>(initialWishlistItems); // Mock items for now
+  const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
   const { data: session, status } = useSession();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      const callbackUrl = searchParams.get('callbackUrl') || '/profile/wishlist';
-      router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+      router.push(`/login?callbackUrl=${encodeURIComponent('/profile/wishlist')}`);
     } else if (status === 'authenticated') {
-      // In a real app, fetch wishlist items for session.user.id from API
-      // e.g., fetch(`/api/wishlist/${session.user.id}`).then(...)
-      setWishlistItems(initialWishlistItems); // Using mock for now
+      fetchWishlistItems();
     }
-  }, [status, router, searchParams, session]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, router]);
 
+  const fetchWishlistItems = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/wishlist');
+      if (!response.ok) {
+        throw new Error('Failed to fetch wishlist items');
+      }
+      const data: Product[] = await response.json();
+      setWishlistItems(data);
+    } catch (error) {
+      console.error("Error fetching wishlist:", error);
+      toast({ title: "Error", description: "Could not load your wishlist.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const handleRemoveFromWishlist = (productId: string) => {
-    // Mock removal. In real app, call API: DELETE /api/wishlist/${productId}
+  const handleRemoveFromWishlist = async (productId: string) => {
+    const originalWishlist = [...wishlistItems];
     const itemToRemove = wishlistItems.find(item => item.id === productId);
+    
     setWishlistItems(prevItems => prevItems.filter(item => item.id !== productId));
-    if (itemToRemove) {
-      toast({ title: `${itemToRemove.name} removed from wishlist`, variant: "destructive" });
+
+    try {
+      const response = await fetch(`/api/wishlist/${productId}`, { method: 'DELETE' });
+      if (!response.ok) {
+        // Revert optimistic update
+        setWishlistItems(originalWishlist);
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to remove item');
+      }
+      if (itemToRemove) {
+        toast({ title: `${itemToRemove.name} removed from wishlist`, variant: "destructive" });
+      }
+    } catch (error: any) {
+      console.error("Error removing from wishlist:", error);
+      toast({ title: "Error", description: error.message || "Could not remove item from wishlist.", variant: "destructive" });
     }
   };
 
   const handleAddToCart = (product: Product) => {
     // Mock add to cart. In real app, call API or cart context method
-    toast({ title: `${product.name} added to cart!`, description: `(This is a mock action)` });
-  }
+    // For now, this is a placeholder for future cart API integration
+    toast({ title: `${product.name} added to cart!`, description: `(This is a mock action for now)` });
+    console.log("Add to cart (mock):", product.name);
+  };
 
-  if (status === 'loading' || status === 'unauthenticated') {
+  if (status === 'loading' || (status === 'authenticated' && isLoading)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
@@ -77,11 +104,11 @@ export default function WishlistPage() {
                 <Card key={product.id} className="group flex flex-col overflow-hidden shadow-card-glow hover:shadow-glow-md transition-all duration-300">
                   <Link href={`/products/${product.id}`} className="block aspect-square overflow-hidden relative">
                     <Image
-                      src={product.imageUrl}
+                      src={product.imageUrl || 'https://placehold.co/400x400.png'}
                       alt={product.name}
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-110"
-                      data-ai-hint={product.dataAiHint || product.category.toLowerCase()}
+                      data-ai-hint={product.dataAiHint || product.category?.toLowerCase() || 'product'}
                     />
                   </Link>
                   <CardContent className="p-4 flex-grow">

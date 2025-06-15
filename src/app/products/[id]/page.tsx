@@ -3,31 +3,104 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { mockProducts } from '@/lib/mockData';
+import { mockProducts } from '@/lib/mockData'; // Will be replaced by API fetch
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, ShoppingCart, CheckCircle, Info, Tag, ArrowLeft, Minus, Plus, Heart } from 'lucide-react';
+import { Star, ShoppingCart, CheckCircle, Info, Tag, ArrowLeft, Minus, Plus, Heart, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { useSession } from 'next-auth/react';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const [product, setProduct] = useState<Product | null>(null);
+  const [isLoadingProduct, setIsLoadingProduct] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [isWishlisting, setIsWishlisting] = useState(false);
   const { toast } = useToast();
+  const { data: session } = useSession();
 
   useEffect(() => {
-    const foundProduct = mockProducts.find(p => p.id === params.id);
-    setProduct(foundProduct || null);
+    const fetchProduct = async () => {
+      setIsLoadingProduct(true);
+      try {
+        const response = await fetch(`/api/products/${params.id}`);
+        if (!response.ok) {
+          throw new Error('Product not found');
+        }
+        const data: Product = await response.json();
+        setProduct(data);
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        setProduct(null); // Ensure product is null on error
+      } finally {
+        setIsLoadingProduct(false);
+      }
+    };
+
+    if (params.id) {
+      fetchProduct();
+    }
   }, [params.id]);
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    // Placeholder for actual add to cart logic - will be API call
+    console.log(`Added ${quantity} of ${product.name} to cart`);
+    toast({
+      title: `${product.name} added to cart!`,
+      description: `Quantity: ${quantity}. (Cart API coming soon)`,
+    });
+  };
+
+  const handleAddToWishlist = async () => {
+    if (!product) return;
+    if (!session) {
+      toast({ title: "Please Login", description: "You need to be logged in to add items to your wishlist.", variant: "destructive" });
+      return;
+    }
+    setIsWishlisting(true);
+    try {
+      const response = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product.id }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to add to wishlist');
+      }
+      toast({
+        title: response.status === 201 ? "Added to Wishlist!" : "Already in Wishlist!",
+        description: `${product.name} ${response.status === 201 ? 'is now in your wishlist.' : 'was already in your wishlist.'}`,
+      });
+    } catch (error: any) {
+      console.error("Error adding to wishlist:", error);
+      toast({ title: "Error", description: error.message || "Could not add to wishlist.", variant: "destructive" });
+    } finally {
+      setIsWishlisting(false);
+    }
+  };
+
+  const incrementQuantity = () => setQuantity(prev => prev + 1);
+  const decrementQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
+
+  if (isLoadingProduct) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Summoning product details from the cosmos...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
         <Info size={64} className="text-destructive mb-4" />
         <h1 className="text-3xl font-headline font-bold text-primary mb-2">Product Not Found</h1>
-        <p className="text-muted-foreground mb-6">Oops! We couldn't find the product you're looking for.</p>
+        <p className="text-muted-foreground mb-6">Oops! We couldn't find the product you're looking for in this galaxy.</p>
         <Button asChild>
           <Link href="/products">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Products
@@ -36,28 +109,6 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       </div>
     );
   }
-
-  const handleAddToCart = () => {
-    // Placeholder for actual add to cart logic
-    console.log(`Added ${quantity} of ${product.name} to cart`);
-    toast({
-      title: `${product.name} added to cart!`,
-      description: `Quantity: ${quantity}. Your little star will love it!`,
-    });
-  };
-
-  const handleAddToWishlist = () => {
-    // Mock add to wishlist logic
-    console.log(`Added ${product.name} to wishlist`);
-    toast({
-      title: `${product.name} added to wishlist!`,
-      description: "Saved for later cosmic adventures.",
-    });
-  };
-
-  const incrementQuantity = () => setQuantity(prev => prev + 1);
-  const decrementQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
-
 
   return (
     <div className="container mx-auto py-8">
@@ -68,11 +119,11 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         <div className="grid md:grid-cols-2 gap-0">
           <div className="relative aspect-square bg-muted/30">
             <Image
-              src={product.imageUrl}
+              src={product.imageUrl || 'https://placehold.co/600x600.png'}
               alt={product.name}
               fill
               className="object-contain p-4 md:p-8"
-              data-ai-hint={product.dataAiHint || product.category.toLowerCase()}
+              data-ai-hint={product.dataAiHint || product.category?.toLowerCase() || 'product'}
             />
           </div>
           <div className="flex flex-col">
@@ -82,8 +133,14 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                     <CardTitle className="text-3xl md:text-4xl font-headline text-primary">{product.name}</CardTitle>
                     <CardDescription className="text-lg text-muted-foreground">{product.category}</CardDescription>
                 </div>
-                <Button variant="ghost" size="icon" onClick={handleAddToWishlist} className="text-primary hover:text-accent rounded-full ml-4 shrink-0">
-                    <Heart className="h-6 w-6"/>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={handleAddToWishlist} 
+                  className="text-primary hover:text-accent rounded-full ml-4 shrink-0"
+                  disabled={isWishlisting}
+                >
+                    {isWishlisting ? <Loader2 className="h-6 w-6 animate-spin" /> : <Heart className="h-6 w-6"/>}
                     <span className="sr-only">Add to wishlist</span>
                 </Button>
               </div>
