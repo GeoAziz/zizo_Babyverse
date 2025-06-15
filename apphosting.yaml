@@ -10,17 +10,19 @@ runConfig:
 # https://firebase.google.com/docs/app-hosting/configure-backend#build
 
 # Environment variables sourced from Google Secret Manager
-# Create these secrets in Secret Manager and grant the App Hosting service account
-# the "Secret Manager Secret Accessor" role for each.
+# Create these secrets in Secret Manager (in the same region as your App Hosting backend)
+# and grant the App Hosting service account the "Secret Manager Secret Accessor" role for each.
 env:
   - variable: DATABASE_URL
-    secret: PROD_DATABASE_URL # Replace with the name of your secret in Secret Manager
+    secret: PROD_DATABASE_URL # Secret name in Secret Manager for your production PostgreSQL connection string
   - variable: NEXTAUTH_SECRET
-    secret: PROD_NEXTAUTH_SECRET # Replace with the name of your secret
+    secret: PROD_NEXTAUTH_SECRET # Secret name in Secret Manager for your NEXTAUTH_SECRET
   - variable: NEXTAUTH_URL
-    secret: PROD_NEXTAUTH_URL # Replace with the name of your secret (this will be your deployed app's URL)
-  # Add other necessary environment variables here, e.g., for your GenAI provider
+    secret: PROD_NEXTAUTH_URL # Secret name in Secret Manager for your deployed app's URL (e.g., https://your-app-id.web.app)
+  # Example for Genkit Google AI API Key, if needed explicitly and not using Application Default Credentials.
   # - variable: GOOGLE_API_KEY
-  #   secret: PROD_GOOGLE_API_KEY
-  # Ensure Genkit can access Google AI services, typically via Application Default Credentials
-  # if the service account has the 'Vertex AI User' or 'AI Platform User' role.
+  #   secret: PROD_GOOGLE_API_KEY # Secret name in Secret Manager for your Google AI API Key
+  # Ensure Genkit can access Google AI services. If your App Hosting service account
+  # has the 'Vertex AI User' or 'AI Platform User' role, Application Default Credentials
+  # might be sufficient without needing a GOOGLE_API_KEY explicitly set.
+  # Add any other production environment variables your application requires here.
