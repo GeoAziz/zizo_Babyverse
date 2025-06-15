@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react'; // Added 'use'
 import Image from 'next/image';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+export default function ProductDetailPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) { // Renamed params to paramsPromise
+  const resolvedParams = use(paramsPromise); // Unwrap the Promise
+  const { id: productId } = resolvedParams; // Destructure id from resolved params
+
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -27,7 +30,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     const fetchProduct = async () => {
       setIsLoadingProduct(true);
       try {
-        const response = await fetch(`/api/products/${params.id}`);
+        const response = await fetch(`/api/products/${productId}`); // Use productId
         if (!response.ok) {
           throw new Error('Product not found');
         }
@@ -35,16 +38,16 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         setProduct(data);
       } catch (error) {
         console.error("Error fetching product:", error);
-        setProduct(null); 
+        setProduct(null);
       } finally {
         setIsLoadingProduct(false);
       }
     };
 
-    if (params.id) {
+    if (productId) { // Use productId
       fetchProduct();
     }
-  }, [params.id]);
+  }, [productId]); // Use productId in dependency array
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -161,10 +164,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                     <CardTitle className="text-3xl md:text-4xl font-headline text-primary">{product.name}</CardTitle>
                     <CardDescription className="text-lg text-muted-foreground">{product.category}</CardDescription>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={handleAddToWishlist} 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleAddToWishlist}
                   className="text-primary hover:text-accent rounded-full ml-4 shrink-0"
                   disabled={isWishlisting}
                   aria-label="Add to wishlist"
@@ -184,12 +187,12 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <CardContent className="flex-grow space-y-4">
               <p className="text-2xl font-semibold text-accent">${product.price.toFixed(2)}</p>
               <p className="text-foreground leading-relaxed whitespace-pre-line">{product.description}</p>
-              
+
               {product.features && product.features.length > 0 && (
                 <div>
                   <h4 className="font-semibold text-primary mb-1">Features:</h4>
                   <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                    {typeof product.features === 'string' 
+                    {typeof product.features === 'string'
                         ? product.features.split(',').map(f => f.trim()).map((feature, idx) => <li key={idx}>{feature}</li>)
                         : product.features.map((feature, idx) => <li key={idx}>{feature}</li>)
                     }
@@ -225,9 +228,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <Button 
-                size="lg" 
-                onClick={handleAddToCart} 
+              <Button
+                size="lg"
+                onClick={handleAddToCart}
                 disabled={product.stock === 0 || isAddingToCart}
                 className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-glow-sm transition-all duration-300 transform hover:scale-105"
               >
