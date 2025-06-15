@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Star, ShoppingCart, Heart, Loader2, ArrowLeft, Minus, Plus, Info, ThumbsUp, Leaf, ShieldCheck, MessageSquare, UserCircle, PackageCheck, ClipboardList, Settings2, Truck, Undo2, Sparkles, AlertTriangle } from 'lucide-react';
+import { Star, ShoppingCart, Heart, Loader2, ArrowLeft, Minus, Plus, Info, ThumbsUp, Leaf, ShieldCheck, MessageSquare, UserCircle, PackageCheck, ClipboardList, Settings2, Truck, Undo2, Sparkles, AlertTriangle, Package } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from 'next-auth/react';
@@ -32,6 +32,7 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
   const [quantity, setQuantity] = useState(1);
   const [isWishlisting, setIsWishlisting] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [error, setError] = useState<string | null>(null); // Added error state
   const { toast } = useToast();
   const { data: session } = useSession();
   const router = useRouter();
@@ -39,23 +40,31 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
   useEffect(() => {
     const fetchProduct = async () => {
       setIsLoadingProduct(true);
+      setError(null); // Reset error state at the beginning of a fetch
       try {
         const response = await fetch(`/api/products/${productId}`);
         if (!response.ok) {
           if (response.status === 404) {
             setProduct(null);
+            // No error state needed here, the !product && !error condition will handle the UI
           } else {
-            const errorData = await response.json().catch(() => ({ message: "API request failed" }));
-            throw new Error(errorData.message || `API request failed with status ${response.status}`);
+            // Handle other HTTP errors (e.g., 500)
+            const errorData = await response.json().catch(() => ({ message: `Server error: ${response.status}. Unable to parse error response.` }));
+            const errorMessage = errorData.message || `Failed to load product. Server responded with status: ${response.status}`;
+            setError(errorMessage);
+            setProduct(null); // Ensure product is null to trigger error or not found UI
+            toast({ title: "Error Loading Product", description: errorMessage, variant: "destructive"});
           }
         } else {
           const data: Product = await response.json();
           setProduct(data);
         }
-      } catch (error: any) {
-        console.error("Error fetching product details:", error);
-        setProduct(null); // Ensure product is null on error to show not found or error state
-        toast({ title: "Error", description: "Could not load product details.", variant: "destructive"});
+      } catch (e: any) { // This catches network errors or issues with .json() parsing if response.ok was true but body was malformed
+        console.error("Network or parsing error fetching product details:", e);
+        const errorMessage = e.message || "An unexpected network error occurred while fetching the product.";
+        setError(errorMessage);
+        setProduct(null);
+        toast({ title: "Network Error", description: errorMessage, variant: "destructive"});
       } finally {
         setIsLoadingProduct(false);
       }
@@ -64,6 +73,7 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
     if (productId) {
       fetchProduct();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId, toast]);
 
   const handleAddToCart = async () => {
@@ -87,7 +97,6 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
       toast({
         title: `${product.name} added to cart!`,
         description: `Quantity: ${quantity}. Your little star will love it!`,
-        // Consider adding a sound effect here if the platform supports it via a hook/service
       });
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Could not add to cart.", variant: "destructive" });
@@ -144,13 +153,32 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
     );
   }
 
-  if (!product) {
+  if (error && !product) { // Display general error if error state is set
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center px-4">
+        <Button variant="outline" asChild className="absolute top-28 left-4 md:left-8">
+          <Link href="/products"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Products</Link>
+        </Button>
+        <AlertTriangle size={72} className="text-destructive mb-6" />
+        <h1 className="text-4xl font-headline font-bold text-primary mb-3">Houston, We Have a Problem!</h1>
+        <p className="text-lg text-muted-foreground mb-4">We encountered an issue trying to fetch this product's details.</p>
+        <p className="text-sm text-destructive mb-8">{error}</p>
+        <Button asChild size="lg" className="bg-accent hover:bg-accent/90">
+          <Link href="/products">
+            Back to All Products
+          </Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (!product) { // This now specifically handles 404 (product is null, error is null)
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center px-4">
          <Button variant="outline" asChild className="absolute top-28 left-4 md:left-8">
             <Link href="/products"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Products</Link>
         </Button>
-        <AlertTriangle size={72} className="text-destructive mb-6" />
+        <Package size={72} className="text-muted-foreground mb-6" />
         <h1 className="text-4xl font-headline font-bold text-primary mb-3">Product Lost in Space</h1>
         <p className="text-lg text-muted-foreground mb-8">Oops! We couldn't find this product. It might have drifted into another dimension.</p>
         <Button asChild size="lg" className="bg-accent hover:bg-accent/90">
@@ -387,3 +415,4 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
     </div>
   );
 }
+
