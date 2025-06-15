@@ -1,12 +1,11 @@
 
-import type { User as PrismaUser, Product as PrismaProduct, Order as PrismaOrderFull, OrderItem as PrismaOrderItemFull, CartItem as PrismaCartItemFull } from '@prisma/client';
+import type { User as PrismaUser, Product as PrismaProduct, Order as PrismaOrderFull, OrderItem as PrismaOrderItemFull, CartItem as PrismaCartItemFull, Baby as PrismaBaby } from '@prisma/client';
 
 export interface Product extends PrismaProduct {
-  reviews?: Review[]; // This was from an old mock, can be removed if not used or integrated with Prisma
   // Prisma Product model should have all necessary fields like dataAiHint
 }
 
-export interface Review { // Consider integrating into Prisma Product if needed
+export interface Review {
   id: string;
   productId: string;
   userId: string;
@@ -22,42 +21,30 @@ export interface Testimonial {
   title: string;
   quote: string;
   imageUrl?: string;
-  dataAiHint?: string; // Added for consistency
+  dataAiHint?: string; 
   stars: number;
 }
 
-export interface User extends PrismaUser { // PrismaUser already has id, name, email, role
-  babyProfiles?: BabyProfile[]; // Prisma relation
-  orders?: Order[];           // Prisma relation
-  wishlist?: string[];        // This was mock, now handled by WishlistItem relation
+export interface User extends PrismaUser { 
+  babies?: BabyProfile[]; // Relation from Prisma
 }
 
-export interface BabyProfile { // Corresponds to Prisma Baby model
-  id: string;
-  name: string;
-  ageInMonths: number;
-  weightInKilograms: number; // Consider if this is part of Prisma Baby model
-  allergies?: string; 
-  preferences?: string;
+export interface BabyProfile extends PrismaBaby {
+  // PrismaBaby already includes id, name, ageInMonths, etc.
+  // Ensure this matches your Prisma model structure for Baby
 }
 
-// CartItem is now defined by PrismaCartItemFull & CartItemWithProduct (in api/cart/route.ts)
-// export interface CartItem extends Product {
-//   quantity: number;
-// }
 
-// OrderItem is defined by PrismaOrderItemFull
 export interface OrderItem extends PrismaOrderItemFull {
   // PrismaOrderItem already has productId, name, quantity, price
 }
 
-// Order is defined by PrismaOrderFull
 export interface Order extends PrismaOrderFull {
-  items: OrderItem[]; // Relation from Prisma
+  items: OrderItem[]; 
 }
 
 
-// For AI Baby Assistant Form - this can remain as is for form handling
+// For AI Baby Assistant Form
 export interface BabyNeedsForm {
   babyName: string;
   ageInMonths: string; 
