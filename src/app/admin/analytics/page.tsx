@@ -1,23 +1,32 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BarChart, LineChart, PieChartIcon, Users, ShoppingBag, AlertTriangle, Lightbulb } from "lucide-react";
-// Placeholder for actual chart component (e.g., from recharts or shadcn/ui charts)
-// import { Bar, BarChart as ReBarChart, Line, LineChart as ReLineChart, Pie, PieChart as RePieChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-// const mockChartData = [
-//   { name: 'Jan', sales: 4000, users: 2400 },
-//   { name: 'Feb', sales: 3000, users: 1398 },
-//   { name: 'Mar', sales: 2000, users: 9800 },
-//   { name: 'Apr', sales: 2780, users: 3908 },
-//   { name: 'May', sales: 1890, users: 4800 },
-//   { name: 'Jun', sales: 2390, users: 3800 },
-// ];
-// const mockPieData = [
-//   { name: '0-6 Months', value: 400 },
-//   { name: '6-12 Months', value: 300 },
-//   { name: '1-2 Years', value: 300 },
-//   { name: '2+ Years', value: 200 },
-// ];
+import { BarChart, LineChart as LineChartIconLucide, PieChartIcon as PieChartIconLucide, Users, ShoppingBag, Lightbulb } from "lucide-react"; // Renamed LineChart and PieChartIcon to avoid conflict
+import { Bar, BarChart as ReBarChart, Line, LineChart as ReLineChart, Pie, PieChart as RePieChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts';
+
+const mockChartData = [
+  { name: 'Jan', sales: 4000, users: 2400, repeatRate: 20 },
+  { name: 'Feb', sales: 3000, users: 1398, repeatRate: 22 },
+  { name: 'Mar', sales: 2000, users: 9800, repeatRate: 30 },
+  { name: 'Apr', sales: 2780, users: 3908, repeatRate: 28 },
+  { name: 'May', sales: 1890, users: 4800, repeatRate: 35 },
+  { name: 'Jun', sales: 2390, users: 3800, repeatRate: 32 },
+];
+const mockPieData = [
+  { name: '0-6 Months', value: 400 },
+  { name: '6-12 Months', value: 300 },
+  { name: '1-2 Years', value: 300 },
+  { name: '2+ Years', value: 200 },
+];
+const PIE_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
+
+const mockRegionData = [
+  { name: 'Galaxy North', sales: 2200 },
+  { name: 'Planet Central', sales: 1800 },
+  { name: 'Star Cluster West', sales: 1500 },
+  { name: 'Nebula South', sales: 1200 },
+];
 
 
 export default function AnalyticsPage() {
@@ -31,14 +40,21 @@ export default function AnalyticsPage() {
             <CardTitle className="flex items-center"><Users className="mr-2 h-5 w-5 text-primary"/> Top Age Groups</CardTitle>
             <CardDescription>Distribution of orders by baby age group.</CardDescription>
           </CardHeader>
-          <CardContent className="h-60 flex items-center justify-center bg-muted/30 rounded-md">
-            <p className="text-muted-foreground">Age group pie chart placeholder</p>
-            {/* <ResponsiveContainer width="100%" height="100%">
+          <CardContent className="h-60 bg-muted/30 rounded-md p-2">
+            <ResponsiveContainer width="100%" height="100%">
               <RePieChart>
-                <Pie data={mockPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="hsl(var(--primary))" label />
-                <Tooltip />
+                <Pie data={mockPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" label>
+                   {mockPieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'hsl(var(--background))', borderRadius: 'var(--radius)', borderColor: 'hsl(var(--border))' }}
+                  itemStyle={{ color: 'hsl(var(--foreground))' }}
+                />
+                <Legend />
               </RePieChart>
-            </ResponsiveContainer> */}
+            </ResponsiveContainer>
           </CardContent>
         </Card>
 
@@ -47,38 +63,43 @@ export default function AnalyticsPage() {
             <CardTitle className="flex items-center"><BarChart className="mr-2 h-5 w-5 text-primary"/> Top Regions</CardTitle>
             <CardDescription>Sales distribution by geographical region.</CardDescription>
           </CardHeader>
-          <CardContent className="h-60 flex items-center justify-center bg-muted/30 rounded-md">
-            <p className="text-muted-foreground">Regional sales bar chart placeholder</p>
-            {/* <ResponsiveContainer width="100%" height="100%">
-              <ReBarChart data={mockChartData.slice(0,3).map(d => ({name: d.name, regions: d.sales/2}))}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="regions" fill="hsl(var(--accent))" />
+          <CardContent className="h-60 bg-muted/30 rounded-md p-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <ReBarChart data={mockRegionData} margin={{ top: 5, right: 0, left: -25, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
+                <XAxis dataKey="name" fontSize={10} interval={0} />
+                <YAxis fontSize={12}/>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'hsl(var(--background))', borderRadius: 'var(--radius)', borderColor: 'hsl(var(--border))' }}
+                  itemStyle={{ color: 'hsl(var(--foreground))' }}
+                  cursor={{fill: 'hsl(var(--muted))'}}
+                />
+                <Bar dataKey="sales" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
               </ReBarChart>
-            </ResponsiveContainer> */}
+            </ResponsiveContainer>
           </CardContent>
         </Card>
         
         <Card className="shadow-card-glow hover:shadow-glow-md transition-shadow">
           <CardHeader>
-            <CardTitle className="flex items-center"><LineChart className="mr-2 h-5 w-5 text-primary"/> Repeat Customers Rate</CardTitle>
-            <CardDescription>Percentage of customers making repeat purchases over time.</CardDescription>
+            <CardTitle className="flex items-center"><LineChartIconLucide className="mr-2 h-5 w-5 text-primary"/> Repeat Customers Rate</CardTitle>
+            <CardDescription>Percentage of customers making repeat purchases.</CardDescription>
           </CardHeader>
-          <CardContent className="h-60 flex items-center justify-center bg-muted/30 rounded-md">
-             <p className="text-muted-foreground">Repeat customer line chart placeholder</p>
-            {/* <ResponsiveContainer width="100%" height="100%">
-              <ReLineChart data={mockChartData.map(d => ({name: d.name, repeatRate: d.users/100}))}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
+          <CardContent className="h-60 bg-muted/30 rounded-md p-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <ReLineChart data={mockChartData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
+                <XAxis dataKey="name" fontSize={12} />
+                <YAxis fontSize={12} unit="%"/>
+                <Tooltip 
+                    contentStyle={{ backgroundColor: 'hsl(var(--background))', borderRadius: 'var(--radius)', borderColor: 'hsl(var(--border))' }}
+                    itemStyle={{ color: 'hsl(var(--foreground))' }}
+                    cursor={{stroke: 'hsl(var(--accent))', strokeWidth: 1}}
+                />
                 <Legend />
-                <Line type="monotone" dataKey="repeatRate" stroke="hsl(var(--primary))" activeDot={{ r: 8 }} />
+                <Line type="monotone" dataKey="repeatRate" stroke="hsl(var(--primary))" strokeWidth={2} activeDot={{ r: 6, fill: 'hsl(var(--primary))', stroke: 'hsl(var(--background))', strokeWidth: 2 }} dot={{r: 4, fill: 'hsl(var(--primary))'}} />
               </ReLineChart>
-            </ResponsiveContainer> */}
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
@@ -120,3 +141,4 @@ export default function AnalyticsPage() {
     </div>
   );
 }
+
