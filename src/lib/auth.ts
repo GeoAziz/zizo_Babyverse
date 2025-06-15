@@ -149,11 +149,9 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/login',
     signOut: '/',
-    error: '/login?error=AuthError' // No trailing comma here
+    error: '/login?error=AuthError' // REMOVED TRAILING COMMA HERE
     // newUser: '/profile/setup' // Optional: if you want to redirect new users to a setup page
-  } // This closes the pages object. No comma after this if secret/debug are commented.
+  }
   // secret: process.env.NEXTAUTH_SECRET, // Already implicitly used by NextAuth, but can be explicit
   // debug: process.env.NODE_ENV === 'development',
-}; // This closes the authOptions object and ends the statement.
-
-    
+};
