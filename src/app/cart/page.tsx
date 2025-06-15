@@ -4,33 +4,46 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Added useRouter
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label'; // Added import
-import { ShoppingCart, Trash2, ArrowRight, PackagePlus, CreditCard, Minus, Plus } from 'lucide-react';
-import { mockProducts } from '@/lib/mockData'; // Using mockProducts to simulate cart items
-import type { Product } from '@/lib/types'; // Assuming Product type exists
+import { Label } from '@/components/ui/label';
+import { ShoppingCart, Trash2, ArrowRight, PackagePlus, CreditCard, Minus, Plus, Loader2 } from 'lucide-react'; // Added Loader2
+import { mockProducts } from '@/lib/mockData';
+import type { Product } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
 interface CartItem extends Product {
   quantity: number;
 }
 
-// Simulate a few items in the cart using mockProducts for now
 const initialCartItems: CartItem[] = mockProducts.slice(0, 2).map((product, index) => ({
   ...product,
-  quantity: index + 1, 
+  quantity: index + 1,
 }));
 
+const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>(initialCartItems);
   const { toast } = useToast();
+  const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    if (localStorage.getItem(MOCK_AUTH_KEY) === 'true') {
+      setIsAuthorized(true);
+    } else {
+      router.push('/login?redirect=/cart');
+    }
+  }, [router]);
 
   const handleQuantityChange = (productId: string, newQuantity: number) => {
-    if (newQuantity < 1) return; // Minimum quantity is 1
+    if (newQuantity < 1) return;
     setCartItems(prevItems =>
       prevItems.map(item =>
         item.id === productId ? { ...item, quantity: newQuantity } : item
@@ -47,12 +60,21 @@ export default function CartPage() {
   };
 
   const cartSubtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-  const shippingCost = cartSubtotal > 0 ? 5.99 : 0; // Example shipping cost
+  const shippingCost = cartSubtotal > 0 ? 5.99 : 0;
   const cartTotal = cartSubtotal + shippingCost;
 
   const handleCheckout = () => {
-    // Placeholder for actual checkout logic
     toast({ title: "Proceeding to Checkout!", description: "Teleporting you to the payment dimension... (not really!)" });
+    router.push('/checkout');
+  }
+
+  if (!isClient || !isAuthorized) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Preparing your cart for hyperjump...</p>
+      </div>
+    );
   }
 
   return (
@@ -121,7 +143,7 @@ export default function CartPage() {
                   </TableBody>
                 </Table>
               </div>
-              
+
               <div className="md:col-span-1 bg-muted/30 p-6 border-l">
                 <h3 className="text-xl font-semibold mb-4 text-primary">Order Summary</h3>
                 <div className="space-y-3">
@@ -145,8 +167,8 @@ export default function CartPage() {
                     <Button variant="outline" className="rounded-l-none border-l-0 border-primary text-primary hover:bg-primary/10">Apply</Button>
                   </div>
                 </div>
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   className="w-full mt-8 bg-accent hover:bg-accent/90 text-accent-foreground shadow-md hover:shadow-glow-sm transition-all duration-300 transform hover:scale-105"
                   onClick={handleCheckout}
                 >
@@ -159,7 +181,7 @@ export default function CartPage() {
               <PackagePlus size={72} className="text-muted-foreground mx-auto mb-6 animate-pulse" />
               <h2 className="text-2xl font-headline font-semibold text-primary mb-3">Your Cart is Empty</h2>
               <p className="text-muted-foreground mb-6">
-                Looks like you haven&apos;t added any cosmic goodies yet. Explore our universe of products!
+                Looks like you haven't added any cosmic goodies yet. Explore our universe of products!
               </p>
               <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 <Link href="/products">

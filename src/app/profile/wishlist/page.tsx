@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star, ArrowLeft, ShoppingCart, Trash2, PackagePlus, Loader2 } from 'lucide-react';
 import type { Product } from '@/lib/types';
-import { mockProducts } from '@/lib/mockData'; 
+import { mockProducts } from '@/lib/mockData';
 import { useToast } from '@/hooks/use-toast';
 
 const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
@@ -27,9 +27,9 @@ export default function WishlistPage() {
     if (localStorage.getItem(MOCK_AUTH_KEY) === 'true') {
       setIsAuthorized(true);
       // In a real app, fetch wishlist items for the logged-in user
-      setWishlistItems(initialWishlistItems); 
+      setWishlistItems(initialWishlistItems);
     } else {
-      router.push('/login');
+      router.push('/login?redirect=/profile/wishlist');
     }
   }, [router]);
 
@@ -41,7 +41,7 @@ export default function WishlistPage() {
       toast({ title: `${itemToRemove.name} removed from wishlist`, variant: "destructive" });
     }
   };
-  
+
   const handleAddToCart = (product: Product) => {
     toast({ title: `${product.name} added to cart!`, description: `(This is a mock action)` });
   }
@@ -50,7 +50,7 @@ export default function WishlistPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Verifying your cosmic credentials...</p>
+        <p className="text-muted-foreground">Polishing your star collection...</p>
       </div>
     );
   }
