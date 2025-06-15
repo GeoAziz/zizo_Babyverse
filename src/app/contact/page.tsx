@@ -7,32 +7,45 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, MessageSquare, Send, MapPin, Phone } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { Mail, MessageSquare, Send, MapPin, Phone, Loader2, AlertCircle } from "lucide-react";
+import { useState, type FormEvent, useEffect, useRef } from "react";
+import { useFormState, useFormStatus } from 'react-dom';
+import { submitContactForm, type ContactFormState } from './actions';
+
+const initialState: ContactFormState = {
+  message: null,
+  errors: undefined,
+  isSuccess: false,
+};
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={pending}>
+      {pending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <MessageSquare className="mr-2 h-5 w-5" />}
+      {pending ? 'Launching...' : 'Launch Message'}
+    </Button>
+  );
+}
 
 export default function ContactPage() {
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: '',
-  });
+  const [state, formAction] = useFormState(submitContactForm, initialState);
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    // Placeholder for submission logic
-    console.log("Contact form submitted:", formData);
-    toast({
-      title: "Message Sent!",
-      description: "Thanks for reaching out. We'll get back to you from our space station soon!",
-    });
-    setFormData({ name: '', email: '', subject: '', message: '' }); // Reset form
-  };
+  useEffect(() => {
+    if (state.isSuccess && state.message) {
+      toast({
+        title: "Message Sent!",
+        description: state.message,
+      });
+      formRef.current?.reset(); // Reset form on success
+    } else if (!state.isSuccess && state.message && state.errors) {
+       // General errors can be displayed or toasted if needed.
+       // Field specific errors are shown below fields.
+       // toast({ title: "Validation Error", description: state.message, variant: "destructive"})
+    }
+  }, [state, toast]);
 
   return (
     <div className="container mx-auto py-12 px-4 space-y-12">
@@ -51,28 +64,44 @@ export default function ContactPage() {
             <CardDescription>Fill out the form below and our team will respond faster than light speed (almost).</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form ref={formRef} action={formAction} className="space-y-6">
+              {state.errors?.general && (
+                <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-2"/>
+                  {state.errors.general.join(', ')}
+                </div>
+              )}
+               {!state.isSuccess && state.message && state.errors && (
+                <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md flex items-center">
+                   <AlertCircle className="h-4 w-4 mr-2"/>
+                   {state.message}
+                </div>
+              )}
+
+
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Your Name</Label>
-                  <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Captain Parent" required />
+                  <Input id="name" name="name" placeholder="Captain Parent" required />
+                  {state.errors?.name && <p className="text-sm text-destructive mt-1">{state.errors.name.join(', ')}</p>}
                 </div>
                 <div>
                   <Label htmlFor="email">Your Email</Label>
-                  <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="parent@starfleet.com" required />
+                  <Input id="email" name="email" type="email" placeholder="parent@starfleet.com" required />
+                  {state.errors?.email && <p className="text-sm text-destructive mt-1">{state.errors.email.join(', ')}</p>}
                 </div>
               </div>
               <div>
                 <Label htmlFor="subject">Subject</Label>
-                <Input id="subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="Question about HyperDiapers" required />
+                <Input id="subject" name="subject" placeholder="Question about HyperDiapers" required />
+                {state.errors?.subject && <p className="text-sm text-destructive mt-1">{state.errors.subject.join(', ')}</p>}
               </div>
               <div>
                 <Label htmlFor="message">Your Message</Label>
-                <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder="Tell us what's on your mind..." rows={5} required />
+                <Textarea id="message" name="message" placeholder="Tell us what's on your mind..." rows={5} required />
+                {state.errors?.message && <p className="text-sm text-destructive mt-1">{state.errors.message.join(', ')}</p>}
               </div>
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                <MessageSquare className="mr-2 h-5 w-5"/> Launch Message
-              </Button>
+              <SubmitButton />
             </form>
           </CardContent>
         </Card>
@@ -104,7 +133,6 @@ export default function ContactPage() {
                 <p className="text-muted-foreground">support@zizosbabyverse.com</p>
               </div>
             </div>
-            {/* Add social media links here if desired */}
           </CardContent>
         </Card>
       </div>
