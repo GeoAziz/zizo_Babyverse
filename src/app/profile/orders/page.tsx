@@ -3,23 +3,33 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ShoppingBag, ArrowLeft, PackageOpen, Eye } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, PackageOpen, Eye, Loader2 } from 'lucide-react';
 import type { Order } from '@/lib/types';
-import { mockOrders } from '@/lib/mockData'; // Using global mock orders
+import { mockOrders } from '@/lib/mockData'; 
 import { format } from 'date-fns';
 
-// Simulate orders for a specific user (e.g., user_1 from mockData)
+const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
 const userSpecificOrders = mockOrders.filter(order => order.userId === 'user_1');
 
 export default function OrderHistoryPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [isClient, setIsClient] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    setOrders(userSpecificOrders);
-  }, []);
+    setIsClient(true);
+    if (localStorage.getItem(MOCK_AUTH_KEY) === 'true') {
+      setIsAuthorized(true);
+      setOrders(userSpecificOrders);
+    } else {
+      router.push('/login');
+    }
+  }, [router]);
 
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
@@ -33,6 +43,15 @@ export default function OrderHistoryPage() {
       default: return 'text-gray-600 bg-gray-100';
     }
   };
+
+  if (!isClient || !isAuthorized) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Verifying your cosmic credentials...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-12 px-4">
@@ -72,7 +91,7 @@ export default function OrderHistoryPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/profile/orders/${order.id}`}> {/* Placeholder for order detail view */}
+                        <Link href={`/profile/orders/${order.id}`}>
                           <Eye className="mr-1 h-4 w-4" /> View Details
                         </Link>
                       </Button>

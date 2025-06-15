@@ -1,17 +1,18 @@
 
 'use client';
 
-import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation'; // Changed from 'next/navigation'
+import { useState, type FormEvent, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowRight, CreditCard, Rocket, ShoppingBag, User, MapPin } from 'lucide-react';
+import { ArrowRight, CreditCard, Rocket, ShoppingBag, User, MapPin, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
-// Mock cart items for summary - in a real app, this would come from a cart context/state
+const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
+
 const mockCartSummary = {
   items: [
     { name: 'Cosmic Comfort Diapers', quantity: 2, price: 29.99 },
@@ -32,12 +33,25 @@ export default function CheckoutPage() {
     city: '',
     postalCode: '',
     country: 'Galaxy Prime',
+    email: '' // Added email
   });
   const [paymentInfo, setPaymentInfo] = useState({
     cardNumber: '',
     expiryDate: '',
     cvv: '',
   });
+
+  const [isClient, setIsClient] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    if (localStorage.getItem(MOCK_AUTH_KEY) === 'true') {
+      setIsAuthorized(true);
+    } else {
+      router.push('/login?redirect=/checkout'); // Add redirect query param
+    }
+  }, [router]);
 
   const handleShippingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setShippingInfo(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -49,10 +63,15 @@ export default function CheckoutPage() {
 
   const handleNextStep = (e?: FormEvent) => {
     e?.preventDefault();
-    // Add validation here if needed for each step
-    if (currentStep === 1) { // Validate shipping
-        if (!shippingInfo.fullName || !shippingInfo.address || !shippingInfo.city || !shippingInfo.postalCode) {
-            toast({title: "Missing Shipping Info", description: "Please fill all shipping details.", variant: "destructive"});
+    if (currentStep === 1) { 
+        if (!shippingInfo.fullName || !shippingInfo.address || !shippingInfo.city || !shippingInfo.postalCode || !shippingInfo.email) {
+            toast({title: "Missing Shipping Info", description: "Please fill all shipping details, including email.", variant: "destructive"});
+            return;
+        }
+    }
+    if (currentStep === 2) {
+        if (!paymentInfo.cardNumber || !paymentInfo.expiryDate || !paymentInfo.cvv) {
+            toast({title: "Missing Payment Info", description: "Please fill all payment details.", variant: "destructive"});
             return;
         }
     }
@@ -61,19 +80,22 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = (e: FormEvent) => {
     e.preventDefault();
-     if (!paymentInfo.cardNumber || !paymentInfo.expiryDate || !paymentInfo.cvv) {
-        toast({title: "Missing Payment Info", description: "Please fill all payment details.", variant: "destructive"});
-        return;
-    }
-    // Mock order placement
     console.log("Order placed with:", { shippingInfo, paymentInfo, cart: mockCartSummary });
     toast({
       title: "Order Placed!",
       description: "Your BabyVerse goodies are preparing for launch! Redirecting to confirmation...",
     });
-    // In a real app, you'd clear the cart and navigate
     router.push('/checkout/confirmation');
   };
+
+  if (!isClient || !isAuthorized) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Verifying your cosmic credentials for checkout...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-12 px-4">
@@ -87,7 +109,6 @@ export default function CheckoutPage() {
         
         <div className="grid md:grid-cols-3">
           <div className="md:col-span-2 p-6 space-y-8">
-            {/* Progress Indicator (Conceptual) */}
             <div className="flex justify-around mb-6">
               <div className={`text-center ${currentStep >= 1 ? 'text-accent font-semibold' : 'text-muted-foreground'}`}>
                 <MapPin className={`mx-auto mb-1 h-6 w-6 ${currentStep >=1 ? 'text-accent' : ''}`}/> Shipping
@@ -108,9 +129,9 @@ export default function CheckoutPage() {
                     <Label htmlFor="fullName">Full Name</Label>
                     <Input id="fullName" name="fullName" value={shippingInfo.fullName} onChange={handleShippingChange} required />
                   </div>
-                   <div> {/* Placeholder for email if needed, or part of user account */}
-                    <Label htmlFor="email-checkout">Email (for updates)</Label>
-                    <Input id="email-checkout" name="email-checkout" type="email" placeholder="you@example.com" required />
+                   <div>
+                    <Label htmlFor="email">Email (for updates)</Label>
+                    <Input id="email" name="email" type="email" value={shippingInfo.email} onChange={handleShippingChange} placeholder="you@example.com" required />
                   </div>
                 </div>
                 <div>
@@ -164,11 +185,11 @@ export default function CheckoutPage() {
             )}
 
             {currentStep === 3 && (
-              <div className="space-y-6">
+              <form onSubmit={handlePlaceOrder} className="space-y-6">
                 <h2 className="text-xl font-semibold text-primary">Review Your Cosmic Order</h2>
                 <div>
                   <h3 className="font-medium text-muted-foreground mb-1">Shipping To:</h3>
-                  <p>{shippingInfo.fullName}</p>
+                  <p>{shippingInfo.fullName} ({shippingInfo.email})</p>
                   <p>{shippingInfo.address}, {shippingInfo.city}, {shippingInfo.postalCode}, {shippingInfo.country}</p>
                 </div>
                  <div>
@@ -178,15 +199,14 @@ export default function CheckoutPage() {
                 <p className="text-sm text-muted-foreground">By clicking "Place Order", you agree to our (conceptual) Terms of Service.</p>
                 <div className="flex flex-col sm:flex-row gap-2">
                     <Button variant="outline" onClick={() => setCurrentStep(2)} className="w-full sm:w-auto">Back to Payment</Button>
-                    <Button onClick={handlePlaceOrder} className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
+                    <Button type="submit" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
                     Place Order & Launch! <Rocket className="ml-2 h-4 w-4" />
                     </Button>
                 </div>
-              </div>
+              </form>
             )}
           </div>
 
-          {/* Order Summary Sidebar */}
           <aside className="md:col-span-1 bg-muted/30 p-6 border-t md:border-t-0 md:border-l">
             <h3 className="text-xl font-semibold mb-4 text-primary">Order Summary</h3>
             <div className="space-y-2 mb-4">

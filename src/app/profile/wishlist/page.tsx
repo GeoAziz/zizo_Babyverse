@@ -4,19 +4,35 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Star, ArrowLeft, ShoppingCart, Trash2, PackagePlus } from 'lucide-react';
+import { Star, ArrowLeft, ShoppingCart, Trash2, PackagePlus, Loader2 } from 'lucide-react';
 import type { Product } from '@/lib/types';
-import { mockProducts } from '@/lib/mockData'; // Using global mock products
+import { mockProducts } from '@/lib/mockData'; 
 import { useToast } from '@/hooks/use-toast';
 
-// Simulate a wishlist by taking a few mock products
+const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
 const initialWishlistItems: Product[] = mockProducts.slice(2, 5);
 
 export default function WishlistPage() {
   const [wishlistItems, setWishlistItems] = useState<Product[]>(initialWishlistItems);
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    setIsClient(true);
+    if (localStorage.getItem(MOCK_AUTH_KEY) === 'true') {
+      setIsAuthorized(true);
+      // In a real app, fetch wishlist items for the logged-in user
+      setWishlistItems(initialWishlistItems); 
+    } else {
+      router.push('/login');
+    }
+  }, [router]);
+
 
   const handleRemoveFromWishlist = (productId: string) => {
     const itemToRemove = wishlistItems.find(item => item.id === productId);
@@ -27,8 +43,16 @@ export default function WishlistPage() {
   };
   
   const handleAddToCart = (product: Product) => {
-    // Mock add to cart
     toast({ title: `${product.name} added to cart!`, description: `(This is a mock action)` });
+  }
+
+  if (!isClient || !isAuthorized) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Verifying your cosmic credentials...</p>
+      </div>
+    );
   }
 
   return (

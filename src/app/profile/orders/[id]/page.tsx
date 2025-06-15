@@ -4,22 +4,42 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Package, CalendarDays, MapPin, CreditCardIcon, Truck, HelpCircle, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Package, CalendarDays, MapPin, CreditCardIcon, Truck, HelpCircle, ShoppingBag, Loader2 } from 'lucide-react';
 import type { Order, OrderItem } from '@/lib/types';
-import { mockOrders } from '@/lib/mockData'; // Using global mock orders
+import { mockOrders } from '@/lib/mockData'; 
 import { format } from 'date-fns';
+
+const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
 
 export default function OrderDetailPage({ params }: { params: { id: string } }) {
   const [order, setOrder] = useState<Order | null>(null);
+  const [isClient, setIsClient] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    // In a real app, you'd fetch this by ID. Here we find it in mock data.
-    const foundOrder = mockOrders.find(o => o.id === params.id);
-    setOrder(foundOrder || null);
-  }, [params.id]);
+    setIsClient(true);
+    if (localStorage.getItem(MOCK_AUTH_KEY) === 'true') {
+      setIsAuthorized(true);
+      const foundOrder = mockOrders.find(o => o.id === params.id);
+      setOrder(foundOrder || null);
+    } else {
+      router.push('/login');
+    }
+  }, [params.id, router]);
+
+  if (!isClient || !isAuthorized) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Verifying your cosmic credentials...</p>
+      </div>
+    );
+  }
 
   if (!order) {
     return (
@@ -75,12 +95,12 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
             {order.items.map((item: OrderItem, index: number) => (
               <div key={index} className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
                 <Image 
-                  src={`https://placehold.co/80x80.png`} // Placeholder, as OrderItem doesn't store image
+                  src={`https://placehold.co/80x80.png`} 
                   alt={item.name} 
                   width={70} 
                   height={70} 
                   className="rounded-md border object-cover"
-                  data-ai-hint="baby product" // Generic hint
+                  data-ai-hint="baby product"
                 />
                 <div className="flex-grow">
                   <p className="font-medium text-primary">{item.name}</p>
@@ -93,7 +113,6 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
              <Separator className="my-6" />
             <div className="text-right space-y-1">
                 <p className="text-muted-foreground">Subtotal: <span className="font-medium text-primary">${(order.totalAmount - (order.trackingNumber ? 5.99 : 0)).toFixed(2)}</span></p> 
-                {/* Crude shipping cost deduction for subtotal example */}
                 <p className="text-muted-foreground">Shipping: <span className="font-medium text-primary">${order.trackingNumber ? '5.99' : '0.00'}</span></p>
                 <p className="text-xl font-bold text-primary">Total: ${order.totalAmount.toFixed(2)}</p>
             </div>

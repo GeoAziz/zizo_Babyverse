@@ -1,14 +1,17 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Edit3, ShoppingBag, Star, KeyRound, LogOut, Baby } from 'lucide-react';
+import { User, Edit3, ShoppingBag, Star, KeyRound, LogOut, Baby, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
 
 // Mock user data
 const mockUser = {
@@ -23,18 +26,47 @@ const mockUser = {
 };
 
 export default function ProfilePage() {
+  const [isClient, setIsClient] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+  
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(mockUser.name);
   const [email, setEmail] = useState(mockUser.email);
-  const { toast } = useToast();
+
+  useEffect(() => {
+    setIsClient(true);
+    if (localStorage.getItem(MOCK_AUTH_KEY) === 'true') {
+      setIsAuthorized(true);
+    } else {
+      router.push('/login');
+    }
+  }, [router]);
 
   const handleSave = () => {
     // Mock save action
-    mockUser.name = name;
+    mockUser.name = name; // In a real app, update backend
     mockUser.email = email;
     setIsEditing(false);
     toast({ title: "Profile Updated", description: "Your cosmic coordinates have been recalibrated!" });
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem(MOCK_AUTH_KEY);
+    window.dispatchEvent(new Event('authChange'));
+    toast({ title: "Logged Out", description: "You've successfully logged out. Come back soon, space explorer!" });
+    router.push('/');
+  };
+
+  if (!isClient || !isAuthorized) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Verifying your cosmic credentials...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-12 px-4">
@@ -49,7 +81,6 @@ export default function ProfilePage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6 space-y-8">
-          {/* Account Information Section */}
           <section>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-primary">Account Information</h2>
@@ -79,7 +110,6 @@ export default function ProfilePage() {
             )}
           </section>
 
-          {/* Baby Profiles Section */}
           <section>
             <h2 className="text-xl font-semibold text-primary mb-4">My Little Stars (Baby Profiles)</h2>
             {mockUser.babyProfiles.length > 0 ? (
@@ -90,7 +120,7 @@ export default function ProfilePage() {
                       <Baby className="h-5 w-5 text-accent mr-3"/>
                       <span>{baby.name} - {baby.ageInMonths} months old</span>
                     </div>
-                    <Button variant="link" size="sm" className="text-accent p-0 h-auto">Edit</Button> {/* Mock edit */}
+                    <Button variant="link" size="sm" className="text-accent p-0 h-auto">Edit</Button>
                   </li>
                 ))}
               </ul>
@@ -102,7 +132,6 @@ export default function ProfilePage() {
             </Button>
           </section>
 
-          {/* Quick Links Section */}
           <section>
             <h2 className="text-xl font-semibold text-primary mb-4">Navigation Deck</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -125,7 +154,7 @@ export default function ProfilePage() {
                 </Link>
               </Button>
               <Button variant="outline" asChild className="justify-start p-4 h-auto text-left hover:border-primary hover:bg-primary/5">
-                 <Link href="#" className="flex items-center"> {/* Placeholder for change password */}
+                 <Link href="#" className="flex items-center">
                   <KeyRound className="mr-3 h-5 w-5 text-primary" />
                    <div>
                     <span className="font-semibold">Change Password</span>
@@ -137,7 +166,7 @@ export default function ProfilePage() {
           </section>
         </CardContent>
         <CardFooter className="border-t p-6">
-            <Button variant="destructive" className="w-full sm:w-auto">
+            <Button variant="destructive" onClick={handleLogout} className="w-full sm:w-auto">
                 <LogOut className="mr-2 h-4 w-4"/> Log Out of BabyVerse
             </Button>
         </CardFooter>

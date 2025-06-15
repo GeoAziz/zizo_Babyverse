@@ -1,18 +1,48 @@
+
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Github, Mail, KeyRound, LogIn } from 'lucide-react'; // Using Github as a placeholder for social login
+import { Github, Mail, KeyRound, LogIn, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { useToast } from '@/hooks/use-toast';
+import { type FormEvent, useState } from 'react';
+
+const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
 
 export default function LoginPage() {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmailField] = useState('');
+  const [password, setPasswordField] = useState('');
+
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Handle login logic here
-    console.log('Login form submitted');
+    setIsLoading(true);
+
+    if (!email || !password) {
+        toast({ title: "Mission Control Alert!", description: "Please enter both email and password to engage hyperdrive.", variant: "destructive"});
+        setIsLoading(false);
+        return;
+    }
+
+    // Simulate API call
+    setTimeout(() => {
+      localStorage.setItem(MOCK_AUTH_KEY, 'true');
+      window.dispatchEvent(new Event('authChange')); // Notify header to update
+      toast({
+        title: 'Login Successful!',
+        description: "Welcome back to BabyVerse, Captain! Prepare for your next adventure.",
+      });
+      router.push('/profile'); // Redirect to profile or dashboard
+      setIsLoading(false);
+    }, 1000);
   };
 
   return (
@@ -43,8 +73,11 @@ export default function LoginPage() {
                   type="email"
                   autoComplete="email"
                   required
+                  value={email}
+                  onChange={(e) => setEmailField(e.target.value)}
                   placeholder="anakin@skywalker.com"
                   className="bg-input/50 border-border focus:border-accent focus:ring-accent"
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -57,8 +90,11 @@ export default function LoginPage() {
                   type="password"
                   autoComplete="current-password"
                   required
+                  value={password}
+                  onChange={(e) => setPasswordField(e.target.value)}
                   placeholder="••••••••"
                   className="bg-input/50 border-border focus:border-accent focus:ring-accent"
+                  disabled={isLoading}
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -72,9 +108,9 @@ export default function LoginPage() {
                 </div>
               </div>
               <div>
-                <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-glow-sm transition-all duration-300 transform hover:scale-105 animate-pulse-glow">
-                  <LogIn className="mr-2 h-5 w-5" />
-                  Secure Login
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-glow-sm transition-all duration-300 transform hover:scale-105 animate-pulse-glow" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
+                  {isLoading ? 'Logging In...' : 'Secure Login'}
                 </Button>
               </div>
             </form>
@@ -87,12 +123,11 @@ export default function LoginPage() {
                   <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
                 </div>
               </div>
-              <div className="mt-6 grid grid-cols-1 gap-3"> {/* Changed to 1 col for simplicity, can be 2 for more social logins */}
-                <Button variant="outline" className="w-full hover:bg-accent/10 hover:border-accent group">
+              <div className="mt-6 grid grid-cols-1 gap-3">
+                <Button variant="outline" className="w-full hover:bg-accent/10 hover:border-accent group" disabled={isLoading}>
                   <Github className="mr-2 h-5 w-5 text-muted-foreground group-hover:text-accent transition-colors" /> 
-                  Sign in with GitHub
+                  Sign in with GitHub (Mock)
                 </Button>
-                 {/* Add more social login buttons here if needed */}
               </div>
             </div>
           </CardContent>

@@ -2,15 +2,39 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, User, LogIn, Star, Bot, Menu, X } from 'lucide-react';
+import { ShoppingCart, User, LogIn, LogOut, Star, Menu, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { useToast } from '@/hooks/use-toast';
+
+const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
 
 export default function Header() {
-  // Placeholder for authentication status - set to true for demo purposes
-  const isLoggedIn = true; 
+  const [loggedIn, setLoggedIn] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const updateAuthState = () => {
+      setLoggedIn(localStorage.getItem(MOCK_AUTH_KEY) === 'true');
+    };
+    updateAuthState(); // Initial check
+    window.addEventListener('authChange', updateAuthState);
+    return () => {
+      window.removeEventListener('authChange', updateAuthState);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem(MOCK_AUTH_KEY);
+    window.dispatchEvent(new Event('authChange')); // Notify other components
+    toast({ title: "Logged Out", description: "You've successfully logged out of BabyVerse." });
+    router.push('/');
+    if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+  };
 
   const navLinks = [
     { href: "/products", label: "Shop" },
@@ -39,7 +63,7 @@ export default function Header() {
               <ShoppingCart className="h-5 w-5" />
             </Link>
           </Button>
-          {isLoggedIn ? (
+          {loggedIn ? (
             <>
               <Button variant="ghost" size="icon" asChild>
                 <Link href="/profile/wishlist" aria-label="Wishlist">
@@ -50,6 +74,9 @@ export default function Header() {
                 <Link href="/profile" aria-label="My Profile">
                   <User className="h-5 w-5" />
                 </Link>
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Logout">
+                <LogOut className="h-5 w-5" />
               </Button>
             </>
           ) : (
@@ -84,7 +111,7 @@ export default function Header() {
                       </Link>
                     </SheetClose>
                   ))}
-                   {isLoggedIn && (
+                   {loggedIn && (
                     <>
                       <SheetClose asChild>
                         <Link href="/profile" className="text-lg hover:text-accent transition-colors py-2 border-b border-border">My Profile</Link>
@@ -95,7 +122,17 @@ export default function Header() {
                        <SheetClose asChild>
                         <Link href="/profile/orders" className="text-lg hover:text-accent transition-colors py-2 border-b border-border">Order History</Link>
                       </SheetClose>
+                      <SheetClose asChild>
+                        <Button variant="ghost" onClick={handleLogout} className="text-lg hover:text-accent transition-colors py-2 border-b border-border w-full justify-start">
+                          Logout
+                        </Button>
+                      </SheetClose>
                     </>
+                  )}
+                  {!loggedIn && (
+                     <SheetClose asChild>
+                        <Link href="/login" className="text-lg hover:text-accent transition-colors py-2 border-b border-border">Login / Signup</Link>
+                      </SheetClose>
                   )}
                 </nav>
               </SheetContent>

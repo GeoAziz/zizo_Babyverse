@@ -1,19 +1,50 @@
+
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserPlus, Mail, KeyRound, Rocket, Baby } from 'lucide-react';
+import { UserPlus, Mail, KeyRound, Rocket, Baby, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { useToast } from '@/hooks/use-toast';
+import { type FormEvent, useState } from 'react';
+
+const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
 
 export default function SignupPage() {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [name, setNameField] = useState('');
+  const [email, setEmailField] = useState('');
+  const [password, setPasswordField] = useState('');
+
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Handle signup logic here
-    console.log('Signup form submitted');
+    setIsLoading(true);
+
+    if (!name || !email || !password) {
+        toast({ title: "Pre-Flight Check Failed!", description: "Ensure all star-navigator fields (Name, Email, Password) are filled.", variant: "destructive"});
+        setIsLoading(false);
+        return;
+    }
+    
+    // Simulate API call
+    setTimeout(() => {
+      localStorage.setItem(MOCK_AUTH_KEY, 'true');
+      window.dispatchEvent(new Event('authChange')); // Notify header to update
+      toast({
+        title: 'Account Launched!',
+        description: "Welcome aboard BabyVerse, new Commander! Your cosmic journey begins now.",
+      });
+      router.push('/profile'); // Redirect to profile or dashboard
+      setIsLoading(false);
+    }, 1000);
   };
 
   return (
@@ -44,8 +75,11 @@ export default function SignupPage() {
                   type="text"
                   autoComplete="name"
                   required
+                  value={name}
+                  onChange={(e) => setNameField(e.target.value)}
                   placeholder="Leia Organa"
                   className="bg-input/50 border-border focus:border-accent focus:ring-accent"
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -58,8 +92,11 @@ export default function SignupPage() {
                   type="email"
                   autoComplete="email"
                   required
+                  value={email}
+                  onChange={(e) => setEmailField(e.target.value)}
                   placeholder="leia@rebellion.org"
                   className="bg-input/50 border-border focus:border-accent focus:ring-accent"
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -72,20 +109,23 @@ export default function SignupPage() {
                   type="password"
                   autoComplete="new-password"
                   required
+                  value={password}
+                  onChange={(e) => setPasswordField(e.target.value)}
                   placeholder="Choose a secure password"
                   className="bg-input/50 border-border focus:border-accent focus:ring-accent"
+                  disabled={isLoading}
                 />
               </div>
               <div className="flex items-center space-x-2 py-2">
-                <Switch id="create-baby-profile" />
+                <Switch id="create-baby-profile" disabled={isLoading} />
                 <Label htmlFor="create-baby-profile" className="text-sm text-muted-foreground font-semibold flex items-center">
                   <Baby className="inline-block mr-2 h-4 w-4 text-accent" /> Create Baby Profile now? (Optional)
                 </Label>
               </div>
               <div>
-                <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-glow-sm transition-all duration-300 transform hover:scale-105 animate-pulse-glow">
-                  <Rocket className="mr-2 h-5 w-5" />
-                  Launch My Account
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-glow-sm transition-all duration-300 transform hover:scale-105 animate-pulse-glow" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Rocket className="mr-2 h-5 w-5" />}
+                  {isLoading ? 'Launching Account...' : 'Launch My Account'}
                 </Button>
               </div>
             </form>
