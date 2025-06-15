@@ -1,0 +1,163 @@
+'use client';
+
+import { useState, type FormEvent } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Bot, Sparkles, Package, Loader2, AlertTriangle, ShoppingCart } from 'lucide-react';
+import { productBundler, type ProductBundlerInput, type ProductBundlerOutput } from '@/ai/flows/product-bundler';
+import type { BabyNeedsForm } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
+
+export default function AiAssistantPage() {
+  const [formData, setFormData] = useState<BabyNeedsForm>({
+    babyName: '',
+    ageInMonths: '',
+    weightInKilograms: '',
+    allergies: '',
+    preferences: '',
+  });
+  const [recommendation, setRecommendation] = useState<ProductBundlerOutput | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setError(null);
+    setRecommendation(null);
+
+    const ageInMonthsNum = parseInt(formData.ageInMonths, 10);
+    const weightInKilogramsNum = parseFloat(formData.weightInKilograms);
+
+    if (isNaN(ageInMonthsNum) || ageInMonthsNum <= 0) {
+      setError('Please enter a valid age in months.');
+      setIsLoading(false);
+      return;
+    }
+    if (isNaN(weightInKilogramsNum) || weightInKilogramsNum <= 0) {
+      setError('Please enter a valid weight in kilograms.');
+      setIsLoading(false);
+      return;
+    }
+
+    const input: ProductBundlerInput = {
+      babyName: formData.babyName,
+      ageInMonths: ageInMonthsNum,
+      weightInKilograms: weightInKilogramsNum,
+      allergies: formData.allergies || 'None',
+      preferences: formData.preferences || 'None',
+    };
+
+    try {
+      const result = await productBundler(input);
+      setRecommendation(result);
+    } catch (e) {
+      console.error('Error fetching recommendations:', e);
+      setError('Zizi encountered a cosmic glitch. Please try again later.');
+      toast({
+        title: "Error",
+        description: "Failed to get recommendations. Please check your input or try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto py-12 px-4">
+      <Card className="max-w-3xl mx-auto bg-card/80 backdrop-blur-md shadow-glow-md border-accent/30">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 p-3 bg-accent/20 rounded-full w-fit animate-pulse-glow">
+            <Bot size={48} className="text-accent" />
+          </div>
+          <CardTitle className="text-3xl font-headline text-primary">Zizi - Your AI Baby Assistant</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Tell Zizi about your little star, and get personalized product bundle recommendations!
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="babyName" className="font-semibold">Baby&apos;s Name</Label>
+                <Input id="babyName" name="babyName" value={formData.babyName} onChange={handleChange} placeholder="e.g., Astro" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ageInMonths" className="font-semibold">Age (in months)</Label>
+                <Input id="ageInMonths" name="ageInMonths" type="number" value={formData.ageInMonths} onChange={handleChange} placeholder="e.g., 6" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="weightInKilograms" className="font-semibold">Weight (in kg)</Label>
+                <Input id="weightInKilograms" name="weightInKilograms" type="number" step="0.1" value={formData.weightInKilograms} onChange={handleChange} placeholder="e.g., 7.5" required />
+              </div>
+               <div className="space-y-2">
+                <Label htmlFor="allergies" className="font-semibold">Allergies (comma-separated)</Label>
+                <Input id="allergies" name="allergies" value={formData.allergies} onChange={handleChange} placeholder="e.g., Dairy, Peanuts" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="preferences" className="font-semibold">Preferences or Specific Needs</Label>
+              <Textarea id="preferences" name="preferences" value={formData.preferences} onChange={handleChange} placeholder="e.g., Prefers soft toys, Organic fabrics only" />
+            </div>
+            <Button type="submit" disabled={isLoading} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-md hover:shadow-glow-sm transition-all duration-300 transform hover:scale-105">
+              {isLoading ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <Sparkles className="mr-2 h-5 w-5" />
+              )}
+              Get Zizi&apos;s Recommendations
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {error && (
+        <Card className="mt-8 bg-destructive/10 border-destructive text-destructive max-w-3xl mx-auto">
+          <CardHeader>
+            <CardTitle className="flex items-center"><AlertTriangle className="mr-2 h-5 w-5" /> Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {recommendation && (
+        <Card className="mt-8 max-w-3xl mx-auto bg-card/80 backdrop-blur-md shadow-glow-md border-primary/30">
+          <CardHeader>
+            <CardTitle className="text-2xl font-headline text-primary flex items-center">
+              <Package className="mr-2 h-6 w-6 text-primary" /> Zizi Recommends for {formData.babyName || 'Your Baby'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-lg font-semibold text-muted-foreground">{recommendation.bundleDescription}</p>
+            <h4 className="text-md font-semibold text-primary">Products in this bundle:</h4>
+            <ul className="list-disc list-inside space-y-2">
+              {recommendation.productNames.map((productName, index) => (
+                <li key={index} className="flex items-center text-muted-foreground">
+                  <Image src={`https://placehold.co/50x50.png`} alt={productName} width={40} height={40} className="rounded mr-3 object-cover" data-ai-hint="baby product"/>
+                  <span>{productName}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+          <CardFooter>
+            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-glow-sm transition-all duration-300 transform hover:scale-105">
+              <ShoppingCart className="mr-2 h-5 w-5" /> Add Bundle to Cart (Coming Soon!)
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+    </div>
+  );
+}
