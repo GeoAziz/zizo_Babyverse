@@ -28,8 +28,12 @@ if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBA
   // By default, the auth emulator runs on http://127.0.0.1:9099
   // The connectAuthEmulator function takes the auth instance and the URL of the emulator.
   // Make sure this URL matches your firebase.json emulator configuration.
-  connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
-  console.log("Firebase Auth Emulator connected.");
+  try {
+    connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+    console.log("Firebase Auth Emulator connected successfully.");
+  } catch (error) {
+    console.error("Failed to connect Firebase Auth Emulator:", error);
+  }
 }
 
 
