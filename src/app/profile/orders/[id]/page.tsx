@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use, useCallback } from 'react'; // Added use and useCallback
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -14,30 +14,27 @@ import { useSession } from 'next-auth/react';
 import { format } from 'date-fns';
 
 interface OrderDetails extends PrismaOrder {
-  items: PrismaOrderItem[]; // Prisma's OrderItem already includes name & price
+  items: PrismaOrderItem[];
 }
 
-export default function OrderDetailPage({ params }: { params: { id: string } }) {
+// Updated prop type for params
+export default function OrderDetailPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(paramsPromise); // Unwrap the Promise
+  const { id: orderId } = resolvedParams; // Destructure id from the resolved params
+
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  useEffect(() => {
-     if (status === 'unauthenticated') {
-      router.push(`/login?callbackUrl=/profile/orders/${params.id}`);
-    } else if (status === 'authenticated' && params.id) {
-      fetchOrder();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, params.id, router]);
+  const fetchOrder = useCallback(async () => {
+    if (!orderId) return; 
 
-  const fetchOrder = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/orders/${params.id}`);
+      const response = await fetch(`/api/orders/${orderId}`); 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to fetch order details.');
@@ -49,8 +46,17 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orderId]); 
 
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      if (orderId) { 
+        router.push(`/login?callbackUrl=/profile/orders/${orderId}`);
+      }
+    } else if (status === 'authenticated' && orderId) {
+      fetchOrder();
+    }
+  }, [status, orderId, router, fetchOrder]); 
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -143,12 +149,12 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
             {order.items.map((item, index) => (
               <div key={item.id || index} className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
                 <Image 
-                  src={item.productId ? `https://placehold.co/80x80.png` : 'https://placehold.co/80x80.png'} // TODO: Fetch actual product image if productId exists
+                  src={'https://placehold.co/80x80.png'} 
                   alt={item.name} 
                   width={70} 
                   height={70} 
                   className="rounded-md border object-cover"
-                  data-ai-hint="baby product" // Generic hint
+                  data-ai-hint="baby product"
                 />
                 <div className="flex-grow">
                   <p className="font-medium text-primary">{item.name}</p>
