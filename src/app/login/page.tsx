@@ -2,47 +2,78 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Github, Mail, KeyRound, LogIn, Loader2 } from 'lucide-react';
+import { Github, Mail, KeyRound, LogIn, Loader2, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
-import { type FormEvent, useState } from 'react';
-
-const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
+import { type FormEvent, useState, useEffect } from 'react';
+import { signIn } from 'next-auth/react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmailField] = useState('');
   const [password, setPasswordField] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const authError = searchParams.get('error');
+    if (authError) {
+      if (authError === 'CredentialsSignin') {
+        setError("Invalid email or password. Please try again.");
+      } else if (authError === 'AuthError' || authError === 'true') { // 'true' from spec
+         setError("Authentication failed. Please check your credentials.");
+      } else if (authError === 'Unauthorized') {
+        setError("You are not authorized to access that page. Please log in.");
+      } else {
+        setError("An unknown authentication error occurred.");
+      }
+      // Clear the error from URL so it doesn't persist on refresh
+      router.replace('/login', undefined);
+    }
+  }, [searchParams, router]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
+    setError(null);
 
     if (!email || !password) {
-        toast({ title: "Mission Control Alert!", description: "Please enter both email and password to engage hyperdrive.", variant: "destructive"});
+        toast({ title: "Mission Control Alert!", description: "Please enter both email and password.", variant: "destructive"});
         setIsLoading(false);
         return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      localStorage.setItem(MOCK_AUTH_KEY, 'true');
-      window.dispatchEvent(new Event('authChange')); // Notify header to update
+    const result = await signIn('credentials', {
+      redirect: false, // We handle redirect manually
+      email: email,
+      password: password,
+    });
+
+    setIsLoading(false);
+
+    if (result?.ok && !result.error) {
       toast({
         title: 'Login Successful!',
-        description: "Welcome back to BabyVerse, Captain! Prepare for your next adventure.",
+        description: "Welcome back to BabyVerse, Captain!",
       });
-      router.push('/profile'); // Redirect to profile or dashboard
-      setIsLoading(false);
-    }, 1000);
+      // Redirect to intended page or profile
+      const callbackUrl = searchParams.get('callbackUrl') || '/profile';
+      router.push(callbackUrl);
+    } else {
+      setError(result?.error === "CredentialsSignin" ? "Invalid email or password." : "Login failed. Please try again.");
+      toast({
+        title: 'Login Failed',
+        description: result?.error === "CredentialsSignin" ? "Invalid email or password. Please try again." : "An error occurred during login.",
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -62,6 +93,12 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <div className="mb-4 p-3 bg-destructive/10 text-destructive text-sm rounded-md flex items-center">
+                <AlertCircle className="h-5 w-5 mr-2" />
+                {error}
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-muted-foreground font-semibold">
@@ -124,9 +161,9 @@ export default function LoginPage() {
                 </div>
               </div>
               <div className="mt-6 grid grid-cols-1 gap-3">
-                <Button variant="outline" className="w-full hover:bg-accent/10 hover:border-accent group" disabled={isLoading}>
+                <Button variant="outline" className="w-full hover:bg-accent/10 hover:border-accent group" disabled={isLoading} onClick={() => signIn('github')}>
                   <Github className="mr-2 h-5 w-5 text-muted-foreground group-hover:text-accent transition-colors" /> 
-                  Sign in with GitHub (Mock)
+                  Sign in with GitHub (Mock/Setup if provider added)
                 </Button>
               </div>
             </div>

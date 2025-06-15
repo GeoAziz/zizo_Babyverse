@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, type FormEvent, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,9 +10,9 @@ import { Label } from '@/components/ui/label';
 import { ArrowRight, CreditCard, Rocket, ShoppingBag, User, MapPin, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
-const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
-
+// Mock cart summary for display. In a real app, this would come from cart state/API.
 const mockCartSummary = {
   items: [
     { name: 'Cosmic Comfort Diapers', quantity: 2, price: 29.99 },
@@ -26,32 +26,34 @@ const mockCartSummary = {
 export default function CheckoutPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
+
   const [currentStep, setCurrentStep] = useState(1);
   const [shippingInfo, setShippingInfo] = useState({
     fullName: '',
     address: '',
     city: '',
     postalCode: '',
-    country: 'Galaxy Prime',
-    email: '' // Added email
+    country: 'Galaxy Prime', // Default or from user profile
+    email: '' 
   });
-  const [paymentInfo, setPaymentInfo] = useState({
+  const [paymentInfo, setPaymentInfo] = useState({ // All mock payment info
     cardNumber: '',
     expiryDate: '',
     cvv: '',
   });
-
-  const [isClient, setIsClient] = useState(false);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
-    if (localStorage.getItem(MOCK_AUTH_KEY) === 'true') {
-      setIsAuthorized(true);
-    } else {
-      router.push('/login?redirect=/checkout'); // Add redirect query param
+    if (status === 'unauthenticated') {
+      const callbackUrl = searchParams.get('callbackUrl') || '/checkout';
+      router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+    } else if (status === 'authenticated' && session?.user) {
+      // Pre-fill email from session if available
+      setShippingInfo(prev => ({ ...prev, email: session.user?.email || '' , fullName: session.user?.name || ''}));
     }
-  }, [router]);
+  }, [status, session, router, searchParams]);
 
   const handleShippingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setShippingInfo(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -69,26 +71,63 @@ export default function CheckoutPage() {
             return;
         }
     }
-    if (currentStep === 2) {
+    if (currentStep === 2) { // Mock payment validation
         if (!paymentInfo.cardNumber || !paymentInfo.expiryDate || !paymentInfo.cvv) {
-            toast({title: "Missing Payment Info", description: "Please fill all payment details.", variant: "destructive"});
+            toast({title: "Missing Payment Info", description: "Please fill all mock payment details.", variant: "destructive"});
             return;
         }
     }
     setCurrentStep(prev => prev + 1);
   };
 
-  const handlePlaceOrder = (e: FormEvent) => {
+  const handlePlaceOrder = async (e: FormEvent) => {
     e.preventDefault();
-    console.log("Order placed with:", { shippingInfo, paymentInfo, cart: mockCartSummary });
-    toast({
-      title: "Order Placed!",
-      description: "Your BabyVerse goodies are preparing for launch! Redirecting to confirmation...",
-    });
-    router.push('/checkout/confirmation');
+    setIsPlacingOrder(true);
+    
+    // In a real app, you would construct the order payload:
+    // const orderPayload = {
+    //   userId: session.user.id, // if using NextAuth and session has user ID
+    //   items: mockCartSummary.items.map(item => ({ productId: 'mockProductId', name: item.name, quantity: item.quantity, price: item.price })), // Map cart items
+    //   totalAmount: mockCartSummary.total,
+    //   shippingAddress: shippingInfo,
+    //   paymentMethod: 'Mock Card', // e.g., 'Stripe Card'
+    //   // ... other details
+    // };
+
+    // try {
+    //   const response = await fetch('/api/orders', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify(orderPayload),
+    //   });
+    //   if (!response.ok) {
+    //     const errorData = await response.json();
+    //     throw new Error(errorData.message || "Failed to place order");
+    //   }
+    //   const createdOrder = await response.json();
+      toast({
+        title: "Order Placed (Mock)!",
+        description: "Your BabyVerse goodies are preparing for launch! Redirecting to confirmation...",
+      });
+      router.push('/checkout/confirmation'); // Redirect to a unique confirmation page: router.push(`/checkout/confirmation?orderId=${createdOrder.id}`);
+    // } catch (error: any) {
+    //   toast({ title: "Order Error", description: error.message || "Could not place order.", variant: "destructive" });
+    // } finally {
+    //   setIsPlacingOrder(false);
+    // }
+    
+    // Mocking successful order placement for now
+    setTimeout(() => {
+        toast({
+            title: "Order Placed!",
+            description: "Your BabyVerse goodies are preparing for launch! Redirecting to confirmation...",
+        });
+        router.push('/checkout/confirmation');
+        setIsPlacingOrder(false);
+    }, 1500);
   };
 
-  if (!isClient || !isAuthorized) {
+  if (status === 'loading' || status === 'unauthenticated') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
@@ -163,16 +202,16 @@ export default function CheckoutPage() {
                 <h2 className="text-xl font-semibold text-primary">Payment Details (Mock)</h2>
                 <div>
                   <Label htmlFor="cardNumber">Card Number</Label>
-                  <Input id="cardNumber" name="cardNumber" value={paymentInfo.cardNumber} onChange={handlePaymentChange} placeholder="**** **** **** 1234" required />
+                  <Input id="cardNumber" name="cardNumber" value={paymentInfo.cardNumber} onChange={handlePaymentChange} placeholder="**** **** **** 1234 (mock)" required />
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="expiryDate">Expiry Date (MM/YY)</Label>
-                    <Input id="expiryDate" name="expiryDate" value={paymentInfo.expiryDate} onChange={handlePaymentChange} placeholder="MM/YY" required />
+                    <Input id="expiryDate" name="expiryDate" value={paymentInfo.expiryDate} onChange={handlePaymentChange} placeholder="MM/YY (mock)" required />
                   </div>
                   <div>
                     <Label htmlFor="cvv">CVV</Label>
-                    <Input id="cvv" name="cvv" value={paymentInfo.cvv} onChange={handlePaymentChange} placeholder="123" required />
+                    <Input id="cvv" name="cvv" value={paymentInfo.cvv} onChange={handlePaymentChange} placeholder="123 (mock)" required />
                   </div>
                 </div>
                  <div className="flex flex-col sm:flex-row gap-2">
@@ -194,13 +233,14 @@ export default function CheckoutPage() {
                 </div>
                  <div>
                   <h3 className="font-medium text-muted-foreground mb-1">Payment Method:</h3>
-                  <p>Card ending in •••• {paymentInfo.cardNumber.slice(-4)}</p>
+                  <p>Card ending in •••• {paymentInfo.cardNumber.slice(-4)} (Mock)</p>
                 </div>
                 <p className="text-sm text-muted-foreground">By clicking "Place Order", you agree to our (conceptual) Terms of Service.</p>
                 <div className="flex flex-col sm:flex-row gap-2">
-                    <Button variant="outline" onClick={() => setCurrentStep(2)} className="w-full sm:w-auto">Back to Payment</Button>
-                    <Button type="submit" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
-                    Place Order & Launch! <Rocket className="ml-2 h-4 w-4" />
+                    <Button variant="outline" onClick={() => setCurrentStep(2)} className="w-full sm:w-auto" disabled={isPlacingOrder}>Back to Payment</Button>
+                    <Button type="submit" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isPlacingOrder}>
+                      {isPlacingOrder ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Rocket className="ml-2 h-4 w-4" />}
+                      {isPlacingOrder ? 'Launching Order...' : 'Place Order & Launch!'}
                     </Button>
                 </div>
               </form>

@@ -4,43 +4,45 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // Added useRouter
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShoppingCart, Trash2, ArrowRight, PackagePlus, CreditCard, Minus, Plus, Loader2 } from 'lucide-react'; // Added Loader2
-import { mockProducts } from '@/lib/mockData';
+import { ShoppingCart, Trash2, ArrowRight, PackagePlus, CreditCard, Minus, Plus, Loader2 } from 'lucide-react';
+import { mockProducts } from '@/lib/mockData'; // Keep for mock cart items if needed temporarily
 import type { Product } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useSession } from 'next-auth/react';
 
 interface CartItem extends Product {
   quantity: number;
 }
 
+// Example: In a real app, cart might be fetched from backend or persisted in localStorage linked to user
 const initialCartItems: CartItem[] = mockProducts.slice(0, 2).map((product, index) => ({
   ...product,
   quantity: index + 1,
 }));
 
-const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState<CartItem[]>(initialCartItems);
+  const [cartItems, setCartItems] = useState<CartItem[]>(initialCartItems); // Keep mock items for now
   const { toast } = useToast();
   const router = useRouter();
-  const [isClient, setIsClient] = useState(false);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
+
 
   useEffect(() => {
-    setIsClient(true);
-    if (localStorage.getItem(MOCK_AUTH_KEY) === 'true') {
-      setIsAuthorized(true);
-    } else {
-      router.push('/login?redirect=/cart');
+    if (status === 'unauthenticated') {
+      const callbackUrl = searchParams.get('callbackUrl') || '/cart';
+      router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
     }
-  }, [router]);
+    // If status is 'authenticated', cart can be loaded/managed
+    // For now, we continue with mock cart items
+  }, [status, router, searchParams]);
 
   const handleQuantityChange = (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
@@ -60,15 +62,16 @@ export default function CartPage() {
   };
 
   const cartSubtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-  const shippingCost = cartSubtotal > 0 ? 5.99 : 0;
+  const shippingCost = cartSubtotal > 0 ? 5.99 : 0; // Mock shipping
   const cartTotal = cartSubtotal + shippingCost;
 
   const handleCheckout = () => {
-    toast({ title: "Proceeding to Checkout!", description: "Teleporting you to the payment dimension... (not really!)" });
+    // In a real app, this would likely save the cart to backend before redirecting
+    toast({ title: "Proceeding to Checkout!", description: "Teleporting you to the payment dimension..." });
     router.push('/checkout');
   }
 
-  if (!isClient || !isAuthorized) {
+  if (status === 'loading' || status === 'unauthenticated') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
@@ -171,6 +174,7 @@ export default function CartPage() {
                   size="lg"
                   className="w-full mt-8 bg-accent hover:bg-accent/90 text-accent-foreground shadow-md hover:shadow-glow-sm transition-all duration-300 transform hover:scale-105"
                   onClick={handleCheckout}
+                  disabled={cartItems.length === 0}
                 >
                   <CreditCard className="mr-2 h-5 w-5" /> Proceed to Checkout
                 </Button>

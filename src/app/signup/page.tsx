@@ -2,31 +2,33 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserPlus, Mail, KeyRound, Rocket, Baby, Loader2 } from 'lucide-react';
+import { UserPlus, Mail, KeyRound, Rocket, Baby, Loader2, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { type FormEvent, useState } from 'react';
-
-const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
+import { signIn } from 'next-auth/react';
 
 export default function SignupPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [name, setNameField] = useState('');
   const [email, setEmailField] = useState('');
   const [password, setPasswordField] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  // const [createBabyProfile, setCreateBabyProfile] = useState(false);
 
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
+    setError(null);
 
     if (!name || !email || !password) {
         toast({ title: "Pre-Flight Check Failed!", description: "Ensure all star-navigator fields (Name, Email, Password) are filled.", variant: "destructive"});
@@ -34,17 +36,49 @@ export default function SignupPage() {
         return;
     }
     
-    // Simulate API call
-    setTimeout(() => {
-      localStorage.setItem(MOCK_AUTH_KEY, 'true');
-      window.dispatchEvent(new Event('authChange')); // Notify header to update
-      toast({
-        title: 'Account Launched!',
-        description: "Welcome aboard BabyVerse, new Commander! Your cosmic journey begins now.",
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
       });
-      router.push('/profile'); // Redirect to profile or dashboard
+
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.message || "Registration failed. Please try again.");
+        toast({ title: "Registration Failed", description: data.message || "Could not create account.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+      }
+
+      // Automatically sign in after successful registration
+      const signInResult = await signIn('credentials', {
+        redirect: false,
+        email: email,
+        password: password,
+      });
+
       setIsLoading(false);
-    }, 1000);
+
+      if (signInResult?.ok && !signInResult.error) {
+        toast({
+          title: 'Account Launched!',
+          description: "Welcome aboard BabyVerse, new Commander! Your cosmic journey begins now.",
+        });
+         const callbackUrl = searchParams.get('callbackUrl') || '/profile';
+         router.push(callbackUrl);
+      } else {
+        setError(signInResult?.error || "Registration successful, but auto-login failed. Please try logging in manually.");
+        toast({ title: "Login after signup failed", description: signInResult?.error || "Please login manually.", variant: "destructive"});
+        router.push('/login'); // Redirect to login page if auto-signin fails
+      }
+
+    } catch (err) {
+      setIsLoading(false);
+      console.error("Signup fetch error:", err);
+      setError("An unexpected error occurred during registration.");
+      toast({ title: "Error", description: "An unexpected error occurred.", variant: "destructive" });
+    }
   };
 
   return (
@@ -64,6 +98,12 @@ export default function SignupPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+                <div className="mb-4 p-3 bg-destructive/10 text-destructive text-sm rounded-md flex items-center">
+                    <AlertCircle className="h-5 w-5 mr-2" />
+                    {error}
+                </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-muted-foreground font-semibold">
@@ -109,9 +149,10 @@ export default function SignupPage() {
                   type="password"
                   autoComplete="new-password"
                   required
+                  minLength={6}
                   value={password}
                   onChange={(e) => setPasswordField(e.target.value)}
-                  placeholder="Choose a secure password"
+                  placeholder="Choose a secure password (min 6 chars)"
                   className="bg-input/50 border-border focus:border-accent focus:ring-accent"
                   disabled={isLoading}
                 />

@@ -4,37 +4,38 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star, ArrowLeft, ShoppingCart, Trash2, PackagePlus, Loader2 } from 'lucide-react';
 import type { Product } from '@/lib/types';
-import { mockProducts } from '@/lib/mockData';
+import { mockProducts } from '@/lib/mockData'; // Keep for mock items
 import { useToast } from '@/hooks/use-toast';
+import { useSession } from 'next-auth/react';
 
-const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
-const initialWishlistItems: Product[] = mockProducts.slice(2, 5);
+const initialWishlistItems: Product[] = mockProducts.slice(2, 5); // Mock data
 
 export default function WishlistPage() {
-  const [wishlistItems, setWishlistItems] = useState<Product[]>(initialWishlistItems);
+  const [wishlistItems, setWishlistItems] = useState<Product[]>(initialWishlistItems); // Mock items for now
   const { toast } = useToast();
-  const [isClient, setIsClient] = useState(false);
-  const [isAuthorized, setIsAuthorized] = useState(false);
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    setIsClient(true);
-    if (localStorage.getItem(MOCK_AUTH_KEY) === 'true') {
-      setIsAuthorized(true);
-      // In a real app, fetch wishlist items for the logged-in user
-      setWishlistItems(initialWishlistItems);
-    } else {
-      router.push('/login?redirect=/profile/wishlist');
+    if (status === 'unauthenticated') {
+      const callbackUrl = searchParams.get('callbackUrl') || '/profile/wishlist';
+      router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+    } else if (status === 'authenticated') {
+      // In a real app, fetch wishlist items for session.user.id from API
+      // e.g., fetch(`/api/wishlist/${session.user.id}`).then(...)
+      setWishlistItems(initialWishlistItems); // Using mock for now
     }
-  }, [router]);
+  }, [status, router, searchParams, session]);
 
 
   const handleRemoveFromWishlist = (productId: string) => {
+    // Mock removal. In real app, call API: DELETE /api/wishlist/${productId}
     const itemToRemove = wishlistItems.find(item => item.id === productId);
     setWishlistItems(prevItems => prevItems.filter(item => item.id !== productId));
     if (itemToRemove) {
@@ -43,10 +44,11 @@ export default function WishlistPage() {
   };
 
   const handleAddToCart = (product: Product) => {
+    // Mock add to cart. In real app, call API or cart context method
     toast({ title: `${product.name} added to cart!`, description: `(This is a mock action)` });
   }
 
-  if (!isClient || !isAuthorized) {
+  if (status === 'loading' || status === 'unauthenticated') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />

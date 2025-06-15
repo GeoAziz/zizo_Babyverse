@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, type FormEvent } from 'react';
@@ -7,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bot, Sparkles, Package, Loader2, AlertTriangle, ShoppingCart } from 'lucide-react';
-import { productBundler, type ProductBundlerInput, type ProductBundlerOutput } from '@/ai/flows/product-bundler';
+// import { productBundler, type ProductBundlerInput, type ProductBundlerOutput } from '@/ai/flows/product-bundler'; // No longer direct import
+import type { ProductBundlerOutput } from '@/ai/flows/product-bundler'; // Keep type
 import type { BabyNeedsForm } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
@@ -49,7 +51,7 @@ export default function AiAssistantPage() {
       return;
     }
 
-    const input: ProductBundlerInput = {
+    const apiInput = {
       babyName: formData.babyName,
       ageInMonths: ageInMonthsNum,
       weightInKilograms: weightInKilogramsNum,
@@ -58,14 +60,25 @@ export default function AiAssistantPage() {
     };
 
     try {
-      const result = await productBundler(input);
+      const response = await fetch('/api/ai/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(apiInput),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to get recommendations from API');
+      }
+
+      const result: ProductBundlerOutput = await response.json();
       setRecommendation(result);
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error fetching recommendations:', e);
-      setError('Zizi encountered a cosmic glitch. Please try again later.');
+      setError(e.message || 'Zizi encountered a cosmic glitch. Please try again later.');
       toast({
         title: "Error",
-        description: "Failed to get recommendations. Please check your input or try again.",
+        description: e.message || "Failed to get recommendations. Please check your input or try again.",
         variant: "destructive",
       });
     } finally {

@@ -10,56 +10,54 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { User, Edit3, ShoppingBag, Star, KeyRound, LogOut, Baby, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSession, signOut } from 'next-auth/react';
+import type { User as PrismaUser } from '@prisma/client'; // Assuming Role is part of PrismaUser
 
-const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
-
-// Mock user data
-const mockUser = {
-  id: 'user_123_galaxy',
-  name: 'Lana Astranova',
-  email: 'lana.astranova@babyverse.com',
-  joinDate: 'Stardate 77432.3',
-  babyProfiles: [
-    { id: 'baby_01', name: 'Orion', ageInMonths: 8 },
-    { id: 'baby_02', name: 'Nova', ageInMonths: 32 },
-  ]
-};
+interface BabyProfile { // Simplified for mock
+  id: string;
+  name: string;
+  ageInMonths: number;
+}
 
 export default function ProfilePage() {
-  const [isClient, setIsClient] = useState(false);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const { data: session, status } = useSession();
   const router = useRouter();
   const { toast } = useToast();
   
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(mockUser.name);
-  const [email, setEmail] = useState(mockUser.email);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  // Mock baby profiles for now, would come from API
+  const [babyProfiles, setBabyProfiles] = useState<BabyProfile[]>([
+    { id: 'baby_01', name: 'Orion', ageInMonths: 8 },
+    { id: 'baby_02', name: 'Nova', ageInMonths: 32 },
+  ]);
 
   useEffect(() => {
-    setIsClient(true);
-    if (localStorage.getItem(MOCK_AUTH_KEY) === 'true') {
-      setIsAuthorized(true);
-    } else {
+    if (status === 'authenticated' && session?.user) {
+      setName(session.user.name || '');
+      setEmail(session.user.email || '');
+      // In a real app, fetch baby profiles here associated with session.user.id
+    } else if (status === 'unauthenticated') {
       router.push('/login');
     }
-  }, [router]);
+  }, [session, status, router]);
 
-  const handleSave = () => {
-    // Mock save action
-    mockUser.name = name; // In a real app, update backend
-    mockUser.email = email;
+  const handleSave = async () => {
     setIsEditing(false);
-    toast({ title: "Profile Updated", description: "Your cosmic coordinates have been recalibrated!" });
+    // In a real app, POST/PUT to an API endpoint to update user details
+    // For example: await fetch('/api/user/profile', { method: 'PUT', body: JSON.stringify({ name, email }) });
+    // Then, potentially update the session if NextAuth allows it, or refetch.
+    toast({ title: "Profile Updated (Mock)", description: "Your cosmic coordinates have been recalibrated!" });
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem(MOCK_AUTH_KEY);
-    window.dispatchEvent(new Event('authChange'));
+  const handleLogout = async () => {
+    await signOut({ redirect: false, callbackUrl: '/' });
     toast({ title: "Logged Out", description: "You've successfully logged out. Come back soon, space explorer!" });
     router.push('/');
   };
 
-  if (!isClient || !isAuthorized) {
+  if (status === 'loading') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
@@ -67,6 +65,15 @@ export default function ProfilePage() {
       </div>
     );
   }
+
+  if (!session) { // Should be caught by middleware, but as a fallback
+    return (
+         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+            <p className="text-muted-foreground">Redirecting to login...</p>
+        </div>
+    );
+  }
+
 
   return (
     <div className="container mx-auto py-12 px-4">
@@ -78,6 +85,7 @@ export default function ProfilePage() {
           <CardTitle className="text-3xl font-headline text-primary">My BabyVerse Profile</CardTitle>
           <CardDescription className="text-muted-foreground">
             Manage your account details and preferences for your intergalactic parenting journey.
+            User Role: {(session.user as any)?.role}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6 space-y-8">
@@ -96,7 +104,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled/>
                 </div>
                 <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90">Save Changes</Button>
                 <Button variant="outline" onClick={() => setIsEditing(false)} className="ml-2">Cancel</Button>
@@ -105,22 +113,22 @@ export default function ProfilePage() {
               <div className="space-y-3 text-muted-foreground">
                 <p><strong>Name:</strong> {name}</p>
                 <p><strong>Email:</strong> {email}</p>
-                <p><strong>Joined BabyVerse:</strong> {mockUser.joinDate}</p>
+                {/* <p><strong>Joined BabyVerse:</strong> {session.user.createdAt ? new Date(session.user.createdAt).toLocaleDateString() : 'N/A'}</p> */}
               </div>
             )}
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-primary mb-4">My Little Stars (Baby Profiles)</h2>
-            {mockUser.babyProfiles.length > 0 ? (
+            {babyProfiles.length > 0 ? (
               <ul className="space-y-3">
-                {mockUser.babyProfiles.map(baby => (
+                {babyProfiles.map(baby => (
                   <li key={baby.id} className="p-3 bg-muted/50 rounded-md flex justify-between items-center">
                     <div className="flex items-center">
                       <Baby className="h-5 w-5 text-accent mr-3"/>
                       <span>{baby.name} - {baby.ageInMonths} months old</span>
                     </div>
-                    <Button variant="link" size="sm" className="text-accent p-0 h-auto">Edit</Button>
+                    <Button variant="link" size="sm" className="text-accent p-0 h-auto">Edit (Mock)</Button>
                   </li>
                 ))}
               </ul>
@@ -154,7 +162,7 @@ export default function ProfilePage() {
                 </Link>
               </Button>
               <Button variant="outline" asChild className="justify-start p-4 h-auto text-left hover:border-primary hover:bg-primary/5">
-                 <Link href="#" className="flex items-center">
+                 <Link href="#" className="flex items-center"> {/* Placeholder for change password */}
                   <KeyRound className="mr-3 h-5 w-5 text-primary" />
                    <div>
                     <span className="font-semibold">Change Password</span>

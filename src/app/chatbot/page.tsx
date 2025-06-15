@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bot, Sparkles, User, Loader2, SendHorizonal, AlertTriangle } from 'lucide-react';
-import { babyverseChatbot, type BabyverseChatbotInput, type BabyverseChatbotOutput } from '@/ai/flows/babyverse-chatbot';
+// import { babyverseChatbot, type BabyverseChatbotInput, type BabyverseChatbotOutput } from '@/ai/flows/babyverse-chatbot'; // No longer direct import
+import type { BabyverseChatbotInput, BabyverseChatbotOutput } from '@/ai/flows/babyverse-chatbot'; // Keep types
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 
@@ -23,7 +24,6 @@ export default function ChatbotPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Mock baby info - in a real app, this would come from user profile or a form
   const [mockBabyContext] = useState<Partial<BabyverseChatbotInput>>({
     babyName: 'Orion',
     babyAgeMonths: 8,
@@ -54,15 +54,27 @@ export default function ChatbotPage() {
     
     setIsLoading(true);
     setError(null);
-    const currentInput = userInput; // Capture current input before clearing
+    const currentInputText = userInput; // Capture current input before clearing
     setUserInput('');
 
     try {
-      const input: BabyverseChatbotInput = {
-        question: currentInput,
-        ...mockBabyContext, // Add mock baby context
+      const apiInput: BabyverseChatbotInput = {
+        question: currentInputText,
+        ...mockBabyContext,
       };
-      const result: BabyverseChatbotOutput = await babyverseChatbot(input);
+
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(apiInput),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to get response from Zizi API');
+      }
+      
+      const result: BabyverseChatbotOutput = await response.json();
       
       const ziziResponse: ChatMessage = {
         id: `zizi-${Date.now()}`,
@@ -71,9 +83,9 @@ export default function ChatbotPage() {
       };
       setMessages(prev => [...prev, ziziResponse]);
 
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error with Zizi:', e);
-      const errorMsg = 'Zizi seems to be on a coffee break in another galaxy. Please try again later.';
+      const errorMsg = e.message || 'Zizi seems to be on a coffee break in another galaxy. Please try again later.';
       setError(errorMsg);
       setMessages(prev => [...prev, { id: `error-${Date.now()}`, sender: 'zizi', text: errorMsg }]);
       toast({
@@ -148,7 +160,7 @@ export default function ChatbotPage() {
           </form>
         </CardFooter>
       </Card>
-       {error && !isLoading && ( // Show persistent error message if not loading
+       {error && !isLoading && ( 
         <div className="mt-4 p-3 bg-destructive/10 border border-destructive text-destructive rounded-md flex items-center">
           <AlertTriangle className="h-5 w-5 mr-2"/>
           <p className="text-sm">{error}</p>
@@ -157,4 +169,3 @@ export default function ChatbotPage() {
     </div>
   );
 }
-

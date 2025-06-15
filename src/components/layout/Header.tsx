@@ -2,38 +2,28 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession, signIn, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, User, LogIn, LogOut, Star, Menu, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
 
-const MOCK_AUTH_KEY = 'isBabyVerseMockLoggedIn';
-
 export default function Header() {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const { data: session, status } = useSession();
+  const loggedIn = status === 'authenticated';
+  const isLoading = status === 'loading';
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const updateAuthState = () => {
-      setLoggedIn(localStorage.getItem(MOCK_AUTH_KEY) === 'true');
-    };
-    updateAuthState(); // Initial check
-    window.addEventListener('authChange', updateAuthState);
-    return () => {
-      window.removeEventListener('authChange', updateAuthState);
-    };
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem(MOCK_AUTH_KEY);
-    window.dispatchEvent(new Event('authChange')); // Notify other components
+  const handleLogout = async () => {
+    await signOut({ redirect: false, callbackUrl: '/' });
     toast({ title: "Logged Out", description: "You've successfully logged out of BabyVerse." });
-    router.push('/');
     if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+    router.push('/'); // Ensure redirection to home
   };
 
   const navLinks = [
@@ -63,7 +53,9 @@ export default function Header() {
               <ShoppingCart className="h-5 w-5" />
             </Link>
           </Button>
-          {loggedIn ? (
+          {isLoading ? (
+            <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-primary"></div>
+          ) : loggedIn ? (
             <>
               <Button variant="ghost" size="icon" asChild>
                 <Link href="/profile/wishlist" aria-label="Wishlist">
@@ -80,10 +72,8 @@ export default function Header() {
               </Button>
             </>
           ) : (
-            <Button variant="outline" asChild>
-              <Link href="/login">
+            <Button variant="outline" onClick={() => signIn()} asChild={false}>
                 <LogIn className="mr-2 h-4 w-4" /> Login
-              </Link>
             </Button>
           )}
           <div className="md:hidden">
@@ -129,9 +119,9 @@ export default function Header() {
                       </SheetClose>
                     </>
                   )}
-                  {!loggedIn && (
+                  {!loggedIn && !isLoading && (
                      <SheetClose asChild>
-                        <Link href="/login" className="text-lg hover:text-accent transition-colors py-2 border-b border-border">Login / Signup</Link>
+                        <Button variant="ghost" onClick={() => { signIn(); setIsMobileMenuOpen(false);}} className="text-lg hover:text-accent transition-colors py-2 border-b border-border w-full justify-start">Login / Signup</Button>
                       </SheetClose>
                   )}
                 </nav>
