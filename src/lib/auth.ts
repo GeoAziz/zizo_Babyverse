@@ -3,9 +3,8 @@ import type { NextAuthOptions, User as NextAuthUser } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from '@/lib/db';
-// import bcrypt from 'bcryptjs'; // bcrypt usage removed as Firebase handles passwords
 import type { Role } from '@prisma/client';
-import admin from '@/lib/firebaseAdmin';
+import admin from '@/lib/firebaseAdmin'; // Ensure this path is correct
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -42,6 +41,8 @@ export const authOptions: NextAuthOptions = {
           };
         } catch (error) {
           console.error("Error in Google provider profile callback:", error);
+          // It's better to throw an error that NextAuth can catch and display
+          // or log, rather than returning a potentially malformed object or null.
           throw new Error("Failed to process Google profile.");
         }
       },
@@ -74,14 +75,16 @@ export const authOptions: NextAuthOptions = {
               user = await prisma.user.create({
                 data: {
                   email: email,
-                  name: credentials.name || decodedToken.name || email.split('@')[0],
+                  name: credentials.name || decodedToken.name || email.split('@')[0], // Use provided name, then token name, then derive
                   firebaseUid: firebaseUid,
                   emailVerified: decodedToken.email_verified ? new Date() : null,
-                  role: 'PARENT',
+                  image: decodedToken.picture || null, // Add image from token if available
+                  role: 'PARENT', // Default role
                 },
               });
             } else if (!user.firebaseUid || user.firebaseUid !== firebaseUid) {
               // Link Firebase UID if user exists but not linked or different
+              // Also update name/image if Firebase token has more recent/better info
               user = await prisma.user.update({
                 where: { email: email },
                 data: {
@@ -102,11 +105,14 @@ export const authOptions: NextAuthOptions = {
               firebaseUid: user.firebaseUid,
             };
           } catch (error) {
-            console.error("Firebase ID token verification failed:", error);
-            return null;
+            console.error("Firebase ID token verification failed in authorize:", error);
+            // Propagate a generic error or a specific one if identifiable
+            // For example, if token is invalid, Firebase admin SDK throws specific errors
+            return null; // Returning null triggers a credentials sign-in error
           }
         }
-        return null; // Only Firebase email/pass via idToken is supported here now
+        // If not FIREBASE_EMAIL or no idToken, this provider is not applicable
+        return null;
       },
     }),
   ],
@@ -115,39 +121,51 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user, account }) {
-      if (user) { 
+      // This callback is called whenever a JWT is created (i.e. on sign in)
+      // or updated (i.e. whenever a session is accessed in the client).
+      if (user) { // `user` object is only passed on initial sign-in
         token.id = user.id;
-        token.role = (user as { role: Role }).role;
+        token.role = (user as { role: Role }).role; // Cast to include custom 'role'
         token.firebaseUid = (user as { firebaseUid?: string }).firebaseUid;
-        token.picture = user.image || token.picture;
+        token.picture = user.image || token.picture; // Prefer user.image from DB, fallback to token.picture
       }
       
-      // If sign-in was with Google via NextAuth GoogleProvider
-      if (account?.provider === "google" && user?.email) {
+      // Special handling if sign-in was with Google provider via NextAuth
+      // This ensures that even if the initial `user` object from Google provider's `profile` callback
+      // was minimal, we enrich the token with full details from our DB.
+      if (account?.provider === "google" && token.email) {
         // User should have been upserted in GoogleProvider.profile, now ensure token fields are aligned
-        const dbUser = await prisma.user.findUnique({ where: { email: user.email } });
+        const dbUser = await prisma.user.findUnique({ where: { email: token.email } });
         if (dbUser) {
           token.id = dbUser.id;
           token.role = dbUser.role;
           token.firebaseUid = dbUser.firebaseUid; // This would be Google's 'sub'
-          token.picture = dbUser.image || token.picture;
+          token.picture = dbUser.image || token.picture; // Ensure image from DB is preferred
+          token.name = dbUser.name || token.name; // Ensure name from DB is preferred
         }
       }
       return token;
     },
     async session({ session, token }) {
+      // This callback is called whenever a session is checked.
+      // We assign properties from the token to the session object.
       if (session.user) {
         session.user.id = token.id as string;
-        (session.user as any).role = token.role as Role; 
-        (session.user as any).firebaseUid = token.firebaseUid as string | undefined;
-        session.user.image = token.picture as string | undefined;
+        (session.user as any).role = token.role as Role; // Add role to session user
+        (session.user as any).firebaseUid = token.firebaseUid as string | undefined; // Add firebaseUid
+        session.user.image = token.picture as string | undefined; // Ensure image is on session
+        session.user.name = token.name as string | undefined; // Ensure name is on session
       }
       return session;
     },
   },
   pages: {
     signIn: '/login',
-    signOut: '/', 
-    error: '/login?error=AuthError', 
-  }, 
-}; 
+    signOut: '/', // Redirect to home page after sign out
+    error: '/login?error=AuthError', // Custom error page or redirect to login with error query
+    // newUser: '/profile/setup' // Optional: if you want to redirect new users to a setup page
+  } // No comma here if `pages` is the last property before the final `};`
+  // You could add other NextAuth options here if needed, e.g.:
+  // secret: process.env.NEXTAUTH_SECRET, // Already implicitly used by NextAuth, but can be explicit
+  // debug: process.env.NODE_ENV === 'development',
+};
