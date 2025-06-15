@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, use } from 'react'; // Added 'use'
+import { useEffect, useState, use } from 'react';
 import Image from 'next/image';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -13,9 +13,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
-export default function ProductDetailPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) { // Renamed params to paramsPromise
-  const resolvedParams = use(paramsPromise); // Unwrap the Promise
-  const { id: productId } = resolvedParams; // Destructure id from resolved params
+export default function ProductDetailPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(paramsPromise);
+  const { id: productId } = resolvedParams;
 
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
@@ -30,24 +30,34 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
     const fetchProduct = async () => {
       setIsLoadingProduct(true);
       try {
-        const response = await fetch(`/api/products/${productId}`); // Use productId
+        const response = await fetch(`/api/products/${productId}`);
         if (!response.ok) {
-          throw new Error('Product not found');
+          if (response.status === 404) {
+            // Product not found - this is an expected state.
+            // Set product to null to trigger the "Product Not Found" UI.
+            // No need to throw an error that gets logged by console.error for this specific case.
+            setProduct(null);
+          } else {
+            // For other errors (e.g., 500), it's good to throw so it gets logged.
+            const errorData = await response.json().catch(() => ({ message: "API request failed" })); // Try to get error message from API
+            throw new Error(errorData.message || `API request failed with status ${response.status}`);
+          }
+        } else {
+          const data: Product = await response.json();
+          setProduct(data);
         }
-        const data: Product = await response.json();
-        setProduct(data);
-      } catch (error) {
-        console.error("Error fetching product:", error);
+      } catch (error) { // This will now primarily catch network errors or non-404 API errors
+        console.error("Error fetching product details:", error);
         setProduct(null);
       } finally {
         setIsLoadingProduct(false);
       }
     };
 
-    if (productId) { // Use productId
+    if (productId) {
       fetchProduct();
     }
-  }, [productId]); // Use productId in dependency array
+  }, [productId]);
 
   const handleAddToCart = async () => {
     if (!product) return;
