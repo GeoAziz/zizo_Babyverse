@@ -1,5 +1,18 @@
+
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DollarSign, ShoppingBag, ListOrdered, PackageWarning, TrendingUp, Users, BarChart3 } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+const mockSalesData = [
+  { name: 'Jan', sales: 4000 },
+  { name: 'Feb', sales: 3000 },
+  { name: 'Mar', sales: 5000 },
+  { name: 'Apr', sales: 4500 },
+  { name: 'May', sales: 6000 },
+  { name: 'Jun', sales: 5500 },
+];
 
 export default function AdminDashboardPage() {
   return (
@@ -55,9 +68,21 @@ export default function AdminDashboardPage() {
             <CardTitle className="flex items-center"><BarChart3 className="mr-2 h-5 w-5 text-primary"/> Sales Graph (Cosmic Orbit Style)</CardTitle>
             <CardDescription>Monthly sales performance.</CardDescription>
           </CardHeader>
-          <CardContent className="h-72 flex items-center justify-center bg-muted/30 rounded-md">
-            <p className="text-muted-foreground">Sales chart placeholder</p>
-            {/* Placeholder for a chart component, e.g., <SalesChart /> */}
+          <CardContent className="h-72 bg-muted/30 rounded-md p-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={mockSalesData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" fontSize={12} />
+                <YAxis fontSize={12} unit="$" />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'hsl(var(--background))', borderRadius: 'var(--radius)', borderColor: 'hsl(var(--border))' }}
+                  itemStyle={{ color: 'hsl(var(--foreground))' }}
+                  cursor={{stroke: 'hsl(var(--accent))', strokeWidth: 1}}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="sales" stroke="hsl(var(--primary))" strokeWidth={2} activeDot={{ r: 6, fill: 'hsl(var(--primary))', stroke: 'hsl(var(--background))', strokeWidth: 2 }} dot={{r: 4, fill: 'hsl(var(--primary))'}} name="Monthly Sales" />
+              </LineChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
         <Card className="shadow-card-glow hover:shadow-glow-md transition-shadow">
