@@ -1,5 +1,7 @@
+
 {
   "hosting": {
+    "public": "n",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -8,9 +10,9 @@
     "rewrites": [
       {
         "source": "**",
-        "apphosting": {
-          "backendId": "YOUR_APP_HOSTING_BACKEND_ID",
-          "region": "YOUR_APP_HOSTING_REGION"
+        "run": {
+          "serviceId": "bverse-19ee7",
+          "region": "us-central1"
         }
       }
     ]
