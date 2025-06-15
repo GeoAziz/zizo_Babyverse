@@ -1,14 +1,14 @@
-
 'use client';
 
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession, signIn, signOut } from 'next-auth/react';
+import { useSession, signOut as nextAuthSignOut } from 'next-auth/react'; // Renamed signOut to nextAuthSignOut
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, User, LogIn, LogOut, Star, Menu, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
+import { auth, firebaseSignOut } from '@/lib/firebaseClient'; // Import Firebase auth and firebaseSignOut
 
 export default function Header() {
   const { data: session, status } = useSession();
@@ -20,11 +20,23 @@ export default function Header() {
   const { toast } = useToast();
 
   const handleLogout = async () => {
-    await signOut({ redirect: false, callbackUrl: '/' });
+    try {
+      await firebaseSignOut(auth); // Sign out from Firebase
+    } catch (error) {
+      console.error("Firebase sign out error:", error);
+      toast({ title: "Firebase Logout Error", description: "Could not sign out from Firebase. Please try again.", variant: "destructive" });
+      // Decide if you want to proceed with NextAuth logout or stop
+    }
+    await nextAuthSignOut({ redirect: false, callbackUrl: '/' }); // Sign out from NextAuth
     toast({ title: "Logged Out", description: "You've successfully logged out of BabyVerse." });
     if (isMobileMenuOpen) setIsMobileMenuOpen(false);
-    router.push('/'); // Ensure redirection to home
+    router.push('/'); 
   };
+
+  const handleLogin = () => {
+    if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+    router.push('/login');
+  }
 
   const navLinks = [
     { href: "/products", label: "Shop" },
@@ -72,7 +84,7 @@ export default function Header() {
               </Button>
             </>
           ) : (
-            <Button variant="outline" onClick={() => signIn()} asChild={false}>
+            <Button variant="outline" onClick={handleLogin}>
                 <LogIn className="mr-2 h-4 w-4" /> Login
             </Button>
           )}
@@ -112,16 +124,14 @@ export default function Header() {
                        <SheetClose asChild>
                         <Link href="/profile/orders" className="text-lg hover:text-accent transition-colors py-2 border-b border-border">Order History</Link>
                       </SheetClose>
-                      <SheetClose asChild>
-                        <Button variant="ghost" onClick={handleLogout} className="text-lg hover:text-accent transition-colors py-2 border-b border-border w-full justify-start">
+                        <Button variant="ghost" onClick={handleLogout} className="text-lg hover:text-accent transition-colors py-2 border-b border-border w-full justify-start text-destructive">
                           Logout
                         </Button>
-                      </SheetClose>
                     </>
                   )}
                   {!loggedIn && !isLoading && (
                      <SheetClose asChild>
-                        <Button variant="ghost" onClick={() => { signIn(); setIsMobileMenuOpen(false);}} className="text-lg hover:text-accent transition-colors py-2 border-b border-border w-full justify-start">Login / Signup</Button>
+                        <Button variant="ghost" onClick={handleLogin} className="text-lg hover:text-accent transition-colors py-2 border-b border-border w-full justify-start">Login / Signup</Button>
                       </SheetClose>
                   )}
                 </nav>
