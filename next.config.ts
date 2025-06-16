@@ -2,7 +2,6 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  // REMOVED: output: 'export', // No longer doing static export for Vercel
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -10,7 +9,6 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    // REMOVED: unoptimized: true, // Allow Vercel to handle image optimization
     remotePatterns: [
       {
         protocol: 'https',
