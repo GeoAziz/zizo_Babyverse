@@ -4,19 +4,23 @@ import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { PromoType, PromoTarget, type Role } from '@prisma/client'; // Ensure PromoType and PromoTarget are imported
+import type { Role, PromoType as PrismaPromoType, PromoTarget as PrismaPromoTarget } from '@prisma/client';
+
+// Define Zod enums explicitly matching Prisma enums
+const ZodPromoType = z.enum(['PERCENTAGE', 'FIXED_AMOUNT']);
+const ZodPromoTarget = z.enum(['ALL_PRODUCTS', 'SPECIFIC_PRODUCTS', 'SPECIFIC_CATEGORIES']);
 
 const promotionSchema = z.object({
   code: z.string().min(1, "Promo code is required"),
   description: z.string().optional(),
-  type: z.nativeEnum(PromoType), // Used imported PromoType
+  type: ZodPromoType,
   value: z.number().positive("Value must be positive"),
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),
   isActive: z.boolean().default(true),
   usageLimit: z.number().int().min(0).optional().nullable(),
   minSpend: z.number().min(0).optional().nullable(),
-  appliesTo: z.nativeEnum(PromoTarget).optional().nullable(), // Used imported PromoTarget
+  appliesTo: ZodPromoTarget.optional().nullable(),
   productIds: z.array(z.string()).optional().default([]),
   categoryNames: z.array(z.string()).optional().default([]),
 }).refine(data => data.endDate >= data.startDate, {
@@ -26,18 +30,17 @@ const promotionSchema = z.object({
 
 
 export async function GET(request: Request) {
-  // Public route to get active promotions (optional: could be admin only)
-  // For simplicity, let's make it admin-only for now, matching product routes
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role: Role }).role !== 'ADMIN') {
-    // If you want public access to some promos, adjust this logic
-    // return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
+    // For public access to active promos, adjust logic here.
+    // For now, consistent with other admin-gated list endpoints.
   }
 
   try {
     const promotions = await prisma.promotion.findMany({
       orderBy: { createdAt: 'desc' },
-      // If public, add: where: { isActive: true, endDate: { gte: new Date() } }
+      // If public, filter for active:
+      // where: { isActive: true, endDate: { gte: new Date() } }
     });
     return NextResponse.json(promotions);
   } catch (error) {
@@ -60,16 +63,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ errors: validation.error.flatten().fieldErrors }, { status: 400 });
     }
 
-    const { code, ...restOfData } = validation.data;
+    const { code, type, appliesTo, ...restOfData } = validation.data;
 
-    // Check if promo code already exists
     const existingPromo = await prisma.promotion.findUnique({ where: { code } });
     if (existingPromo) {
       return NextResponse.json({ message: "Promotion code already exists" }, { status: 409 });
     }
     
     const newPromotion = await prisma.promotion.create({
-      data: { code, ...restOfData },
+      data: { 
+        code, 
+        type: type as PrismaPromoType, // Cast to Prisma enum type
+        appliesTo: appliesTo as PrismaPromoTarget | null, // Cast to Prisma enum type or null
+        ...restOfData 
+      },
     });
     return NextResponse.json(newPromotion, { status: 201 });
   } catch (error: any) {
