@@ -216,3 +216,10 @@ export default function LoginPage() {
               <Link href="/signup" className="font-medium text-accent hover:text-accent/80 transition-colors">
                 Launch Your Account
               </Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
+  );
+}

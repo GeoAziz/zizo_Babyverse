@@ -113,4 +113,9 @@ export default function ForgotPasswordPage() {
                 Log In
               </Link>
             </p>
-          </
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
+  );
+}
