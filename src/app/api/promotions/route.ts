@@ -4,19 +4,19 @@ import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import type { Role, PromoType, PromoTarget } from '@prisma/client';
+import { PromoType, PromoTarget, type Role } from '@prisma/client'; // Ensure PromoType and PromoTarget are imported
 
 const promotionSchema = z.object({
   code: z.string().min(1, "Promo code is required"),
   description: z.string().optional(),
-  type: z.nativeEnum(PromoType),
+  type: z.nativeEnum(PromoType), // Used imported PromoType
   value: z.number().positive("Value must be positive"),
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),
   isActive: z.boolean().default(true),
   usageLimit: z.number().int().min(0).optional().nullable(),
   minSpend: z.number().min(0).optional().nullable(),
-  appliesTo: z.nativeEnum(PromoTarget).optional().nullable(),
+  appliesTo: z.nativeEnum(PromoTarget).optional().nullable(), // Used imported PromoTarget
   productIds: z.array(z.string()).optional().default([]),
   categoryNames: z.array(z.string()).optional().default([]),
 }).refine(data => data.endDate >= data.startDate, {

@@ -2,7 +2,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DollarSign, ShoppingBag, ListOrdered, PackageWarning, TrendingUp, Users, BarChart3 } from "lucide-react";
+import { DollarSign, ShoppingBag, ListOrdered, PackageX, TrendingUp, Users, BarChart3 } from "lucide-react"; // Changed PackageWarning to PackageX
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const mockSalesData = [
@@ -53,7 +53,7 @@ export default function AdminDashboardPage() {
         <Card className="shadow-card-glow hover:shadow-glow-md transition-shadow bg-destructive/10 border-destructive">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-destructive">Stock Alerts</CardTitle>
-            <PackageWarning className="h-5 w-5 text-destructive" />
+            <PackageX className="h-5 w-5 text-destructive" /> {/* Changed PackageWarning to PackageX */}
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">5 Products Low</div>
