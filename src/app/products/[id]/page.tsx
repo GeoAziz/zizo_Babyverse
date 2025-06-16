@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, use, Suspense } from 'react';
 import Image from 'next/image';
-import type { Product } from '@/lib/types'; // Ensure Product type includes all necessary fields
+import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,67 +13,64 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import ProductCard from '@/components/shared/ProductCard'; // For suggested products
-import { mockProducts } from '@/lib/mockData'; // For mock suggested products
+import ProductCard from '@/components/shared/ProductCard';
+// Removed mockProducts import as suggested products should also come from API or be handled differently
 
-// Mock data for sections not yet backed by API
+// Mock data for sections not yet backed by API (can be removed if reviews are fetched)
 const mockReviews = [
   { id: 'rev1', userName: 'CosmoParent1', babyAge: '6 months', rating: 5, comment: 'Absolutely essential for any new parent in the Andromeda sector! Our little star sleeps so soundly now.' },
   { id: 'rev2', userName: 'GalaxyMom', babyAge: '3 months', rating: 4, comment: 'Great product, very innovative. Shipping took a bit longer than light speed though.' },
 ];
 
-
-export default function ProductDetailPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(paramsPromise);
-  const { id: productId } = resolvedParams;
-
+function ProductDetailPageContent({ productId }: { productId: string }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisting, setIsWishlisting] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const [error, setError] = useState<string | null>(null); // Added error state
+  const [error, setError] = useState<string | null>(null);
+  const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
+
   const { toast } = useToast();
   const { data: session } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchProductAndSuggestions = async () => {
+      if (!productId) return;
       setIsLoadingProduct(true);
-      setError(null); // Reset error state at the beginning of a fetch
+      setError(null);
       try {
-        const response = await fetch(`/api/products/${productId}`);
-        if (!response.ok) {
-          if (response.status === 404) {
-            setProduct(null);
-            // No error state needed here, the !product && !error condition will handle the UI
-          } else {
-            // Handle other HTTP errors (e.g., 500)
-            const errorData = await response.json().catch(() => ({ message: `Server error: ${response.status}. Unable to parse error response.` }));
-            const errorMessage = errorData.message || `Failed to load product. Server responded with status: ${response.status}`;
-            setError(errorMessage);
-            setProduct(null); // Ensure product is null to trigger error or not found UI
-            toast({ title: "Error Loading Product", description: errorMessage, variant: "destructive"});
-          }
-        } else {
-          const data: Product = await response.json();
-          setProduct(data);
+        // Fetch main product
+        const productResponse = await fetch(`/api/products/${productId}`);
+        if (!productResponse.ok) {
+          const errorData = await productResponse.json().catch(() => ({}));
+          throw new Error(errorData.message || `Failed to load product. Status: ${productResponse.status}`);
         }
-      } catch (e: any) { // This catches network errors or issues with .json() parsing if response.ok was true but body was malformed
-        console.error("Network or parsing error fetching product details:", e);
-        const errorMessage = e.message || "An unexpected network error occurred while fetching the product.";
-        setError(errorMessage);
+        const productData: Product = await productResponse.json();
+        setProduct(productData);
+
+        // Fetch suggested products (e.g., from the same category, excluding current product)
+        if (productData.category) {
+          const suggestionsResponse = await fetch(`/api/products?category=${encodeURIComponent(productData.category)}&limit=5`); // Fetch 5, filter current
+          if (suggestionsResponse.ok) {
+            let suggestions: Product[] = await suggestionsResponse.json();
+            suggestions = suggestions.filter(p => p.id !== productId).slice(0, 4); // Exclude current, take 4
+            setSuggestedProducts(suggestions);
+          }
+        }
+
+      } catch (e: any) {
+        console.error("Error fetching product details:", e);
+        setError(e.message || "An unexpected error occurred.");
         setProduct(null);
-        toast({ title: "Network Error", description: errorMessage, variant: "destructive"});
+        toast({ title: "Error", description: e.message, variant: "destructive" });
       } finally {
         setIsLoadingProduct(false);
       }
     };
 
-    if (productId) {
-      fetchProduct();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchProductAndSuggestions();
   }, [productId, toast]);
 
   const handleAddToCart = async () => {
@@ -153,7 +150,7 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
     );
   }
 
-  if (error && !product) { // Display general error if error state is set
+  if (error) { 
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center px-4">
         <Button variant="outline" asChild className="absolute top-28 left-4 md:left-8">
@@ -172,7 +169,7 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
     );
   }
 
-  if (!product) { // This now specifically handles 404 (product is null, error is null)
+  if (!product) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center px-4">
          <Button variant="outline" asChild className="absolute top-28 left-4 md:left-8">
@@ -196,9 +193,7 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
             <Link href="/products"><ArrowLeft className="mr-2 h-4 w-4" /> Back to All Products</Link>
         </Button>
 
-      {/* 1. Hero Visual Zone & 2. Product Info Panel & 3. Ratings & 4. Price Panel */}
       <section className="grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
-        {/* Hero Visual Zone */}
         <div className="relative aspect-square group">
             <Image
               src={product.imageUrl || 'https://placehold.co/800x800.png'}
@@ -215,12 +210,16 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
             </Button>
         </div>
 
-        {/* Product Info, Ratings, Price Panel */}
         <div className="space-y-6">
           <Card className="shadow-glow-sm border-primary/20">
             <CardHeader>
               <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary leading-tight" style={{textShadow: '0 0 5px hsl(var(--primary-foreground)/0.3)'}}>{product.name}</h1>
-              <CardDescription className="text-md text-muted-foreground pt-1">{product.description?.substring(0,150) || 'The finest in the galaxy for your little one.'}... (see details below)</CardDescription>
+              <CardDescription className="text-md text-muted-foreground pt-1">
+                {product.description ? 
+                  (product.description.length > 150 ? `${product.description.substring(0,150)}... (see details below)` : product.description)
+                  : 'The finest in the galaxy for your little one.'
+                }
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="p-3 bg-accent/10 border border-accent/30 rounded-lg text-accent-foreground">
@@ -231,13 +230,12 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
                 <p className="text-sm text-accent">This {product.category.toLowerCase()} is perfect for {product.targetAudience || 'young explorers'} and is known for its {product.keywords || 'cosmic comfort'}!</p>
               </div>
               
-              {/* Ratings & Reviews Badges */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`h-6 w-6 ${i < Math.round(product.averageRating || 4) ? 'text-yellow-400 fill-yellow-400 shadow-sm' : 'text-muted-foreground/30'}`} />
+                    <Star key={i} className={`h-6 w-6 ${i < Math.round(product.averageRating || 0) ? 'text-yellow-400 fill-yellow-400 shadow-sm' : 'text-muted-foreground/30'}`} />
                   ))}
-                  <span className="ml-1 text-sm text-muted-foreground">({(product.averageRating || 4.5).toFixed(1)} stars, {Math.floor(Math.random() * 100) + 50} reviews)</span>
+                  <span className="ml-1 text-sm text-muted-foreground">({(product.averageRating || 0).toFixed(1)} stars, {Math.floor(Math.random() * 100) + 50} reviews)</span>
                   <Link href="#reviews" className="text-sm text-accent hover:underline ml-auto">📝 Read Reviews</Link>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -247,7 +245,6 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
                 </div>
               </div>
 
-              {/* Price & Actions */}
               <div className="pt-4 border-t">
                 <p className="text-4xl font-bold text-accent mb-4" style={{textShadow: '0 0 8px hsl(var(--accent)/0.5)'}}>${product.price.toFixed(2)}</p>
                  <div className="flex flex-col sm:flex-row gap-3 items-stretch mb-4">
@@ -293,7 +290,6 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
         </div>
       </section>
 
-      {/* 5. Product Details Tabs */}
       <section>
         <Tabs defaultValue="description" className="w-full">
           <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 gap-2 bg-card border border-border shadow-sm p-1 rounded-lg">
@@ -314,7 +310,7 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
                     <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
                         {typeof product.features === 'string'
                             ? product.features.split(',').map(f => f.trim()).filter(f => f).map((feature, idx) => <li key={idx}>{feature}</li>)
-                            : product.features?.map((feature, idx) => <li key={idx}>{feature}</li>)
+                            : Array.isArray(product.features) ? product.features.map((feature, idx) => <li key={idx}>{feature}</li>) : null
                         }
                     </ul>
                     </div>
@@ -353,18 +349,19 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
         </Tabs>
       </section>
 
-      {/* 6. Suggested for Your Baby (Placeholder) */}
       <section className="py-8">
         <h2 className="text-2xl font-headline font-bold text-center mb-8 text-primary">Zizi Thinks You Might Also Like...</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {mockProducts.filter(p => p.id !== product.id).slice(0, 4).map(p => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-         <p className="text-sm text-center mt-4 text-muted-foreground italic">Personalized recommendations powered by Zizi AI (Coming Soon!)</p>
+        {suggestedProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {suggestedProducts.map(p => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-center mt-4 text-muted-foreground italic">Zizi is pondering other cosmic wonders for you...</p>
+        )}
       </section>
 
-      {/* 7. Customer Reviews (Placeholder) */}
       <section id="reviews" className="py-8">
         <h2 className="text-2xl font-headline font-bold text-center mb-8 text-primary">Echoes from the Parent Galaxy (Reviews)</h2>
         <div className="space-y-6">
@@ -399,7 +396,6 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
         </div>
       </section>
 
-      {/* 8. Secure Checkout Callout */}
       <section className="py-8">
          <Card className="bg-gradient-to-r from-primary/80 to-secondary/80 text-primary-foreground p-6 rounded-lg shadow-glow-lg text-center">
             <CardTitle className="text-2xl font-headline mb-2">Secure &amp; Trusted Checkout</CardTitle>
@@ -416,3 +412,21 @@ export default function ProductDetailPage({ params: paramsPromise }: { params: P
   );
 }
 
+export default function ProductDetailPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(paramsPromise);
+  const { id: productId } = resolvedParams;
+
+  // Wrap the actual content component with Suspense for better loading UX if needed,
+  // though the component itself handles its loading state.
+  // This structure is mainly to correctly use the `use(paramsPromise)` hook.
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-20 w-20 animate-spin text-primary mb-6" />
+        <p className="text-xl text-muted-foreground">Loading product...</p>
+      </div>
+    }>
+      <ProductDetailPageContent productId={productId} />
+    </Suspense>
+  );
+}

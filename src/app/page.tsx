@@ -1,25 +1,51 @@
+
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, Bot, Zap, ShoppingBag, Star, MessageCircle } from 'lucide-react';
-import { mockFeaturedCollections, mockTestimonials, mockProducts } from '@/lib/mockData';
-import ProductCard from '@/components/shared/ProductCard'; // Assuming ProductCard component exists
+import { ArrowRight, Bot, Zap, ShoppingBag, Star, MessageCircle, Loader2 } from 'lucide-react';
+import { mockFeaturedCollections, mockTestimonials } from '@/lib/mockData';
+import ProductCard from '@/components/shared/ProductCard';
+import { useState, useEffect } from 'react';
+import type { Product } from '@/lib/types';
 
 export default function Home() {
+  const [latestProducts, setLatestProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoadingProducts(true);
+      try {
+        const response = await fetch('/api/products?limit=4'); // Example: fetch 4 latest products
+        if (!response.ok) {
+          throw new Error('Failed to fetch latest products');
+        }
+        const data: Product[] = await response.json();
+        setLatestProducts(data);
+      } catch (error) {
+        console.error("Error fetching latest products:", error);
+        // Optionally set an error state to display a message to the user
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
   return (
     <div className="space-y-16 md:space-y-24">
       {/* Hero Section */}
       <section className="relative text-center py-16 md:py-24 rounded-xl overflow-hidden bg-gradient-to-br from-primary to-secondary shadow-glow-lg">
         <div className="absolute inset-0 opacity-20">
-          {/* Placeholder for animated baby capsule - using a static image for now */}
           <Image 
             src="https://placehold.co/1200x600.png" 
             alt="Animated baby capsule gliding into a sci-fi nursery" 
-            layout="fill" 
-            objectFit="cover"
+            fill
+            className="object-cover animate-pulse-glow"
             data-ai-hint="baby capsule space" 
-            className="animate-pulse-glow"
           />
         </div>
         <div className="relative z-10 container mx-auto px-4">
@@ -100,11 +126,19 @@ export default function Home() {
       {/* New Arrivals / Hot Products Section Example */}
       <section id="deals" className="container mx-auto px-4 py-12">
         <h2 className="text-3xl font-headline font-bold text-center mb-10 text-primary">New Arrivals & Hot Deals</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {mockProducts.slice(0, 4).map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {isLoadingProducts ? (
+          <div className="flex justify-center items-center py-10">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          </div>
+        ) : latestProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {latestProducts.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-muted-foreground">Could not load latest products. Please check back soon!</p>
+        )}
          <div className="text-center mt-8">
           <Button size="lg" asChild className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-glow-sm transition-all duration-300 transform hover:scale-105">
             <Link href="/products">

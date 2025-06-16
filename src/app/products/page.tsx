@@ -2,40 +2,63 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { mockProducts } from '@/lib/mockData';
 import type { Product } from '@/lib/types';
 import ProductCard from '@/components/shared/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { ShoppingBag, Search, Filter } from 'lucide-react';
+import { ShoppingBag, Search, Filter, Loader2, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 
 const ITEMS_PER_PAGE = 8;
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<string>('name-asc');
   const [currentPage, setCurrentPage] = useState(1);
+  const { toast } = useToast();
 
   useEffect(() => {
-    setProducts(mockProducts);
-  }, []);
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('/api/products');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to fetch products');
+        }
+        const data: Product[] = await response.json();
+        setProducts(data);
+      } catch (e: any) {
+        console.error("Error fetching products:", e);
+        setError(e.message || 'Could not load products. Please try again.');
+        toast({ title: "Error", description: e.message || "Could not load products.", variant: "destructive" });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [toast]);
 
   const categories = useMemo(() => {
-    const allCategories = new Set(mockProducts.map(p => p.category));
+    if (products.length === 0) return ['all'];
+    const allCategories = new Set(products.map(p => p.category).filter(Boolean)); // filter(Boolean) to remove undefined/null
     return ['all', ...Array.from(allCategories)];
-  }, []);
+  }, [products]);
 
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = products;
+    let filtered = [...products]; // Create a new array to avoid mutating original
 
     if (searchTerm) {
       filtered = filtered.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.description.toLowerCase().includes(searchTerm.toLowerCase())
+        (p.description && p.description.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -97,7 +120,7 @@ export default function ProductsPage() {
               />
             </div>
             <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value); setCurrentPage(1); }}>
-              <SelectTrigger>
+              <SelectTrigger disabled={isLoading || error !== null}>
                 <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>
@@ -107,7 +130,7 @@ export default function ProductsPage() {
               </SelectContent>
             </Select>
             <Select value={sortOrder} onValueChange={(value) => { setSortOrder(value); setCurrentPage(1); }}>
-              <SelectTrigger>
+              <SelectTrigger disabled={isLoading || error !== null}>
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
@@ -120,7 +143,19 @@ export default function ProductsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {paginatedProducts.length > 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+              <p className="text-muted-foreground">Loading products from the BabyVerse...</p>
+            </div>
+          ) : error ? (
+             <div className="flex flex-col items-center justify-center py-16 text-center">
+                <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+                <p className="text-xl text-destructive mb-2">Oops! A Cosmic Glitch Occurred</p>
+                <p className="text-muted-foreground mb-4">{error}</p>
+                <Button onClick={() => window.location.reload()} variant="outline">Try Reloading Galaxy</Button>
+            </div>
+          ) : paginatedProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {paginatedProducts.map(product => (
                 <ProductCard key={product.id} product={product} />
@@ -132,7 +167,7 @@ export default function ProductsPage() {
             </div>
           )}
 
-          {totalPages > 1 && (
+          {!isLoading && !error && totalPages > 1 && (
             <div className="mt-12 flex justify-center space-x-2">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                 <Button

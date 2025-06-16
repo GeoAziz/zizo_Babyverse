@@ -24,9 +24,14 @@ const productSchema = z.object({
 });
 
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const limitParam = searchParams.get('limit');
+  const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+
   try {
     const products = await prisma.product.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      ...(limit && !isNaN(limit) && { take: limit }),
     });
     return NextResponse.json(products);
   } catch (error) {
