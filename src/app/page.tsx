@@ -14,20 +14,35 @@ import type { Product } from '@/lib/types';
 export default function Home() {
   const [latestProducts, setLatestProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [productFetchError, setProductFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoadingProducts(true);
+      setProductFetchError(null); // Reset error before new fetch
       try {
-        const response = await fetch('/api/products?limit=4'); // Example: fetch 4 latest products
+        const response = await fetch('/api/products?limit=4'); 
         if (!response.ok) {
-          throw new Error('Failed to fetch latest products');
+          let errorMessage = 'Failed to fetch latest products';
+          try {
+            const errorData = await response.json();
+            if (errorData && errorData.message) {
+              errorMessage = `API Error: ${errorData.message} (Status: ${response.status})`;
+            } else {
+              errorMessage = `Failed to fetch latest products. Status: ${response.status} ${response.statusText}`;
+            }
+          } catch (jsonError) {
+            // If response is not JSON, use status text
+            errorMessage = `Failed to fetch latest products. Status: ${response.status} ${response.statusText}`;
+          }
+          console.error("Detailed fetch error in Home page:", errorMessage); 
+          throw new Error(errorMessage);
         }
         const data: Product[] = await response.json();
         setLatestProducts(data);
       } catch (error) {
-        console.error("Error fetching latest products:", error);
-        // Optionally set an error state to display a message to the user
+        console.error("Error fetching latest products in Home page:", error);
+        setProductFetchError((error as Error).message || "Could not load products. Please check back soon!");
       } finally {
         setIsLoadingProducts(false);
       }
@@ -129,7 +144,13 @@ export default function Home() {
         {isLoadingProducts ? (
           <div className="flex justify-center items-center py-10">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="ml-3 text-muted-foreground">Summoning latest products...</p>
           </div>
+        ) : productFetchError ? (
+           <div className="text-center py-10">
+            <p className="text-destructive font-semibold">Error Loading Products</p>
+            <p className="text-sm text-muted-foreground">{productFetchError}</p>
+           </div>
         ) : latestProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {latestProducts.map(product => (
@@ -137,7 +158,7 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <p className="text-center text-muted-foreground">Could not load latest products. Please check back soon!</p>
+          <p className="text-center text-muted-foreground py-10">No new arrivals beamed in yet. Check back soon!</p>
         )}
          <div className="text-center mt-8">
           <Button size="lg" asChild className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-glow-sm transition-all duration-300 transform hover:scale-105">
@@ -193,3 +214,4 @@ export default function Home() {
     </div>
   );
 }
+
