@@ -30,15 +30,25 @@ export default function ProductsPage() {
       try {
         const response = await fetch('/api/products');
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to fetch products');
+          let detailedErrorMessage = `Failed to fetch products. Status: ${response.status} ${response.statusText}`;
+          try {
+            // Attempt to get a more specific error message from the API response body
+            const errorData = await response.json();
+            if (errorData && errorData.message) {
+              detailedErrorMessage = `API Error: ${errorData.message} (Status: ${response.status})`;
+            }
+          } catch (jsonError) {
+            // If response body is not JSON or JSON parsing fails, keep the status-based message
+            console.warn("Could not parse error response as JSON from /api/products.");
+          }
+          throw new Error(detailedErrorMessage);
         }
         const data: Product[] = await response.json();
         setProducts(data);
       } catch (e: any) {
-        console.error("Error fetching products:", e);
-        setError(e.message || 'Could not load products. Please try again.');
-        toast({ title: "Error", description: e.message || "Could not load products.", variant: "destructive" });
+        console.error("Error fetching products in ProductsPage:", e.message);
+        setError(e.message); // Set the more detailed error message
+        toast({ title: "Error Loading Products", description: e.message, variant: "destructive" });
       } finally {
         setIsLoading(false);
       }
@@ -48,12 +58,12 @@ export default function ProductsPage() {
 
   const categories = useMemo(() => {
     if (products.length === 0) return ['all'];
-    const allCategories = new Set(products.map(p => p.category).filter(Boolean)); // filter(Boolean) to remove undefined/null
+    const allCategories = new Set(products.map(p => p.category).filter(Boolean));
     return ['all', ...Array.from(allCategories)];
   }, [products]);
 
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = [...products]; // Create a new array to avoid mutating original
+    let filtered = [...products];
 
     if (searchTerm) {
       filtered = filtered.filter(p =>
