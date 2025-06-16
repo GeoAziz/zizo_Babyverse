@@ -1,0 +1,17 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      // Allow read/write access if the user is authenticated through Firebase Authentication.
+      // WARNING: This is a permissive rule suitable for early development.
+      // For production, you'll want more granular rules,
+      // typically based on user ID (e.g., request.auth.uid == userId), roles,
+      // or specific document paths.
+      // This rule primarily affects client-side direct access to Firestore.
+      // If your Next.js backend is the only part accessing Firestore (using Admin SDK),
+      // these client-side rules are less critical for those backend operations.
+      allow read, write: if request.auth != null;
+    }
+  }
+}
