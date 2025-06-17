@@ -85,14 +85,17 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="group flex flex-col h-full overflow-hidden shadow-card-glow hover:shadow-glow-md transition-all duration-300 transform hover:-translate-y-1">
       <CardHeader className="p-0 relative">
-        <Link href={`/products/${product.id}`} className="block aspect-square overflow-hidden">
-          <Image
+        <Link href={`/products/${product.id}`} className="block aspect-square overflow-hidden">          <Image
             src={product.imageUrl || 'https://placehold.co/400x400.png'}
             alt={product.name}
             width={400}
             height={400}
             className="object-cover w-full h-full transition-transform duration-500 ease-in-out group-hover:scale-110"
             data-ai-hint={product.dataAiHint || product.category?.toLowerCase() || 'product'}
+            priority={false}
+            loading="lazy"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            quality={75}
           />
         </Link>
         {product.tags?.includes('Bestseller') && (

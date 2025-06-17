@@ -1,4 +1,3 @@
-
 import { PrismaClient, Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
@@ -49,7 +48,7 @@ async function main() {
     "Toys & Learning",
   ];
 
-  const productDataByCategory: Record<string, Array<Partial<Omit<typeof prisma.product.createArgs.data, 'id' | 'createdAt' | 'updatedAt'>>>> = {
+  const productDataByCategory: Record<string, Array<Partial<Omit<Parameters<typeof prisma.product.create>[0]['data'], 'id' | 'createdAt' | 'updatedAt'>>>> = {
     "Baby Care & Hygiene": [
       { name: 'Cussons Baby Gift Box (Blue)', price: kshToConceptualUsd(2199), description: 'A comprehensive baby care set including lotion, powder, oil, and wipes.', category: "Baby Care & Hygiene", stock: 50, ecoTag: false, imageUrl: 'https://placehold.co/600x400.png', dataAiHint: 'gift box baby', features: "Lotion, Powder, Oil, Wipes", targetAudience: "Newborns", keywords: "baby care, gift set, hygiene" },
       { name: 'Calendula Baby Soap', price: kshToConceptualUsd(380), description: 'Gentle soap suitable for babies.', category: "Baby Care & Hygiene", stock: 100, ecoTag: true, imageUrl: 'https://placehold.co/600x400.png', dataAiHint: 'baby soap', features: "Calendula extract, Gentle formula", targetAudience: "Infants", keywords: "natural, gentle, baby soap" },
@@ -143,7 +142,7 @@ async function main() {
             tags: product.tags || [],
             ageGroup: product.ageGroup || 'Various',
             ecoTag: product.ecoTag || false,
-            averageRating: product.averageRating || (Math.random() * 1.5 + 3.5).toFixed(1), // Random rating between 3.5 and 5.0
+            averageRating: parseFloat((Math.random() * 1.5 + 3.5).toFixed(1)), // Random rating between 3.5 and 5.0
             features: product.features,
             targetAudience: product.targetAudience,
             keywords: product.keywords,
@@ -169,7 +168,7 @@ async function main() {
           tags: ['New Arrival'],
           ageGroup: 'Various',
           ecoTag: Math.random() > 0.5,
-          averageRating: (Math.random() * 1.5 + 3.5).toFixed(1),
+          averageRating: parseFloat((Math.random() * 1.5 + 3.5).toFixed(1)),
           features: "High-quality, Durable, Safe for babies",
           targetAudience: "Babies and Toddlers",
           keywords: `baby, ${category.toLowerCase()}, essential`

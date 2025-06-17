@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, type FormEvent, useEffect } from 'react';
@@ -231,19 +230,35 @@ export default function CheckoutPage() {
 
             {currentStep === 2 && (
               <form onSubmit={handleNextStep} className="space-y-6">
-                <h2 className="text-xl font-semibold text-primary">Payment Details (Mock)</h2>
+                <h2 className="text-xl font-semibold text-primary">Payment Details</h2>
+                <div className="space-y-4">
+                  <div className="flex gap-4 p-4 border rounded-lg items-center">
+                    <input type="radio" name="paymentMethod" value="stripe" defaultChecked />
+                    <div>
+                      <h3 className="font-medium">Card Payment (Stripe)</h3>
+                      <p className="text-sm text-muted-foreground">Pay securely with your credit card</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4 p-4 border rounded-lg items-center opacity-50">
+                    <input type="radio" name="paymentMethod" value="paypal" disabled />
+                    <div>
+                      <h3 className="font-medium">PayPal (Coming Soon)</h3>
+                      <p className="text-sm text-muted-foreground">Pay with your PayPal account</p>
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <Label htmlFor="cardNumber">Card Number</Label>
-                  <Input id="cardNumber" name="cardNumber" value={paymentInfo.cardNumber} onChange={handlePaymentChange} placeholder="**** **** **** 1234 (mock)" required />
+                  <Input id="cardNumber" name="cardNumber" value={paymentInfo.cardNumber} onChange={handlePaymentChange} placeholder="**** **** **** 1234" required />
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="expiryDate">Expiry Date (MM/YY)</Label>
-                    <Input id="expiryDate" name="expiryDate" value={paymentInfo.expiryDate} onChange={handlePaymentChange} placeholder="MM/YY (mock)" required />
+                    <Input id="expiryDate" name="expiryDate" value={paymentInfo.expiryDate} onChange={handlePaymentChange} placeholder="MM/YY" required />
                   </div>
                   <div>
                     <Label htmlFor="cvv">CVV</Label>
-                    <Input id="cvv" name="cvv" value={paymentInfo.cvv} onChange={handlePaymentChange} placeholder="123 (mock)" required />
+                    <Input id="cvv" name="cvv" value={paymentInfo.cvv} onChange={handlePaymentChange} placeholder="123" required />
                   </div>
                 </div>
                  <div className="flex flex-col sm:flex-row gap-2">
