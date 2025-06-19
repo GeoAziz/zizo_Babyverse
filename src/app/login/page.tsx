@@ -1,8 +1,8 @@
-
 'use client';
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,7 +26,7 @@ const GoogleIcon = () => (
 );
 
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -62,16 +62,23 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
 
-    if (!emailField || !passwordField) {
-        toast({ title: "Mission Control Alert!", description: "Please enter both email and password.", variant: "destructive"});
-        setIsLoading(false);
-        return;
+    // Input validation
+    if (!emailField.trim() || !passwordField) {
+      toast({ 
+        title: "Mission Control Alert!", 
+        description: "Please enter both email and password.", 
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
     }
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, emailField, passwordField);
+      // Try Firebase authentication
+      const userCredential = await signInWithEmailAndPassword(auth, emailField.trim(), passwordField);
       const idToken = await userCredential.user.getIdToken();
       
+      // Try NextAuth sign in with Firebase token
       const result = await signIn('credentials', {
         redirect: false,
         idToken: idToken,
@@ -79,20 +86,56 @@ export default function LoginPage() {
       });
 
       if (result?.ok && !result.error) {
-        toast({ title: 'Login Successful!', description: "Welcome back to BabyVerse, Captain!"});
-        router.push(callbackUrl);
+        toast({ 
+          title: 'Login Successful!', 
+          description: "Welcome back to BabyVerse, Captain!"
+        });
+        // Check if user is admin and redirect accordingly
+        const isAdmin = emailField.trim() === 'admin@babyverse.com';
+        router.push(isAdmin ? '/admin/dashboard' : callbackUrl);
       } else {
-        setError(result?.error === "CredentialsSignin" ? "Invalid credentials." : result?.error || "Login failed via NextAuth. Please try again.");
-        toast({ title: 'Login Failed', description: result?.error || "An error occurred during NextAuth login.", variant: 'destructive'});
+        const errorMessage = result?.error === "CredentialsSignin" 
+          ? "Invalid credentials." 
+          : result?.error || "Login failed. Please try again.";
+        setError(errorMessage);
+        toast({ 
+          title: 'Login Failed', 
+          description: errorMessage, 
+          variant: 'destructive'
+        });
       }
     } catch (firebaseError: any) {
       console.error("Firebase login error:", firebaseError);
       let friendlyMessage = "Login failed. Please check your credentials.";
-      if (firebaseError.code === 'auth/user-not-found' || firebaseError.code === 'auth/wrong-password' || firebaseError.code === 'auth/invalid-credential') {
-        friendlyMessage = "Invalid email or password.";
+      
+      switch (firebaseError.code) {
+        case 'auth/invalid-credential':
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          friendlyMessage = "Invalid email or password. Please try again.";
+          break;
+        case 'auth/invalid-email':
+          friendlyMessage = "Please enter a valid email address.";
+          break;
+        case 'auth/user-disabled':
+          friendlyMessage = "This account has been disabled. Please contact support.";
+          break;
+        case 'auth/too-many-requests':
+          friendlyMessage = "Too many failed login attempts. Please try again later.";
+          break;
+        case 'auth/network-request-failed':
+          friendlyMessage = "Network error. Please check your internet connection.";
+          break;
+        default:
+          friendlyMessage = `Login failed: ${firebaseError.code || 'Unknown error'}`;
       }
+      
       setError(friendlyMessage);
-      toast({ title: 'Login Failed', description: friendlyMessage, variant: 'destructive'});
+      toast({ 
+        title: 'Login Failed', 
+        description: friendlyMessage, 
+        variant: 'destructive'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -221,5 +264,13 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

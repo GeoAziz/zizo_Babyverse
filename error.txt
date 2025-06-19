@@ -1,0 +1,748 @@
+ex.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\internal\tracestate-impl.js|action-browser
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/trace/internal/tracestate-validators.js
+./node_modules/@opentelemetry/api/build/esm/trace/internal/tracestate-impl.js
+./node_modules/@opentelemetry/api/build/esm/trace/internal/utils.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/ai/flows/ai-product-descriptions.ts
+
+./node_modules/@opentelemetry/api/build/esm/trace/internal/tracestate-validators.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\trace\internal\tracestate-validators.js|rsc
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\trace\internal\tracestate-impl.js|rsc
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\internal\tracestate-validators.js|rsc
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\internal\tracestate-impl.js|rsc
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/trace/internal/tracestate-validators.js
+./node_modules/@opentelemetry/api/build/esm/trace/internal/tracestate-impl.js
+./node_modules/@opentelemetry/api/build/esm/trace/internal/utils.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/app/api/ai/chat/route.ts
+
+./node_modules/@opentelemetry/api/build/esm/trace/internal/utils.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\trace\internal\utils.js|action-browser
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\index.js|action-browser 
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\internal\utils.js|action-browser
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\index.js|action-browser 
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/trace/internal/utils.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/ai/flows/ai-product-descriptions.ts
+
+./node_modules/@opentelemetry/api/build/esm/trace/internal/utils.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\trace\internal\utils.js|rsc
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\index.js|rsc
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\internal\utils.js|rsc
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\index.js|rsc
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/trace/internal/utils.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/app/api/ai/chat/route.ts
+
+./node_modules/@opentelemetry/api/build/esm/trace/invalid-span-constants.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\trace\invalid-span-constants.js|action-browser
+    Used by 3 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\index.js|action-browser 
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\invalid-span-constants.js|action-browser
+    Used by 3 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\index.js|action-browser 
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/trace/invalid-span-constants.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/ai/flows/ai-product-descriptions.ts
+
+./node_modules/@opentelemetry/api/build/esm/trace/invalid-span-constants.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\trace\invalid-span-constants.js|rsc
+    Used by 3 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\index.js|rsc
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\invalid-span-constants.js|rsc
+    Used by 3 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\index.js|rsc
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/trace/invalid-span-constants.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/app/api/ai/chat/route.ts
+
+./node_modules/@opentelemetry/api/build/esm/trace/span_kind.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\trace\span_kind.js|action-browser
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\index.js|action-browser 
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\span_kind.js|action-browser
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\index.js|action-browser 
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/trace/span_kind.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/ai/flows/ai-product-descriptions.ts
+
+./node_modules/@opentelemetry/api/build/esm/trace/span_kind.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\trace\span_kind.js|rsc    
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\index.js|rsc
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\span_kind.js|rsc    
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\index.js|rsc
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/trace/span_kind.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/app/api/ai/chat/route.ts
+
+./node_modules/@opentelemetry/api/build/esm/trace/spancontext-utils.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\trace\spancontext-utils.js|action-browser
+    Used by 3 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\index.js|action-browser 
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\spancontext-utils.js|action-browser
+    Used by 3 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\index.js|action-browser 
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/trace/spancontext-utils.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/ai/flows/ai-product-descriptions.ts
+
+./node_modules/@opentelemetry/api/build/esm/trace/spancontext-utils.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\trace\spancontext-utils.js|rsc
+    Used by 3 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\index.js|rsc
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\spancontext-utils.js|rsc
+    Used by 3 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\index.js|rsc
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/trace/spancontext-utils.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/app/api/ai/chat/route.ts
+
+./node_modules/@opentelemetry/api/build/esm/trace/status.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\trace\status.js|action-browser
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\index.js|action-browser 
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\status.js|action-browser
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\index.js|action-browser 
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/trace/status.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/ai/flows/ai-product-descriptions.ts
+
+./node_modules/@opentelemetry/api/build/esm/trace/status.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\trace\status.js|rsc       
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\index.js|rsc
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\status.js|rsc       
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\index.js|rsc
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/trace/status.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/app/api/ai/chat/route.ts
+
+./node_modules/@opentelemetry/api/build/esm/trace/trace_flags.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\trace\trace_flags.js|action-browser
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\index.js|action-browser 
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\trace_flags.js|action-browser
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\index.js|action-browser 
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/trace/trace_flags.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/ai/flows/ai-product-descriptions.ts
+
+./node_modules/@opentelemetry/api/build/esm/trace/trace_flags.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\trace\trace_flags.js|rsc  
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\index.js|rsc
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\trace\trace_flags.js|rsc  
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\index.js|rsc
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/trace/trace_flags.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/app/api/ai/chat/route.ts
+
+./node_modules/@opentelemetry/api/build/esm/version.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\version.js|action-browser 
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\internal\global-utils.js|action-browser
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\version.js|action-browser 
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\internal\global-utils.js|action-browser
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/version.js
+./node_modules/@opentelemetry/api/build/esm/internal/global-utils.js
+./node_modules/@opentelemetry/api/build/esm/api/diag.js
+./node_modules/@opentelemetry/api/build/esm/diag-api.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/ai/flows/ai-product-descriptions.ts
+
+./node_modules/@opentelemetry/api/build/esm/version.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\version.js|rsc
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\api\build\esm\internal\global-utils.js|rsc
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\version.js|rsc
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-loader\index.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\@opentelemetry\api\build\esm\internal\global-utils.js|rsc
+
+Import trace for requested module:
+./node_modules/@opentelemetry/api/build/esm/version.js
+./node_modules/@opentelemetry/api/build/esm/internal/global-utils.js
+./node_modules/@opentelemetry/api/build/esm/api/context.js
+./node_modules/@opentelemetry/api/build/esm/context-api.js
+./node_modules/@opentelemetry/api/build/esm/index.js
+./node_modules/@genkit-ai/core/lib/tracing/exporter.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/app/api/ai/chat/route.ts
+
+./node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@opentelemetry/sdk-node/build/src/sdk.js
+./node_modules/@opentelemetry/sdk-node/build/src/index.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/app/api/ai/chat/route.ts
+
+./node_modules/@opentelemetry/sdk-node/build/src/TracerProviderWithEnvExporter.js
+Module not found: Can't resolve '@opentelemetry/exporter-jaeger' in 'F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\sdk-node\build\src'
+
+Import trace for requested module:
+./node_modules/@opentelemetry/sdk-node/build/src/TracerProviderWithEnvExporter.js
+./node_modules/@opentelemetry/sdk-node/build/src/sdk.js
+./node_modules/@opentelemetry/sdk-node/build/src/index.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/ai/flows/ai-product-descriptions.ts
+
+./node_modules/@opentelemetry/sdk-node/build/src/TracerProviderWithEnvExporter.js
+Module not found: Can't resolve '@opentelemetry/exporter-jaeger' in 'F:\projects\babyverse\zizo_BabyVerse\node_modules\@opentelemetry\sdk-node\build\src'
+
+Import trace for requested module:
+./node_modules/@opentelemetry/sdk-node/build/src/TracerProviderWithEnvExporter.js
+./node_modules/@opentelemetry/sdk-node/build/src/sdk.js
+./node_modules/@opentelemetry/sdk-node/build/src/index.js
+./node_modules/@genkit-ai/core/lib/tracing.js
+./node_modules/@genkit-ai/ai/lib/chat.js
+./node_modules/genkit/lib/common.js
+./node_modules/genkit/lib/index.mjs
+./src/app/api/ai/chat/route.ts
+
+./node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/handlebars/lib/index.js
+./node_modules/dotprompt/dist/index.js
+./node_modules/@genkit-ai/core/lib/registry.js
+./node_modules/genkit/lib/registry.js
+./node_modules/genkit/lib/genkit.js
+./node_modules/genkit/lib/index.mjs
+./src/ai/flows/ai-product-descriptions.ts
+
+./node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/handlebars/lib/index.js
+./node_modules/dotprompt/dist/index.js
+./node_modules/@genkit-ai/core/lib/registry.js
+./node_modules/genkit/lib/registry.js
+./node_modules/genkit/lib/genkit.js
+./node_modules/genkit/lib/index.mjs
+./src/ai/flows/ai-product-descriptions.ts
+
+./node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/handlebars/lib/index.js
+./node_modules/dotprompt/dist/index.js
+./node_modules/@genkit-ai/core/lib/registry.js
+./node_modules/genkit/lib/registry.js
+./node_modules/genkit/lib/genkit.js
+./node_modules/genkit/lib/index.mjs
+./src/ai/flows/ai-product-descriptions.ts
+
+./node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/handlebars/lib/index.js
+./node_modules/dotprompt/dist/index.js
+./node_modules/@genkit-ai/core/lib/registry.js
+./node_modules/genkit/lib/registry.js
+./node_modules/genkit/lib/genkit.js
+./node_modules/genkit/lib/index.mjs
+./src/app/api/ai/chat/route.ts
+
+./node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/handlebars/lib/index.js
+./node_modules/dotprompt/dist/index.js
+./node_modules/@genkit-ai/core/lib/registry.js
+./node_modules/genkit/lib/registry.js
+./node_modules/genkit/lib/genkit.js
+./node_modules/genkit/lib/index.mjs
+./src/app/api/ai/chat/route.ts
+
+./node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/handlebars/lib/index.js
+./node_modules/dotprompt/dist/index.js
+./node_modules/@genkit-ai/core/lib/registry.js
+./node_modules/genkit/lib/registry.js
+./node_modules/genkit/lib/genkit.js
+./node_modules/genkit/lib/index.mjs
+./src/app/api/ai/chat/route.ts
+
+./node_modules/next/dist/pages/_app.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\pages\_app.js|pages-dir-node   
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\pages\_app.js|pages-dir-node 
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\pages\_app.js|pages-dir-node   
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js?kind=PAGES&page=%2F_error&preferredRegion=&absolutePagePath=next%2Fdist%2Fpages%2F_error&absoluteAppPath=next%2Fdist%2Fpages%2F_app&absoluteDocumentPath=next%2Fdist%2Fpages%2F_document&middlewareConfigBase64=e30%3D!|pages-dir-node
+
+./node_modules/next/dist/pages/_document.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\pages\_document.js|pages-dir-node
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\pages\_document.js|pages-dir-node
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\pages\_document.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js?kind=PAGES&page=%2F_error&preferredRegion=&absolutePagePath=next%2Fdist%2Fpages%2F_error&absoluteAppPath=next%2Fdist%2Fpages%2F_app&absoluteDocumentPath=next%2Fdist%2Fpages%2F_document&middlewareConfigBase64=e30%3D!|pages-dir-node
+
+./node_modules/next/dist/shared/lib/constants.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\constants.js|pages-dir-node
+    Used by 3 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\pages\_document.js|pages-dir-node
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\constants.js|pages-dir-node
+    Used by 3 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\pages\_document.js|pages-dir-node
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/constants.js
+
+./node_modules/next/dist/shared/lib/encode-uri-path.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\encode-uri-path.js|pages-dir-node
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\pages\_document.js|pages-dir-node
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\encode-uri-path.js|pages-dir-node
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\pages\_document.js|pages-dir-node
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/encode-uri-path.js
+
+./node_modules/next/dist/shared/lib/is-plain-object.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\is-plain-object.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\lib\is-error.js|pages-dir-node
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\is-plain-object.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\lib\is-error.js|pages-dir-node
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/is-plain-object.js
+./node_modules/next/dist/lib/is-error.js
+
+./node_modules/next/dist/shared/lib/is-thenable.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\is-thenable.js|pages-dir-node
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\server\lib\trace\tracer.js|pages-dir-node   
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\is-thenable.js|pages-dir-node
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\server\lib\trace\tracer.js|pages-dir-node   
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/is-thenable.js
+./node_modules/next/dist/server/lib/trace/tracer.js
+
+./node_modules/next/dist/shared/lib/modern-browserslist-target.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\modern-browserslist-target.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\constants.js|pages-dir-node
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\modern-browserslist-target.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\constants.js|pages-dir-node
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/modern-browserslist-target.js
+./node_modules/next/dist/shared/lib/constants.js
+
+./node_modules/next/dist/shared/lib/page-path/denormalize-page-path.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\page-path\denormalize-page-path.js|pages-dir-node
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\server\get-page-files.js|pages-dir-node     
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\page-path\denormalize-page-path.js|pages-dir-node
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\server\get-page-files.js|pages-dir-node     
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/page-path/denormalize-page-path.js
+./node_modules/next/dist/server/get-page-files.js
+
+./node_modules/next/dist/shared/lib/page-path/ensure-leading-slash.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\page-path\ensure-leading-slash.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\page-path\normalize-page-path.js|pages-dir-node
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\page-path\ensure-leading-slash.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\page-path\normalize-page-path.js|pages-dir-node
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/page-path/ensure-leading-slash.js
+./node_modules/next/dist/shared/lib/page-path/normalize-page-path.js
+./node_modules/next/dist/server/get-page-files.js
+
+./node_modules/next/dist/shared/lib/page-path/normalize-page-path.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\page-path\normalize-page-path.js|pages-dir-node
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\server\get-page-files.js|pages-dir-node     
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\page-path\normalize-page-path.js|pages-dir-node
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\server\get-page-files.js|pages-dir-node     
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/page-path/normalize-page-path.js
+./node_modules/next/dist/server/get-page-files.js
+
+./node_modules/next/dist/shared/lib/page-path/normalize-path-sep.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\page-path\normalize-path-sep.js|pages-dir-node
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\page-path\denormalize-page-path.js|pages-dir-node
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\page-path\normalize-path-sep.js|pages-dir-node
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\page-path\denormalize-page-path.js|pages-dir-node
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/page-path/normalize-path-sep.js
+./node_modules/next/dist/shared/lib/page-path/denormalize-page-path.js
+./node_modules/next/dist/server/get-page-files.js
+
+./node_modules/next/dist/shared/lib/router/utils/app-paths.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\router\utils\app-paths.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\router\utils\interception-routes.js|pages-dir-node
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\router\utils\app-paths.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\router\utils\interception-routes.js|pages-dir-node
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/router/utils/app-paths.js
+./node_modules/next/dist/shared/lib/router/utils/interception-routes.js
+./node_modules/next/dist/shared/lib/router/utils/is-dynamic.js
+./node_modules/next/dist/shared/lib/router/utils/index.js
+./node_modules/next/dist/shared/lib/page-path/denormalize-page-path.js
+./node_modules/next/dist/server/get-page-files.js
+
+./node_modules/next/dist/shared/lib/router/utils/index.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\router\utils\index.js|pages-dir-node
+    Used by 3 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\page-path\denormalize-page-path.js|pages-dir-node
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\router\utils\index.js|pages-dir-node
+    Used by 3 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\page-path\denormalize-page-path.js|pages-dir-node
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/router/utils/index.js
+./node_modules/next/dist/shared/lib/page-path/denormalize-page-path.js
+./node_modules/next/dist/server/get-page-files.js
+
+./node_modules/next/dist/shared/lib/router/utils/interception-routes.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\router\utils\interception-routes.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\router\utils\is-dynamic.js|pages-dir-node
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\router\utils\interception-routes.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\router\utils\is-dynamic.js|pages-dir-node
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/router/utils/interception-routes.js
+./node_modules/next/dist/shared/lib/router/utils/is-dynamic.js
+./node_modules/next/dist/shared/lib/router/utils/index.js
+./node_modules/next/dist/shared/lib/page-path/denormalize-page-path.js
+./node_modules/next/dist/server/get-page-files.js
+
+./node_modules/next/dist/shared/lib/router/utils/is-dynamic.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\router\utils\is-dynamic.js|pages-dir-node
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\router\utils\index.js|pages-dir-node
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\router\utils\is-dynamic.js|pages-dir-node
+    Used by 1 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\router\utils\index.js|pages-dir-node
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/router/utils/is-dynamic.js
+./node_modules/next/dist/shared/lib/router/utils/index.js
+./node_modules/next/dist/shared/lib/page-path/denormalize-page-path.js
+./node_modules/next/dist/server/get-page-files.js
+
+./node_modules/next/dist/shared/lib/router/utils/sorted-routes.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\router\utils\sorted-routes.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\router\utils\index.js|pages-dir-node
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\router\utils\sorted-routes.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\router\utils\index.js|pages-dir-node
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/router/utils/sorted-routes.js
+./node_modules/next/dist/shared/lib/router/utils/index.js
+./node_modules/next/dist/shared/lib/page-path/denormalize-page-path.js
+./node_modules/next/dist/server/get-page-files.js
+
+./node_modules/next/dist/shared/lib/segment.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\segment.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\router\utils\app-paths.js|pages-dir-node
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\segment.js|pages-dir-node
+    Used by 2 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\router\utils\app-paths.js|pages-dir-node
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/segment.js
+./node_modules/next/dist/shared/lib/router/utils/app-paths.js
+./node_modules/next/dist/shared/lib/router/utils/interception-routes.js
+./node_modules/next/dist/shared/lib/router/utils/is-dynamic.js
+./node_modules/next/dist/shared/lib/router/utils/index.js
+./node_modules/next/dist/shared/lib/page-path/denormalize-page-path.js
+./node_modules/next/dist/server/get-page-files.js
+
+./node_modules/next/dist/shared/lib/utils.js
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\shared\lib\utils.js|pages-dir-node
+    Used by 3 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_BabyVerse\node_modules\next\dist\pages\_app.js|pages-dir-node 
+* javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\shared\lib\utils.js|pages-dir-node
+    Used by 3 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[8].use[0]!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\pages\_app.js|pages-dir-node 
+
+Import trace for requested module:
+./node_modules/next/dist/shared/lib/utils.js
+
+./node_modules/clsx/dist/clsx.mjs
+There are multiple modules with names that only differ in casing.
+This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
+Use equal casing. Compare these module identifiers:
+* javascript/esm|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[7].use[1]!F:\projects\babyverse\zizo_BabyVerse\node_modules\clsx\dist\clsx.mjs|ssr
+    Used by 2 module(s), i. e.
+    javascript/esm|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[7].use[1]!F:\projects\babyverse\zizo_BabyVerse\node_modules\class-variance-authority\dist\index.mjs|ssr   
+* javascript/esm|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[7].use[1]!F:\projects\babyverse\zizo_Babyverse\node_modules\clsx\dist\clsx.mjs|ssr
+    Used by 30 module(s), i. e.
+    javascript/auto|F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[7].use[1]!F:\projects\babyverse\zizo_Babyverse\node_modules\recharts\es6\cartesian\Bar.js|ssr
+
+Import trace for requested module:
+./node_modules/clsx/dist/clsx.mjs
+./node_modules/class-variance-authority/dist/index.mjs
+./src/components/ui/button.tsx
+./src/app/page.tsx
+
+uncaughtException [Error: kill EPERM] { errno: -4048, code: 'EPERM', syscall: 'kill' }
+PS F:\projects\babyverse\zizo_BabyVerse> ex.js!F:\projects\babyverse\zizo_Babyverse\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSets

@@ -1,4 +1,3 @@
-
 import type { User as PrismaUser, Product as PrismaProduct, Order as PrismaOrderFull, OrderItem as PrismaOrderItemFull, CartItem as PrismaCartItemFull, Baby as PrismaBaby } from '@prisma/client';
 
 export interface Product extends PrismaProduct {
@@ -27,6 +26,7 @@ export interface Testimonial {
 
 export interface User extends PrismaUser { 
   babies?: BabyProfile[]; // Relation from Prisma
+  emailVerificationToken?: string; // Added emailVerificationToken
 }
 
 export interface BabyProfile extends PrismaBaby {

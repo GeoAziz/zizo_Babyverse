@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import { env } from '@/lib/env';
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-05-28.basil',
 });
 
 export const createPaymentIntent = async (amount: number) => {

@@ -3,46 +3,67 @@ import { env } from '@/lib/env';
 
 sgMail.setApiKey(env.SENDGRID_API_KEY);
 
-export const sendOrderConfirmation = async (to: string, orderData: any) => {
-  try {
-    const msg = {
-      to,
-      from: 'orders@babyverse.com',
-      subject: `Order Confirmed - #${orderData.id}`,
-      templateId: 'd-xxxxxxxxxxxxx', // Your SendGrid template ID
-      dynamicTemplateData: {
-        orderId: orderData.id,
-        customerName: orderData.shippingAddress.fullName,
-        orderTotal: orderData.totalAmount,
-        orderItems: orderData.items,
-        shippingAddress: orderData.shippingAddress,
-      },
-    };
-    
-    await sgMail.send(msg);
-    return true;
-  } catch (error) {
-    console.error('Error sending order confirmation email:', error);
-    throw error;
-  }
+type EmailTemplate = 'ORDER_CONFIRMATION' | 'SHIPPING_UPDATE' | 'LOW_STOCK_ALERT' | 'PROMOTION' | 'WELCOME';
+
+const templates: Record<EmailTemplate, string> = {
+  ORDER_CONFIRMATION: 'd-your-order-template-id',
+  SHIPPING_UPDATE: 'd-your-shipping-template-id',
+  LOW_STOCK_ALERT: 'd-your-stock-alert-template-id',
+  PROMOTION: 'd-your-promo-template-id',
+  WELCOME: 'd-your-welcome-template-id'
 };
 
-export const sendPasswordReset = async (to: string, resetToken: string) => {
+export async function sendEmail(to: string, template: EmailTemplate, data: any) {
   try {
     const msg = {
       to,
-      from: 'security@babyverse.com',
-      subject: 'Password Reset Request',
-      templateId: 'd-xxxxxxxxxxxxx', // Your SendGrid template ID
-      dynamicTemplateData: {
-        resetLink: `${env.NEXTAUTH_URL}/reset-password?token=${resetToken}`,
-      },
+      from: 'your@babyverse.com',
+      templateId: templates[template],
+      dynamic_template_data: data,
     };
-    
+
     await sgMail.send(msg);
+    console.log(`Email sent successfully to ${to}`);
     return true;
   } catch (error) {
-    console.error('Error sending password reset email:', error);
+    console.error('SendGrid Error:', error);
     throw error;
   }
-};
+}
+
+export async function sendLowStockAlert(productName: string, currentStock: number) {
+  return sendEmail(
+    'admin@babyverse.com',
+    'LOW_STOCK_ALERT',
+    {
+      productName,
+      currentStock,
+      restockLink: `${env.NEXTAUTH_URL}/admin/products`
+    }
+  );
+}
+
+export async function sendOrderConfirmation(orderDetails: any) {
+  return sendEmail(
+    orderDetails.customerEmail,
+    'ORDER_CONFIRMATION',
+    {
+      orderNumber: orderDetails.id,
+      items: orderDetails.items,
+      total: orderDetails.total,
+      shippingAddress: orderDetails.shippingAddress
+    }
+  );
+}
+
+export async function sendShippingUpdate(orderDetails: any) {
+  return sendEmail(
+    orderDetails.customerEmail,
+    'SHIPPING_UPDATE',
+    {
+      orderNumber: orderDetails.id,
+      trackingNumber: orderDetails.trackingNumber,
+      estimatedDelivery: orderDetails.estimatedDelivery
+    }
+  );
+}

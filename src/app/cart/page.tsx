@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -16,8 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSession } from 'next-auth/react';
 import type { CartItemWithProduct } from '@/app/api/cart/route';
 
-
-export default function CartPage() {
+function CartPageContent() {
   const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([]);
   const [isLoadingCart, setIsLoadingCart] = useState(true);
   const { toast } = useToast();
@@ -50,6 +48,15 @@ export default function CartPage() {
       router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
     } else if (status === 'authenticated') {
       fetchCartItems();
+      
+      // Add cart update listener
+      const handleCartUpdate = () => {
+        fetchCartItems();
+      };
+      window.addEventListener('cartUpdate', handleCartUpdate);
+      return () => {
+        window.removeEventListener('cartUpdate', handleCartUpdate);
+      };
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, router, searchParams]);
@@ -197,9 +204,8 @@ export default function CartPage() {
                               <Plus className="h-3 w-3" />
                             </Button>
                           </div>
-                        </TableCell>
-                        <TableCell className="text-right">${item.product.price.toFixed(2)}</TableCell>
-                        <TableCell className="text-right font-semibold">${(item.product.price * item.quantity).toFixed(2)}</TableCell>
+                        </TableCell>                        <TableCell className="text-right">KSH {(item.product.price * 100).toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-semibold">KSH {(item.product.price * item.quantity * 100).toFixed(2)}</TableCell>
                         <TableCell className="text-center">
                           <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)} className="text-destructive hover:text-destructive/80">
                             <Trash2 className="h-4 w-4" />
@@ -215,16 +221,15 @@ export default function CartPage() {
                 <h3 className="text-xl font-semibold mb-4 text-primary">Order Summary</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between text-muted-foreground">
-                    <span>Subtotal</span>
-                    <span>${cartSubtotal.toFixed(2)}</span>
+                    <span>Subtotal</span>                    <span>KSH {(cartSubtotal * 100).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Shipping</span>
-                    <span>${shippingCost.toFixed(2)}</span>
+                    <span>KSH {(shippingCost * 100).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold text-primary pt-2 border-t">
                     <span>Total</span>
-                    <span>${cartTotal.toFixed(2)}</span>
+                    <span>KSH {(cartTotal * 100).toFixed(2)}</span>
                   </div>
                 </div>
                 <div className="mt-6">
@@ -261,5 +266,18 @@ export default function CartPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function CartPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Loading cart contents...</p>
+      </div>
+    }>
+      <CartPageContent />
+    </Suspense>
   );
 }

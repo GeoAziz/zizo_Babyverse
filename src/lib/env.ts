@@ -4,9 +4,9 @@ const envSchema = z.object({
   // Database
   DATABASE_URL: z.string(),
 
-  // NextAuth
-  NEXTAUTH_URL: z.string().optional(),
-  NEXTAUTH_SECRET: z.string().optional(),
+  // Auth
+  NEXTAUTH_URL: z.string(),
+  NEXTAUTH_SECRET: z.string(),
 
   // Payment Processing
   STRIPE_SECRET_KEY: z.string(),
@@ -18,10 +18,8 @@ const envSchema = z.object({
 
   // Redis
   REDIS_URL: z.string().optional(),
-  REDIS_PASSWORD: z.string().optional(),
-
-  // Email (SendGrid)
-  SENDGRID_API_KEY: z.string().optional(),
+  REDIS_PASSWORD: z.string().optional(),  // Email (SendGrid)
+  SENDGRID_API_KEY: z.string(),
   EMAIL_FROM: z.string().optional(),
 
   // Image Upload (Cloudinary)

@@ -1,15 +1,16 @@
 import { env } from '@/lib/env';
-import { PayPalHttpClient, Environment } from '@paypal/checkout-server-sdk';
+import * as paypal from '@paypal/checkout-server-sdk';
 
+// Initialize PayPal client
 const environment = env.PAYPAL_MODE === 'sandbox' 
-  ? new Environment.Sandbox(env.PAYPAL_CLIENT_ID, env.PAYPAL_CLIENT_SECRET)
-  : new Environment.Live(env.PAYPAL_CLIENT_ID, env.PAYPAL_CLIENT_SECRET);
+  ? new paypal.core.SandboxEnvironment(env.PAYPAL_CLIENT_ID, env.PAYPAL_CLIENT_SECRET)
+  : new paypal.core.LiveEnvironment(env.PAYPAL_CLIENT_ID, env.PAYPAL_CLIENT_SECRET);
 
-const client = new PayPalHttpClient(environment);
+const client = new paypal.core.PayPalHttpClient(environment);
 
 export const createPayPalOrder = async (amount: number) => {
   try {
-    const request = new Orders.OrdersCreateRequest();
+    const request = new paypal.orders.OrdersCreateRequest();
     request.prefer("return=representation");
     request.requestBody({
       intent: 'CAPTURE',
@@ -31,7 +32,7 @@ export const createPayPalOrder = async (amount: number) => {
 
 export const capturePayPalPayment = async (orderId: string) => {
   try {
-    const request = new Orders.OrdersCaptureRequest(orderId);
+    const request = new paypal.orders.OrdersCaptureRequest(orderId);
     const capture = await client.execute(request);
     return capture;
   } catch (error) {

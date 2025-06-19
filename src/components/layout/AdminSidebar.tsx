@@ -1,9 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { LayoutDashboard, ShoppingBag, ListOrdered, Users, PieChart, Tag, Settings, LogOut, Rocket } from 'lucide-react';
+import { signOut } from 'next-auth/react';
+import { useToast } from '@/hooks/use-toast';
+import { auth, firebaseSignOut } from '@/lib/firebaseClient';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -17,6 +20,20 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await firebaseSignOut(auth);
+      await signOut({ redirect: false });
+      toast({ title: "Logged Out", description: "Admin session ended successfully." });
+      router.push('/login');
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({ title: "Logout Error", description: "Failed to log out. Please try again.", variant: "destructive" });
+    }
+  };
 
   return (
     <aside className="w-64 bg-sidebar text-sidebar-foreground p-4 flex flex-col space-y-4 border-r border-sidebar-border">
@@ -46,6 +63,7 @@ export default function AdminSidebar() {
       </nav>
       <div>
         <button
+          onClick={handleLogout}
           className={cn(
             'flex items-center space-x-3 rounded-md px-3 py-2 text-sm font-medium transition-colors w-full text-left',
             'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'

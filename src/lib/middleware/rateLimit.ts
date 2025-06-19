@@ -3,10 +3,10 @@ import { env } from '@/lib/env';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const redis = new Redis(env.REDIS_URL);
+const redis = new Redis(env.REDIS_URL || 'redis://localhost:6379');
 
 export const rateLimiter = async (req: NextRequest) => {
-  const ip = req.ip || 'anonymous';
+  const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'anonymous';
   const key = `rate-limit:${ip}`;
   
   try {

@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -30,6 +29,12 @@ export default function ProductCard({ product }: ProductCardProps) {
       router.push(`/login?callbackUrl=${window.location.pathname}`);
       return;
     }
+
+    if (product.stock < 1) {
+      toast({ title: "Out of Stock", description: "This product is currently unavailable.", variant: "destructive" });
+      return;
+    }
+
     setIsAddingToCart(true);
     try {
       const response = await fetch('/api/cart', {
@@ -45,6 +50,8 @@ export default function ProductCard({ product }: ProductCardProps) {
         title: `${product.name} added to cart!`,
         description: "Your little star will love it!",
       });
+      // Trigger a cart update event
+      window.dispatchEvent(new CustomEvent('cartUpdate'));
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Could not add to cart.", variant: "destructive" });
     } finally {
@@ -122,7 +129,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           {product.description?.substring(0, 60)}...
         </CardDescription>
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xl font-semibold text-primary">${product.price.toFixed(2)}</p>
+          <p className="text-xl font-semibold text-primary">KSH {(product.price * 100).toFixed(2)}</p>
           {product.averageRating && (
             <div className="flex items-center text-sm text-muted-foreground">
               <Star className="h-4 w-4 text-yellow-400 fill-yellow-400 mr-1" />

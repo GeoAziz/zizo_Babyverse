@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -68,11 +67,34 @@ export default function WishlistPage() {
     }
   };
 
-  const handleAddToCart = (product: Product) => {
-    // Mock add to cart. In real app, call API or cart context method
-    // For now, this is a placeholder for future cart API integration
-    toast({ title: `${product.name} added to cart!`, description: `(This is a mock action for now)` });
-    console.log("Add to cart (mock):", product.name);
+  const handleAddToCart = async (product: Product) => {
+    if (!session) {
+      toast({ title: "Please Login", description: "You need to be logged in to add items to your cart.", variant: "destructive" });
+      router.push(`/login?callbackUrl=/profile/wishlist`);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product.id, quantity: 1 }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to add to cart');
+      }
+      toast({
+        title: `${product.name} added to cart!`,
+        description: "Your little star will love it!",
+      });
+      // Trigger cart update
+      window.dispatchEvent(new CustomEvent('cartUpdate'));
+      // Remove from wishlist after adding to cart
+      await handleRemoveFromWishlist(product.id);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Could not add to cart.", variant: "destructive" });
+    }
   };
 
   if (status === 'loading' || (status === 'authenticated' && isLoading)) {

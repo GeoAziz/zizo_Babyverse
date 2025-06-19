@@ -45,6 +45,7 @@ model User {
   passwordHash  String? // Optional for Firebase Auth
   role          Role      @default(PARENT)
   firebaseUid   String?   @unique // For Firebase Auth integration
+  emailVerificationToken String?
 
   accounts      Account[]
   sessions      Session[]

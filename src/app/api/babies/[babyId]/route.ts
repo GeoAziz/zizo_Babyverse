@@ -1,31 +1,64 @@
-
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { z } from 'zod';
 
-// Optional: Schema for updates if you implement PUT
-// const UpdateBabyProfileSchema = z.object({
-//   name: z.string().min(1, "Baby's name is required.").optional(),
-//   ageInMonths: z.coerce.number().int().min(0, "Age must be a non-negative integer.").optional(),
-//   weightInKilograms: z.coerce.number().positive("Weight must be positive.").optional().nullable(),
-//   allergies: z.string().optional().nullable(),
-//   preferences: z.string().optional().nullable(),
-// });
+const UpdateBabyProfileSchema = z.object({
+  name: z.string().min(1, "Baby's name is required.").optional(),
+  ageInMonths: z.coerce.number().int().min(0, "Age must be a non-negative integer.").optional(),
+  weightInKilograms: z.coerce.number().positive("Weight must be positive.").optional().nullable(),
+  allergies: z.string().optional().nullable(),
+  preferences: z.string().optional().nullable(),
+});
 
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: { babyId: string } }
+// For GET
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ babyId: string }> }
 ) {
+  const params = await context.params;
   const session = await getServerSession(authOptions);
-  if (!session || !session.user || !session.user.id) {
+  if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   const { babyId } = params;
+  if (!babyId) {
+    return NextResponse.json({ message: "Baby ID is required" }, { status: 400 });
+  }
 
+  try {
+    const babyProfile = await prisma.baby.findFirst({
+      where: {
+        id: babyId,
+        userId: session.user.id,
+      },
+    });
+
+    if (!babyProfile) {
+      return NextResponse.json({ message: "Baby profile not found or you're not authorized to view it" }, { status: 404 });
+    }
+
+    return NextResponse.json(babyProfile);
+  } catch (error) {
+    console.error(`Error fetching baby profile ${babyId}:`, error);
+    return NextResponse.json({ message: "Failed to fetch baby profile" }, { status: 500 });
+  }
+}
+
+// For DELETE
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ babyId: string }> }
+) {
+  const params = await context.params;
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const { babyId } = params;
   if (!babyId) {
     return NextResponse.json({ message: "Baby ID is required" }, { status: 400 });
   }
@@ -51,54 +84,55 @@ export async function DELETE(
   } catch (error: any) {
     console.error(`Error deleting baby profile ${babyId}:`, error);
     if (error.code === 'P2025') { // Prisma error for record to delete does not exist
-        return NextResponse.json({ message: "Baby profile not found" }, { status: 404 });
+      return NextResponse.json({ message: "Baby profile not found" }, { status: 404 });
     }
     return NextResponse.json({ message: "Failed to delete baby profile" }, { status: 500 });
   }
 }
 
-// Placeholder for PUT if needed later
-// export async function PUT(
-//   request: Request,
-//   { params }: { params: { babyId: string } }
-// ) {
-//   const session = await getServerSession(authOptions);
-//   if (!session || !session.user || !session.user.id) {
-//     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-//   }
+// For PUT
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ babyId: string }> }
+) {
+  const params = await context.params;
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
 
-//   const { babyId } = params;
-//   if (!babyId) {
-//     return NextResponse.json({ message: "Baby ID is required" }, { status: 400 });
-//   }
+  const { babyId } = params;
+  if (!babyId) {
+    return NextResponse.json({ message: "Baby ID is required" }, { status: 400 });
+  }
 
-//   try {
-//     const body = await request.json();
-//     const validation = UpdateBabyProfileSchema.safeParse(body);
+  try {
+    const body = await request.json();
+    const validation = UpdateBabyProfileSchema.safeParse(body);
 
-//     if (!validation.success) {
-//       return NextResponse.json({ errors: validation.error.flatten().fieldErrors }, { status: 400 });
-//     }
-    
-//     const babyToUpdate = await prisma.baby.findFirst({
-//         where: {id: babyId, userId: session.user.id}
-//     });
+    if (!validation.success) {
+      return NextResponse.json({ errors: validation.error.flatten().fieldErrors }, { status: 400 });
+    }
 
-//     if(!babyToUpdate) {
-//         return NextResponse.json({message: "Baby profile not found or unauthorized"}, {status: 404});
-//     }
+    const babyToUpdate = await prisma.baby.findFirst({
+      where: { id: babyId, userId: session.user.id }
+    });
 
-//     const updatedBabyProfile = await prisma.baby.update({
-//       where: { id: babyId },
-//       data: validation.data,
-//     });
+    if (!babyToUpdate) {
+      return NextResponse.json({ message: "Baby profile not found or you're not authorized to update it" }, { status: 404 });
+    }
 
-//     return NextResponse.json(updatedBabyProfile);
-//   } catch (error: any) {
-//     console.error(`Error updating baby profile ${babyId}:`, error);
-//     if (error.code === 'P2025') {
-//       return NextResponse.json({ message: "Baby profile not found" }, { status: 404 });
-//     }
-//     return NextResponse.json({ message: "Failed to update baby profile" }, { status: 500 });
-//   }
-// }
+    const updatedBabyProfile = await prisma.baby.update({
+      where: { id: babyId },
+      data: validation.data,
+    });
+
+    return NextResponse.json(updatedBabyProfile);
+  } catch (error: any) {
+    console.error(`Error updating baby profile ${babyId}:`, error);
+    if (error.code === 'P2025') {
+      return NextResponse.json({ message: "Baby profile not found" }, { status: 404 });
+    }
+    return NextResponse.json({ message: "Failed to update baby profile" }, { status: 500 });
+  }
+}

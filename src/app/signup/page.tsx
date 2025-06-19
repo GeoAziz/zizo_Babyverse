@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,7 +26,7 @@ const GoogleIcon = () => (
   </svg>
 );
 
-export default function SignupPage() {
+function SignupPageContent(): React.ReactNode {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -117,7 +118,7 @@ export default function SignupPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-15rem)] items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background to-secondary/20">
-       <div className="relative w-full max-w-md space-y-8">
+      <div className="relative w-full max-w-md space-y-8">
         <div className="absolute -top-10 -right-20 w-72 h-72 bg-primary/30 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-3000"></div>
         <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-accent/30 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-5000"></div>
 
@@ -227,5 +228,13 @@ export default function SignupPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignupPageContent />
+    </Suspense>
   );
 }

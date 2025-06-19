@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent, useEffect } from 'react';
+import { useState, type FormEvent, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,12 +12,14 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import type { CartItemWithProduct } from '@/app/api/cart/route';
 import type { Order as PrismaOrder, OrderItem as PrismaOrderItem } from '@prisma/client';
+import { PayPalButtons, PayPalScriptProvider } from '@paypal/react-paypal-js';
+import type { OnApproveData, OnApproveActions, CreateOrderData, CreateOrderActions } from '@paypal/paypal-js';
 
 interface CheckoutOrder extends PrismaOrder {
   items: PrismaOrderItem[];
 }
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const router = useRouter();
   const { toast } = useToast();
   const { data: session, status } = useSession();
@@ -105,15 +107,17 @@ export default function CheckoutPage() {
     setCurrentStep(prev => prev + 1);
   };
 
-  const handlePlaceOrder = async (e: FormEvent) => {
-    e.preventDefault();
+  const handlePlaceOrder = async (e: FormEvent | any) => {
+    if (e.preventDefault) {
+      e.preventDefault();
+    }
     if (!cartSummary || cartSummary.items.length === 0) {
         toast({ title: "Empty Cart", description: "Cannot place an order with an empty cart.", variant: "destructive" });
         return;
     }
     setIsPlacingOrder(true);
     
-    const orderPayload = {
+    const orderPayload = e.shippingAddress ? e : {
       shippingAddress: shippingInfo,
       // paymentMethodId: "mock_payment_id" // For real payment
     };
@@ -231,34 +235,69 @@ export default function CheckoutPage() {
             {currentStep === 2 && (
               <form onSubmit={handleNextStep} className="space-y-6">
                 <h2 className="text-xl font-semibold text-primary">Payment Details</h2>
-                <div className="space-y-4">
-                  <div className="flex gap-4 p-4 border rounded-lg items-center">
-                    <input type="radio" name="paymentMethod" value="stripe" defaultChecked />
-                    <div>
-                      <h3 className="font-medium">Card Payment (Stripe)</h3>
-                      <p className="text-sm text-muted-foreground">Pay securely with your credit card</p>
-                    </div>
+                <div className="space-y-4">                  {/* PayPal Button */}
+                  <div className="p-4 border rounded-lg">
+                    <PayPalButtons
+                      forceReRender={[cartSummary.total]}
+                      createOrder={(data, actions) => {
+                        return actions.order.create({
+                          intent: "CAPTURE",
+                          purchase_units: [{
+                            amount: {
+                              currency_code: "USD",
+                              value: cartSummary.total.toFixed(2),
+                              breakdown: {
+                                item_total: {
+                                  currency_code: "USD",
+                                  value: cartSummary.subtotal.toFixed(2)
+                                },
+                                shipping: {
+                                  currency_code: "USD",
+                                  value: cartSummary.shipping.toFixed(2)
+                                }
+                              }
+                            },
+                            items: cartSummary.items.map(item => ({
+                              name: item.product.name,
+                              unit_amount: {
+                                currency_code: "USD",
+                                value: item.product.price.toFixed(2)
+                              },
+                              quantity: item.quantity.toString()
+                            }))
+                          }]
+                        });
+                      }}
+                      onApprove={async (data, actions) => {
+                        try {
+                          const order = await actions.order?.capture();
+                          if (order) {
+                            const orderPayload = {
+                              shippingAddress: shippingInfo,
+                              paymentMethodId: "paypal",
+                              paypalOrderId: data.orderID
+                            };
+                            await handlePlaceOrder(orderPayload);
+                          }
+                        } catch (error) {
+                          toast({
+                            title: "Payment Failed",
+                            description: "There was an error processing your payment.",
+                            variant: "destructive"
+                          });
+                        }
+                      }}
+                      style={{ layout: "vertical" }}
+                    />
                   </div>
+                  
+                  {/* Disabled Card Payment Section */}
                   <div className="flex gap-4 p-4 border rounded-lg items-center opacity-50">
-                    <input type="radio" name="paymentMethod" value="paypal" disabled />
+                    <input type="radio" name="paymentMethod" value="stripe" disabled />
                     <div>
-                      <h3 className="font-medium">PayPal (Coming Soon)</h3>
-                      <p className="text-sm text-muted-foreground">Pay with your PayPal account</p>
+                      <h3 className="font-medium">Card Payment (Coming Soon)</h3>
+                      <p className="text-sm text-muted-foreground">Pay with credit/debit card</p>
                     </div>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="cardNumber">Card Number</Label>
-                  <Input id="cardNumber" name="cardNumber" value={paymentInfo.cardNumber} onChange={handlePaymentChange} placeholder="**** **** **** 1234" required />
-                </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="expiryDate">Expiry Date (MM/YY)</Label>
-                    <Input id="expiryDate" name="expiryDate" value={paymentInfo.expiryDate} onChange={handlePaymentChange} placeholder="MM/YY" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="cvv">CVV</Label>
-                    <Input id="cvv" name="cvv" value={paymentInfo.cvv} onChange={handlePaymentChange} placeholder="123" required />
                   </div>
                 </div>
                  <div className="flex flex-col sm:flex-row gap-2">
@@ -323,5 +362,26 @@ export default function CheckoutPage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  const paypalOptions = {
+    clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "ARTOq_3ZQaLVQVlbjrD-_84O9eQYrsmwpL9Pjl1l2nCCJ1diAipfPFNbrbLO1BUG7oKB9G4swv86ZJEk",
+    currency: "USD",
+    intent: "capture",
+  };
+
+  return (
+    <PayPalScriptProvider options={paypalOptions}>
+      <Suspense fallback={
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+          <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground">Preparing checkout...</p>
+        </div>
+      }>
+        <CheckoutPageContent />
+      </Suspense>
+    </PayPalScriptProvider>
   );
 }

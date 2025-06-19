@@ -5,12 +5,12 @@ import { processWebhookEvent } from '@/lib/payments/stripe';
 import { headers } from 'next/headers';
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-05-28.basil',
 });
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const signature = headers().get('stripe-signature');
+  const signature = (await headers()).get('stripe-signature');
 
   if (!signature) {
     return NextResponse.json({ error: 'No signature' }, { status: 400 });
