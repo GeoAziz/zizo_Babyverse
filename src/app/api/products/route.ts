@@ -1,11 +1,11 @@
-
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import type { Role } from '@prisma/client';
 
+// Schema validation for POST requests
 const productSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().min(1, "Description is required"),
@@ -23,24 +23,56 @@ const productSchema = z.object({
   dataAiHint: z.string().optional(),
 });
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const limitParam = searchParams.get('limit');
-  const limit = limitParam ? parseInt(limitParam, 10) : undefined;
-
+export async function GET(request: NextRequest) {
   try {
+    const searchParams = request.nextUrl.searchParams;
+    const limitParam = searchParams.get('limit');
+    const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+    const category = searchParams.get('category');
+
+    if (limitParam && isNaN(limit!)) {
+      return NextResponse.json(
+        { message: "Invalid limit parameter" }, 
+        { status: 400 }
+      );
+    }
+
+    const where = category ? { category } : {};
+
     const products = await prisma.product.findMany({
+      where,
       orderBy: { createdAt: 'desc' },
-      ...(limit && !isNaN(limit) && { take: limit }),
+      ...(limit && { take: limit }),
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        category: true,
+        imageUrl: true,
+        stock: true,
+        tags: true,
+        ageGroup: true,
+        ecoTag: true,
+        averageRating: true,
+        features: true,
+        targetAudience: true,
+        keywords: true,
+        createdAt: true
+      }
     });
+
     return NextResponse.json(products);
   } catch (error) {
     console.error("Error fetching products:", error);
-    return NextResponse.json({ message: "Failed to fetch products" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Failed to fetch products", error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
 
   if (!session || (session.user as { role: Role }).role !== 'ADMIN') {

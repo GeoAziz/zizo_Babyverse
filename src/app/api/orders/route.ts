@@ -1,8 +1,7 @@
-
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import { z } from 'zod';
 
 const ShippingAddressSchema = z.object({
@@ -19,9 +18,10 @@ const CreateOrderSchema = z.object({
   // paymentMethodId: z.string().min(1, "Payment method ID is required"), // For real payment
 });
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || !session.user || !session.user.id) {
+  
+  if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
@@ -30,15 +30,23 @@ export async function GET(request: Request) {
       where: { userId: session.user.id },
       include: {
         items: {
-          // No need to include product again if name/price are on OrderItem
+          include: {
+            product: true,
+          },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
+
     return NextResponse.json(orders);
   } catch (error) {
-    console.error("Error fetching orders:", error);
-    return NextResponse.json({ message: "Failed to fetch orders" }, { status: 500 });
+    console.error('Error fetching orders:', error);
+    return NextResponse.json(
+      { message: "Failed to fetch orders" },
+      { status: 500 }
+    );
   }
 }
 

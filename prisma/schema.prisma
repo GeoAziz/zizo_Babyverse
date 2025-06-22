@@ -50,10 +50,13 @@ model User {
   accounts      Account[]
   sessions      Session[]
   orders        Order[]
-  cart          CartItem[]
+  cart          Cart?
+  cartItems     CartItem[]
   wishlist      WishlistItem[]
   babies        Baby[]
   notifications Notification[]
+  userActions   UserAction[]
+  preferences    UserPreference?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -110,12 +113,15 @@ model Product {
   features       String?
   targetAudience String?
   keywords       String?
+  arModelUrl     String?  // AR model URL for 3D previews
 
   cartItems     CartItem[]
   wishlistItems WishlistItem[]
   orderItems    OrderItem[]
   promotions    Promotion[]    @relation("ProductPromotions")
   media         Media[] // Add relation to Media model
+  userActions   UserAction[]
+  recommendations ProductRecommendation?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -159,18 +165,29 @@ model OrderItem {
   // @@unique([orderId, productId]) 
 }
 
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id])
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
 model CartItem {
   id        String  @id @default(cuid())
-  userId    String
-  user      User    @relation(fields: [userId], references: [id])
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
   productId String
   product   Product @relation(fields: [productId], references: [id])
   quantity  Int
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([userId, productId])
+  @@unique([cartId, productId])
 }
 
 model WishlistItem {
@@ -186,17 +203,69 @@ model WishlistItem {
 }
 
 model Baby {
-  id                String  @id @default(cuid())
+  id                String        @id @default(cuid())
   userId            String
-  user              User    @relation(fields: [userId], references: [id])
+  user              User         @relation(fields: [userId], references: [id])
   name              String
   ageInMonths       Int
   weightInKilograms Float?
   allergies         String?
   preferences       String?
+  milestones        Milestone[]
+  growthRecords     GrowthRecord[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Milestone {
+  id          String   @id @default(cuid())
+  babyId      String
+  baby        Baby     @relation(fields: [babyId], references: [id])
+  category    String   // e.g., "Motor", "Language", "Social"
+  name        String
+  description String
+  achieved    Boolean  @default(false)
+  targetAge   Int      // Target age in months
+  achievedAt  DateTime?
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GrowthRecord {
+  id          String   @id @default(cuid())
+  babyId      String
+  baby        Baby     @relation(fields: [babyId], references: [id])
+  date        DateTime
+  weight      Float?   // in kilograms
+  height      Float?   // in centimeters
+  headCirc    Float?   // head circumference in centimeters
+  notes       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model UserAction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  timestamp DateTime @default(now())
+}
+
+model ProductRecommendation {
+  id            String    @id @default(cuid())
+  productId     String    @unique
+  score         Float
+  totalFeedback Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  product       Product   @relation(fields: [productId], references: [id])
 }
 
 model Promotion {
@@ -268,4 +337,14 @@ model Fulfillment {
   updates   Json[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model UserPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  preferredCategories String[]
+  preferAR        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

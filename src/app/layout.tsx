@@ -1,10 +1,11 @@
-
 import type { Metadata } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import ClientLayout from '@/components/layout/ClientLayout';
 import Providers from './providers'; // Import the new Providers component
+import { AuthProvider } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -32,11 +33,17 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className={`${inter.variable} ${spaceGrotesk.variable} font-body antialiased`}>
+      <body className={cn(
+        `min-h-screen bg-background font-sans antialiased`,
+        inter.variable,
+        spaceGrotesk.variable
+      )}>
         <Providers> {/* Wrap ClientLayout with Providers */}
-          <ClientLayout>
-            {children}
-          </ClientLayout>
+          <AuthProvider>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </AuthProvider>
         </Providers>
         <Toaster />
       </body>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -22,33 +21,42 @@ export default function ProductsPage() {
   const [sortOrder, setSortOrder] = useState<string>('name-asc');
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
-
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch('/api/products');
+        const response = await fetch('/api/products', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        });
+
         if (!response.ok) {
           let detailedErrorMessage = `Failed to fetch products. Status: ${response.status} ${response.statusText}`;
           try {
-            // Attempt to get a more specific error message from the API response body
             const errorData = await response.json();
             if (errorData && errorData.message) {
               detailedErrorMessage = `API Error: ${errorData.message} (Status: ${response.status})`;
             }
           } catch (jsonError) {
-            // If response body is not JSON or JSON parsing fails, keep the status-based message
             console.warn("Could not parse error response as JSON from /api/products.");
           }
           throw new Error(detailedErrorMessage);
         }
+
         const data: Product[] = await response.json();
         setProducts(data);
       } catch (e: any) {
         console.error("Error fetching products in ProductsPage:", e.message);
-        setError(e.message); // Set the more detailed error message
-        toast({ title: "Error Loading Products", description: e.message, variant: "destructive" });
+        setError(e.message);
+        toast({
+          title: "Error Loading Products",
+          description: e.message,
+          variant: "destructive"
+        });
       } finally {
         setIsLoading(false);
       }
@@ -118,9 +126,9 @@ export default function ProductsPage() {
           <CardTitle className="text-xl font-headline text-primary flex items-center">
             <Filter className="mr-2 h-5 w-5 text-accent" /> Filter & Sort Your Universe
           </CardTitle>
-           <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative">
-               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search products..."
@@ -159,11 +167,11 @@ export default function ProductsPage() {
               <p className="text-muted-foreground">Loading products from the BabyVerse...</p>
             </div>
           ) : error ? (
-             <div className="flex flex-col items-center justify-center py-16 text-center">
-                <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
-                <p className="text-xl text-destructive mb-2">Oops! A Cosmic Glitch Occurred</p>
-                <p className="text-muted-foreground mb-4">{error}</p>
-                <Button onClick={() => window.location.reload()} variant="outline">Try Reloading Galaxy</Button>
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+              <p className="text-xl text-destructive mb-2">Oops! A Cosmic Glitch Occurred</p>
+              <p className="text-muted-foreground mb-4">{error}</p>
+              <Button onClick={() => window.location.reload()} variant="outline">Try Reloading Galaxy</Button>
             </div>
           ) : paginatedProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

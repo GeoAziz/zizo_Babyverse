@@ -1,9 +1,14 @@
 import { prisma } from '@/lib/db';
 import { EmailService } from './EmailService';
-import type { Prisma } from '@prisma/client';
+import type { Prisma, Product, User, Order, Baby } from '@prisma/client';
+
+interface EnhancedRecommendation extends Product {
+  reviews: Array<{ rating: number }>;
+  recommendation?: { score: number };
+}
 
 export class CustomerService {
-  static async getCustomerProfile(userId: string) {
+  static async getCustomerProfile(userId: string): Promise<User & { orders: Order[]; babies: Baby[]; wishlist: any[] }> {
     try {
       const customer = await prisma.user.findUnique({
         where: { id: userId },
@@ -14,7 +19,7 @@ export class CustomerService {
             }
           },
           babies: true,
-          wishlists: true
+          wishlist: true
         }
       });
 
@@ -159,6 +164,106 @@ export class CustomerService {
     } catch (error) {
       console.error('Failed to generate recommendations:', error);
       throw new Error('Failed to generate recommendations');
+    }
+  }
+
+  static async generateEnhancedRecommendations(userId: string, babyAge?: number): Promise<EnhancedRecommendation[]> {
+    try {
+      const [orderHistory, preferences, viewHistory] = await Promise.all([
+        prisma.$queryRaw<Array<{ product: Product }>>`
+          SELECT * FROM "OrderItem"
+          JOIN "Product" ON "OrderItem"."productId" = "Product"."id"
+          WHERE "OrderItem"."orderId" IN (
+            SELECT "id" FROM "Order" WHERE "userId" = ${userId}
+          )
+        `,
+        prisma.$queryRaw<Array<{ preferredCategories: string[]; preferAR: boolean }>>`
+          SELECT * FROM "UserPreference" WHERE "userId" = ${userId}
+        `,
+        prisma.$queryRaw<Array<{ productId: string }>>`
+          SELECT * FROM "ProductView"
+          WHERE "userId" = ${userId}
+          ORDER BY "viewedAt" DESC
+          LIMIT 10
+        `
+      ]);
+
+      const categories = new Set([
+        ...orderHistory.map(item => item.product.category),
+        ...(preferences?.[0]?.preferredCategories || [])
+      ]);
+
+      const recommendations = await prisma.product.findMany({
+        where: {
+          OR: [
+            { category: { in: Array.from(categories) } },
+            { id: { in: viewHistory.map(v => v.productId) } },
+            babyAge ? {
+              ageGroup: {
+                contains: `${Math.floor(babyAge / 12)}Y`
+              }
+            } : {}
+          ],
+          id: { notIn: orderHistory.map(item => item.product.id) }
+        },
+        include: {
+          Review: true,
+          ProductRecommendation: true
+        },
+        orderBy: [
+          { createdAt: 'desc' }
+        ],
+        take: 10
+      }) as unknown as EnhancedRecommendation[];
+
+      return recommendations;
+    } catch (error) {
+      console.error('Failed to generate enhanced recommendations:', error);
+      throw new Error('Failed to generate enhanced recommendations');
+    }
+  }
+
+  static async updateUserPreferences(userId: string, preferences: {
+    preferredCategories?: string[];
+    preferAR?: boolean;
+    priceRange?: { min: number; max: number };
+    notifications?: boolean;
+  }) {
+    try {
+      return await prisma.$executeRaw`
+        INSERT INTO "UserPreference" ("userId", "preferredCategories", "preferAR", "priceRange", "notifications")
+        VALUES (${userId}, ${preferences.preferredCategories}, ${preferences.preferAR}, ${preferences.priceRange}, ${preferences.notifications})
+        ON CONFLICT ("userId") DO UPDATE
+        SET
+          "preferredCategories" = EXCLUDED."preferredCategories",
+          "preferAR" = EXCLUDED."preferAR",
+          "priceRange" = EXCLUDED."priceRange",
+          "notifications" = EXCLUDED."notifications"
+      `;
+    } catch (error) {
+      console.error('Failed to update user preferences:', error);
+      throw new Error('Failed to update user preferences');
+    }
+  }
+
+  static async trackProductInteraction(
+    userId: string,
+    productId: string,
+    interaction: {
+      type: 'view' | 'purchase' | 'wishlist';
+      duration?: number;
+      rating?: number;
+      feedback?: string;
+    }
+  ) {
+    try {
+      await prisma.$executeRaw`
+        INSERT INTO "ProductInteraction" ("userId", "productId", "type", "duration", "rating", "feedback")
+        VALUES (${userId}, ${productId}, ${interaction.type}, ${interaction.duration}, ${interaction.rating}, ${interaction.feedback})
+      `;
+    } catch (error) {
+      console.error('Failed to track product interaction:', error);
+      throw new Error('Failed to track product interaction');
     }
   }
 }

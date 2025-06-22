@@ -15,40 +15,37 @@ export default function Home() {
   const [latestProducts, setLatestProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [productFetchError, setProductFetchError] = useState<string | null>(null);
+  const fetchProducts = async () => {
+    if (isLoadingProducts) return; // Prevent multiple simultaneous requests
+    setIsLoadingProducts(true);
+    setProductFetchError(null);
+    try {
+      const response = await fetch('/api/products?limit=4');
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type');
+        let errorMessage = 'Failed to fetch latest products';
+        
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          errorMessage = errorData.message || `Failed to fetch latest products. Status: ${response.status}`;
+        } else {
+          errorMessage = `Failed to fetch latest products. Status: ${response.status} ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+      const data = await response.json();
+      setLatestProducts(data);
+    } catch (error) {
+      console.error("Error fetching latest products:", error);
+      setProductFetchError((error as Error).message || "Could not load products. Please try again later.");
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoadingProducts(true);
-      setProductFetchError(null); // Reset error before new fetch
-      try {
-        const response = await fetch('/api/products?limit=4'); 
-        if (!response.ok) {
-          let errorMessage = 'Failed to fetch latest products';
-          try {
-            const errorData = await response.json();
-            if (errorData && errorData.message) {
-              errorMessage = `API Error: ${errorData.message} (Status: ${response.status})`;
-            } else {
-              errorMessage = `Failed to fetch latest products. Status: ${response.status} ${response.statusText}`;
-            }
-          } catch (jsonError) {
-            // If response is not JSON, use status text
-            errorMessage = `Failed to fetch latest products. Status: ${response.status} ${response.statusText}`;
-          }
-          console.error("Detailed fetch error in Home page:", errorMessage); 
-          throw new Error(errorMessage);
-        }
-        const data: Product[] = await response.json();
-        setLatestProducts(data);
-      } catch (error) {
-        console.error("Error fetching latest products in Home page:", error);
-        setProductFetchError((error as Error).message || "Could not load products. Please check back soon!");
-      } finally {
-        setIsLoadingProducts(false);
-      }
-    };
     fetchProducts();
-  }, []);
+  }, []); // Empty dependency array since fetchProducts is defined inside component
 
   return (
     <div className="space-y-16 md:space-y-24">

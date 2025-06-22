@@ -1,5 +1,4 @@
-
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { getServerSession } from "next-auth/next";
@@ -25,31 +24,32 @@ const productUpdateSchema = z.object({
 
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
-    // Validate if ID is a CUID, otherwise Prisma might throw an error if it's not found
-    // This is a basic check, a more robust CUID validation regex could be used.
-    if (!params.id || params.id.length < 20) { // Basic CUID length check
-        return NextResponse.json({ message: "Invalid product ID format" }, { status: 400 });
+    const { id } = context.params;
+    
+    // Validate if ID is a CUID
+    if (!id || id.length < 20) {
+      return NextResponse.json({ message: "Invalid product ID format" }, { status: 400 });
     }
 
     const product = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id }
     });
 
     if (!product) {
       return NextResponse.json({ message: "Product not found" }, { status: 404 });
     }
+
     return NextResponse.json(product);
-  } catch (error: any) {
-    console.error(`Error fetching product ${params.id}:`, error);
-    // Check if Prisma throws a specific error for invalid ID format, though findUnique usually returns null for non-matches
-    if (error.code === 'P2023' || (error.message && error.message.includes("Invalid `prisma.product.findUnique()` invocation"))) {
-        return NextResponse.json({ message: "Invalid product ID format provided to database." }, { status: 400 });
-    }
-    return NextResponse.json({ message: "Failed to fetch product" }, { status: 500 });
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    return NextResponse.json(
+      { message: "Failed to fetch product", error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }
 

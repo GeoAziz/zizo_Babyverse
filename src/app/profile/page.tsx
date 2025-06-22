@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, type FormEvent } from 'react';
@@ -10,10 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { User, Edit3, ShoppingBag, Star, KeyRound, LogOut, Baby, Loader2, PlusCircle, Trash2 } from 'lucide-react';
+import { User, Edit3, ShoppingBag, Star, KeyRound, LogOut, Baby, Loader2, PlusCircle, Trash2, Package, MapPin, CreditCard, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSession, signOut } from 'next-auth/react';
-import type { BabyProfile } from '@/lib/types'; // Using PrismaBaby via lib/types
+import type { BabyProfile, Order, ShippingAddress } from '@/lib/types'; // Using PrismaBaby via lib/types
+import { format } from 'date-fns';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export default function ProfilePage() {
   const { data: session, status, update: updateSession } = useSession();
@@ -30,6 +31,14 @@ export default function ProfilePage() {
   const [currentBaby, setCurrentBaby] = useState<Partial<BabyProfile>>({ name: '', ageInMonths: 0, weightInKilograms: undefined, allergies: '', preferences: '' });
   const [isSavingBaby, setIsSavingBaby] = useState(false);
 
+  const [activeTab, setActiveTab] = useState('profile');
+  const [isLoading, setIsLoading] = useState(true);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [profile, setProfile] = useState({
+    name: '',
+    email: '',
+    defaultShippingAddress: {} as ShippingAddress,
+  });
 
   const fetchBabyProfiles = async () => {
     if (status !== 'authenticated') return;
@@ -51,11 +60,47 @@ export default function ProfilePage() {
       setName(session.user.name || '');
       setEmail(session.user.email || '');
       fetchBabyProfiles();
+      fetchProfile();
+      fetchOrders();
     } else if (status === 'unauthenticated') {
       router.push('/login?callbackUrl=/profile');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, status, router]);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await fetch('/api/user/profile');
+      if (!response.ok) throw new Error('Failed to fetch profile');
+      const data = await response.json();
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast({
+        title: "Error",
+        description: "Could not load your profile.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const response = await fetch('/api/orders');
+      if (!response.ok) throw new Error('Failed to fetch orders');
+      const data = await response.json();
+      setOrders(data);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast({
+        title: "Error",
+        description: "Could not load your orders.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSaveProfile = async () => {
     setIsEditingProfile(false);
@@ -128,187 +173,158 @@ export default function ProfilePage() {
   };
 
 
-  if (status === 'loading') {
+  if (status === 'loading' || (status === 'authenticated' && isLoading)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Verifying your cosmic credentials...</p>
+        <p className="text-muted-foreground">Loading your cosmic profile...</p>
       </div>
     );
   }
 
-  if (!session) { 
+  if (status === 'unauthenticated') {
     return (
-         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
-            <p className="text-muted-foreground">Redirecting to login...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <p className="text-muted-foreground">Redirecting to login...</p>
+      </div>
     );
   }
 
 
   return (
     <div className="container mx-auto py-12 px-4">
-      <Card className="max-w-3xl mx-auto shadow-glow-lg border-accent/30">
-        <CardHeader className="text-center border-b pb-6">
-          <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-            <User size={48} className="text-primary" />
-          </div>
-          <CardTitle className="text-3xl font-headline text-primary">My BabyVerse Profile</CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Manage your account details and preferences for your intergalactic parenting journey.
-            User Role: {(session.user as any)?.role}
-          </CardDescription>
+      <Card className="max-w-4xl mx-auto shadow-glow-lg">
+        <CardHeader>
+          <CardTitle className="text-3xl font-headline text-primary flex items-center">
+            <User className="mr-3 h-8 w-8 text-accent" /> My Profile
+          </CardTitle>
+          <CardDescription>Manage your account and view your order history.</CardDescription>
         </CardHeader>
-        <CardContent className="p-6 space-y-8">
-          <section>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-primary">Account Information</h2>
-              <Button variant="ghost" size="icon" onClick={() => setIsEditingProfile(!isEditingProfile)} className="text-accent hover:text-accent/80">
-                <Edit3 className="h-5 w-5" />
-              </Button>
-            </div>
-            {isEditingProfile ? (
-              <div className="space-y-4">
+        <CardContent>
+          <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="orders">Orders</TabsTrigger>
+              <TabsTrigger value="addresses">Addresses</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="profile" className="space-y-6">
+              <form onSubmit={handleSaveProfile} className="space-y-4">
                 <div>
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    value={profile.name}
+                    onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={email} disabled/>
-                   <p className="text-xs text-muted-foreground mt-1">Email cannot be changed here.</p>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={profile.email}
+                    disabled
+                  />
                 </div>
-                <Button onClick={handleSaveProfile} className="bg-accent text-accent-foreground hover:bg-accent/90">Save Changes</Button>
-                <Button variant="outline" onClick={() => setIsEditingProfile(false)} className="ml-2">Cancel</Button>
-              </div>
-            ) : (
-              <div className="space-y-3 text-muted-foreground">
-                <p><strong>Name:</strong> {name}</p>
-                <p><strong>Email:</strong> {email}</p>
-              </div>
-            )}
-          </section>
+                <Button type="submit">Save Changes</Button>
+              </form>
+            </TabsContent>
 
-          <section>
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-primary">My Little Stars</h2>
-                <Button variant="outline" size="sm" onClick={openAddBabyModal} className="border-accent text-accent hover:bg-accent/10">
-                    <PlusCircle className="mr-2 h-4 w-4"/> Add Baby
-                </Button>
-            </div>
-            {isLoadingBabies ? (
-                <div className="flex items-center justify-center py-4">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary mr-2"/> Loading baby profiles...
+            <TabsContent value="orders" className="space-y-6">
+              {orders.length > 0 ? (
+                <div className="space-y-4">
+                  {orders.map((order) => (
+                    <Card key={order.id} className="bg-card/50">
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-lg">Order #{order.id}</CardTitle>
+                            <CardDescription>
+                              Placed on {format(new Date(order.createdAt), 'PPP')}
+                            </CardDescription>
+                          </div>
+                          <Button
+                            variant="outline"
+                            onClick={() => router.push(`/orders/${order.id}`)}
+                          >
+                            View Details
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid gap-4">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Status:</span>
+                            <span className="font-medium capitalize">{order.status}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Items:</span>
+                            <span className="font-medium">{order.items.length} items</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Total:</span>
+                            <span className="font-medium">KSH {(order.totalAmount * 100).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-            ) : babyProfiles.length > 0 ? (
-              <ul className="space-y-3">
-                {babyProfiles.map(baby => (
-                  <li key={baby.id} className="p-3 bg-muted/30 rounded-md flex justify-between items-center shadow-sm hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center">
-                      <Baby className="h-6 w-6 text-accent mr-3"/>
+              ) : (
+                <div className="text-center py-12">
+                  <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Orders Yet</h3>
+                  <p className="text-muted-foreground">
+                    When you make your first purchase, it will appear here.
+                  </p>
+                  <Button
+                    className="mt-4"
+                    onClick={() => router.push('/products')}
+                  >
+                    Start Shopping
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="addresses" className="space-y-6">
+              <div className="grid gap-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-medium text-primary">{baby.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                            {baby.ageInMonths} months old
-                            {baby.weightInKilograms && `, ${baby.weightInKilograms}kg`}
+                        <CardTitle className="text-lg">Default Shipping Address</CardTitle>
+                        <CardDescription>Used for order deliveries</CardDescription>
+                      </div>
+                      <Button variant="outline">Edit</Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {profile.defaultShippingAddress ? (
+                      <div className="space-y-1">
+                        <p className="font-medium">{profile.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {profile.defaultShippingAddress.street}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {profile.defaultShippingAddress.city}, {profile.defaultShippingAddress.postalCode}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {profile.defaultShippingAddress.country}
                         </p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        {/* <Button variant="ghost" size="icon" className="text-blue-500 hover:text-blue-700 h-7 w-7">
-                            <Edit3 className="h-4 w-4" />
-                        </Button> */}
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteBabyProfile(baby.id)} className="text-destructive hover:text-destructive/80 h-7 w-7">
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-muted-foreground text-sm py-4 text-center">No baby profiles added yet. Add your little star to get personalized experiences!</p>
-            )}
-          </section>
-
-          <Dialog open={isBabyModalOpen} onOpenChange={setIsBabyModalOpen}>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                <DialogTitle className="font-headline text-xl text-primary">
-                    {currentBaby.id ? 'Edit Little Star' : 'Add a New Little Star'}
-                </DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSaveBabyProfile} className="space-y-4 py-2">
-                    <div>
-                        <Label htmlFor="babyName">Baby's Name</Label>
-                        <Input id="babyName" name="name" value={currentBaby.name || ''} onChange={handleBabyInputChange} required />
-                    </div>
-                    <div>
-                        <Label htmlFor="ageInMonths">Age (in months)</Label>
-                        <Input id="ageInMonths" name="ageInMonths" type="number" value={currentBaby.ageInMonths || 0} onChange={handleBabyInputChange} required min="0"/>
-                    </div>
-                    <div>
-                        <Label htmlFor="weightInKilograms">Weight (in kg, optional)</Label>
-                        <Input id="weightInKilograms" name="weightInKilograms" type="number" step="0.1" value={currentBaby.weightInKilograms || ''} onChange={handleBabyInputChange} />
-                    </div>
-                    <div>
-                        <Label htmlFor="allergies">Allergies (optional, comma-separated)</Label>
-                        <Textarea id="allergies" name="allergies" value={currentBaby.allergies || ''} onChange={handleBabyInputChange} rows={2}/>
-                    </div>
-                     <div>
-                        <Label htmlFor="preferences">Preferences (optional, e.g., loves music, organic only)</Label>
-                        <Textarea id="preferences" name="preferences" value={currentBaby.preferences || ''} onChange={handleBabyInputChange} rows={2}/>
-                    </div>
-                <DialogFooter className="mt-2">
-                    <DialogClose asChild>
-                        <Button type="button" variant="outline" disabled={isSavingBaby}>Cancel</Button>
-                    </DialogClose>
-                    <Button type="submit" disabled={isSavingBaby} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                        {isSavingBaby ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                        Save Little Star
-                    </Button>
-                </DialogFooter>
-                </form>
-            </DialogContent>
-          </Dialog>
-
-          <section>
-            <h2 className="text-xl font-semibold text-primary mb-4">Navigation Deck</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Button variant="outline" asChild className="justify-start p-4 h-auto text-left hover:border-primary hover:bg-primary/5 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-sm">
-                <Link href="/profile/orders" className="flex items-center">
-                  <ShoppingBag className="mr-3 h-5 w-5 text-primary" />
-                  <div>
-                    <span className="font-semibold">Order History</span>
-                    <p className="text-xs text-muted-foreground">View your past purchases</p>
-                  </div>
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="justify-start p-4 h-auto text-left hover:border-primary hover:bg-primary/5 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-sm">
-                <Link href="/profile/wishlist" className="flex items-center">
-                  <Star className="mr-3 h-5 w-5 text-primary" />
-                   <div>
-                    <span className="font-semibold">My Wishlist</span>
-                    <p className="text-xs text-muted-foreground">Your saved favorite items</p>
-                  </div>
-                </Link>
-              </Button>
-              <Button variant="outline" disabled asChild className="justify-start p-4 h-auto text-left hover:border-primary hover:bg-primary/5 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-sm opacity-60 cursor-not-allowed">
-                 <Link href="#" className="flex items-center"> 
-                  <KeyRound className="mr-3 h-5 w-5 text-primary" />
-                   <div>
-                    <span className="font-semibold">Change Password</span>
-                    <p className="text-xs text-muted-foreground">Update your security (soon)</p>
-                  </div>
-                </Link>
-              </Button>
-            </div>
-          </section>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No default shipping address set
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
-        <CardFooter className="border-t p-6">
-            <Button variant="destructive" onClick={handleLogout} className="w-full sm:w-auto">
-                <LogOut className="mr-2 h-4 w-4"/> Log Out of BabyVerse
-            </Button>
-        </CardFooter>
       </Card>
     </div>
   );

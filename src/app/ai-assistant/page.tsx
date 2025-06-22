@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, type FormEvent } from 'react';
@@ -13,6 +12,9 @@ import type { ProductBundlerOutput } from '@/ai/flows/product-bundler'; // Keep 
 import type { BabyNeedsForm } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { BundleVisualizer } from '@/components/ai/BundleVisualizer';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function AiAssistantPage() {
   const [formData, setFormData] = useState<BabyNeedsForm>({
@@ -26,6 +28,48 @@ export default function AiAssistantPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  const handleAddBundleToCart = async () => {
+    if (!recommendation || !session) {
+      toast({ 
+        title: "Please Login", 
+        description: "You need to be logged in to add items to your cart.",
+        variant: "destructive" 
+      });
+      router.push('/login?callbackUrl=/ai-assistant');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Add each product in the bundle to cart
+      for (const productId of recommendation.productIds) {
+        await fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId, quantity: 1 }),
+        });
+      }
+      
+      toast({
+        title: "Bundle Added to Cart!",
+        description: "All items from the bundle have been added to your cart.",
+      });
+      
+      // Trigger cart update event
+      window.dispatchEvent(new CustomEvent('cartUpdate'));
+    } catch (error: any) {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Could not add bundle to cart.", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -85,7 +129,6 @@ export default function AiAssistantPage() {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="container mx-auto py-12 px-4">
       <Card className="max-w-3xl mx-auto bg-card/80 backdrop-blur-md shadow-glow-md border-accent/30">
@@ -146,30 +189,13 @@ export default function AiAssistantPage() {
       )}
 
       {recommendation && (
-        <Card className="mt-8 max-w-3xl mx-auto bg-card/80 backdrop-blur-md shadow-glow-md border-primary/30">
-          <CardHeader>
-            <CardTitle className="text-2xl font-headline text-primary flex items-center">
-              <Package className="mr-2 h-6 w-6 text-primary" /> Zizi Recommends for {formData.babyName || 'Your Baby'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-lg font-semibold text-muted-foreground">{recommendation.bundleDescription}</p>
-            <h4 className="text-md font-semibold text-primary">Products in this bundle:</h4>
-            <ul className="list-disc list-inside space-y-2">
-              {recommendation.productNames.map((productName, index) => (
-                <li key={index} className="flex items-center text-muted-foreground">
-                  <Image src={`https://placehold.co/50x50.png`} alt={productName} width={40} height={40} className="rounded mr-3 object-cover" data-ai-hint="baby product"/>
-                  <span>{productName}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-          <CardFooter>
-            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-glow-sm transition-all duration-300 transform hover:scale-105">
-              <ShoppingCart className="mr-2 h-5 w-5" /> Add Bundle to Cart (Coming Soon!)
-            </Button>
-          </CardFooter>
-        </Card>
+        <div className="mt-8 max-w-4xl mx-auto">
+          <BundleVisualizer
+            bundle={recommendation}
+            onAddToCart={handleAddBundleToCart}
+            isLoading={isLoading}
+          />
+        </div>
       )}
     </div>
   );

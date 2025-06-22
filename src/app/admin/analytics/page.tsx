@@ -18,6 +18,8 @@ import {
   Tooltip,
   Legend 
 } from 'recharts';
+import { MarketingTools } from '@/components/admin/MarketingTools';
+import { AdvancedAnalytics } from '@/components/admin/AdvancedAnalytics';
 
 export default function AnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState<any>(null);
@@ -63,7 +65,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-headline font-bold text-primary">Analytics Dashboard</h1>
+      <h1 className="text-3xl font-headline font-bold text-primary">Advanced Analytics Dashboard</h1>
       
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -112,75 +114,12 @@ export default function AnalyticsPage() {
         </Card>
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="shadow-card-glow hover:shadow-glow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center"><Users className="mr-2 h-5 w-5 text-primary"/> Age Groups Distribution</CardTitle>
-            <CardDescription>Distribution of orders by baby age group.</CardDescription>
-          </CardHeader>
-          <CardContent className="h-60">
-            <ResponsiveContainer width="100%" height="100%">
-              <RePieChart>
-                <Pie 
-                  data={analyticsData.ageGroups} 
-                  dataKey="value" 
-                  nameKey="name" 
-                  cx="50%" 
-                  cy="50%" 
-                  outerRadius="80%" 
-                  label
-                >
-                  {analyticsData.ageGroups.map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </RePieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Advanced Analytics Section */}
+      <AdvancedAnalytics data={analyticsData} isLoading={loading} error={error} />
 
-        <Card className="shadow-card-glow hover:shadow-glow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center"><BarChart className="mr-2 h-5 w-5 text-primary"/> Regional Sales</CardTitle>
-            <CardDescription>Sales distribution by region.</CardDescription>
-          </CardHeader>
-          <CardContent className="h-60">
-            <ResponsiveContainer width="100%" height="100%">
-              <ReBarChart data={analyticsData.regionData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="sales" fill="hsl(var(--primary))" />
-              </ReBarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-card-glow hover:shadow-glow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <LineChartIconLucide className="mr-2 h-5 w-5 text-primary"/> Monthly Trends
-            </CardTitle>
-            <CardDescription>Revenue and user growth over time.</CardDescription>
-          </CardHeader>
-          <CardContent className="h-60">
-            <ResponsiveContainer width="100%" height="100%">
-              <ReLineChart data={analyticsData.monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="sales" stroke="hsl(var(--primary))" />
-                <Line type="monotone" dataKey="users" stroke="hsl(var(--accent))" />
-              </ReLineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Marketing Tools Section */}
+      <div className="mt-8">
+        <MarketingTools />
       </div>
 
       {/* Additional Insights */}

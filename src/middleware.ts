@@ -1,44 +1,41 @@
-
-import { withAuth } from "next-auth/middleware";
-import type { NextRequestWithAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export default withAuth(
-  // `withAuth` augments your `Request` with the user's token.
-  function middleware(req: NextRequestWithAuth) {
-    const { token } = req.nextauth;
-    const { pathname } = req.nextUrl;
+// This function can be marked `async` if using `await` inside
+export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
 
-    // Protect admin routes
-    if (pathname.startsWith("/admin")) {
-      if (!token || (token as any).role !== "ADMIN") {
-        // If you want to redirect to a specific unauthorized page for admin:
-        // return NextResponse.redirect(new URL('/unauthorized-admin', req.url));
-        // For now, redirect to login, which will handle it or show an error
-        return NextResponse.redirect(new URL("/login?error=Unauthorized", req.url));
-      }
-    }
-    // For other protected routes like /profile, /cart, etc.,
-    // the default behavior of withAuth (redirecting to signIn page if no token) is usually sufficient.
-    // `authorized` callback below handles the general case.
-  },
-  {
-    callbacks: {
-      authorized: ({ token }) => !!token, // If there is a token, the user is authorized
-    },
-    pages: {
-      signIn: "/login", // Default NextAuth sign-in page
-    },
+  // Define public paths that don't require authentication
+  const isPublicPath =
+    path.startsWith("/api/products") ||
+    path.startsWith("/login") ||
+    path.startsWith("/register") ||
+    path.startsWith("/about") ||
+    path === "/";
+
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+
+  // Redirect to login if accessing protected route without token
+  if (!isPublicPath && !token) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
-);
 
+  return NextResponse.next();
+}
+
+// Matcher configuration for protected routes
 export const config = {
   matcher: [
     "/profile/:path*",
     "/admin/:path*",
     "/cart/:path*",
     "/checkout/:path*",
-    "/ai-assistant/:path*", // Assuming AI assistant should be protected
-    "/chatbot/:path*" // Assuming chatbot should be protected
+    "/ai-assistant/:path*",
+    "/chatbot/:path*",
+    "/api/((?!products).)*", // Exclude /api/products from authentication
   ],
 };

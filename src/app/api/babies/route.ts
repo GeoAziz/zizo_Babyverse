@@ -6,11 +6,26 @@ import { authOptions } from "@/lib/auth";
 import { z } from 'zod';
 
 const BabyProfileSchema = z.object({
-  name: z.string().min(1, "Baby's name is required."),
-  ageInMonths: z.coerce.number().int().min(0, "Age must be a non-negative integer."),
-  weightInKilograms: z.coerce.number().positive("Weight must be positive.").optional().nullable(),
-  allergies: z.string().optional().nullable(),
-  preferences: z.string().optional().nullable(),
+  name: z.string().min(1, "Baby's name is required.")
+    .max(50, "Name is too long")
+    .refine(name => /^[a-zA-Z\s-']+$/.test(name), "Name can only contain letters, spaces, hyphens, and apostrophes"),
+  ageInMonths: z.coerce.number().int()
+    .min(0, "Age must be a non-negative integer.")
+    .max(60, "Age must be 60 months or less"),
+  weightInKilograms: z.coerce.number()
+    .positive("Weight must be positive.")
+    .min(0.5, "Weight must be at least 0.5 kg")
+    .max(30, "Weight must be 30 kg or less")
+    .optional()
+    .nullable(),
+  allergies: z.string()
+    .max(500, "Allergies description is too long")
+    .optional()
+    .nullable(),
+  preferences: z.string()
+    .max(500, "Preferences description is too long")
+    .optional()
+    .nullable(),
 });
 
 export async function GET(request: Request) {
