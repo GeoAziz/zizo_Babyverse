@@ -88,8 +88,6 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.0.2",
-    "@sentry/nextjs": "^7.0.0",
-    "@sentry/profiling-node": "^1.0.0",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.0.0",
@@ -99,7 +97,6 @@
     "@types/node": "^20",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
-    "@types/stripe": "^8.0.416",
     "cypress": "^13.0.0",
     "genkit-cli": "1.8.0",
     "handlebars-loader": "^1.7.3",
