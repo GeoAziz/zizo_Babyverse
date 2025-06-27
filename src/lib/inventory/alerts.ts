@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { sendLowStockAlert } from '@/lib/email/sendgrid';
+// import { sendLowStockAlert } from '@/lib/email/sendgrid';
 
 export const LOW_STOCK_THRESHOLD = 10;
 export const CRITICAL_STOCK_THRESHOLD = 5;
@@ -17,13 +17,13 @@ export async function checkInventoryLevels() {
     for (const product of lowStockProducts) {
       if (product.stock <= CRITICAL_STOCK_THRESHOLD) {
         // Send immediate alert for critical stock
-        await sendLowStockAlert(product.name, product.stock);
+        // await sendLowStockAlert(product.name, product.stock);
       }
     }
 
     return {
       lowStock: lowStockProducts.length,
-      criticalStock: lowStockProducts.filter(p => p.stock <= CRITICAL_STOCK_THRESHOLD).length,
+      criticalStock: lowStockProducts.filter((p: { stock: number }) => p.stock <= CRITICAL_STOCK_THRESHOLD).length,
       products: lowStockProducts
     };
   } catch (error) {
@@ -44,7 +44,7 @@ export async function updateStockLevel(productId: string, quantity: number, oper
     });
 
     if (product.stock <= LOW_STOCK_THRESHOLD) {
-      await sendLowStockAlert(product.name, product.stock);
+      // await sendLowStockAlert(product.name, product.stock);
     }
 
     return product;

@@ -18,9 +18,7 @@ const envSchema = z.object({
 
   // Redis
   REDIS_URL: z.string().optional(),
-  REDIS_PASSWORD: z.string().optional(),  // Email (SendGrid)
-  SENDGRID_API_KEY: z.string(),
-  EMAIL_FROM: z.string().optional(),
+  REDIS_PASSWORD: z.string().optional(),
 
   // Image Upload (Cloudinary)
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
