@@ -1,44 +1,22 @@
-import { sendEmail, sendLowStockAlert, sendOrderConfirmation, sendShippingUpdate } from '@/lib/email/sendgrid';
 import type { Order, OrderItem, Product, User } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 
-export class EmailService {  static async sendOrderConfirmationEmail(order: Order & { items: OrderItem[] }, customer: User) {
-    try {
-      await sendOrderConfirmation({
-        customerEmail: customer.email,
-        id: order.id,
-        items: order.items,
-        total: order.totalAmount,
-        shippingAddress: order.shippingAddress
-      });
-    } catch (error) {
-      console.error('Failed to send order confirmation:', error);
-      throw new Error('Failed to send order confirmation email');
-    }
+// EmailService: All email functionality is disabled (SendGrid removed)
+export class EmailService {
+  static async sendOrderConfirmationEmail(order: Order & { items: OrderItem[] }, customer: User) {
+    // Email sending is disabled
+    return;
   }
 
   static async sendLowStockNotification(product: Product) {
-    try {
-      await sendLowStockAlert(product.name, product.stock);
-    } catch (error) {
-      console.error('Failed to send low stock alert:', error);
-      throw new Error('Failed to send low stock notification');
-    }
+    // Email sending is disabled
+    return;
   }
 
   static async sendShippingUpdateEmail(order: Order, customer: User, trackingInfo: any) {
-    try {
-      await sendShippingUpdate({
-        customerEmail: customer.email,
-        id: order.id,
-        trackingNumber: trackingInfo.trackingNumber,
-        estimatedDelivery: trackingInfo.estimatedDelivery
-      });
-    } catch (error) {
-      console.error('Failed to send shipping update:', error);
-      throw new Error('Failed to send shipping update email');
-    }
+    // Email sending is disabled
+    return;
   }
   static async sendWelcomeEmail(user: User) {
     try {
@@ -50,14 +28,8 @@ export class EmailService {  static async sendOrderConfirmationEmail(order: Orde
         }
       });
 
-      await sendEmail(
-        user.email,
-        'WELCOME',
-        {
-          name: user.name,
-          verificationUrl: `${process.env.NEXTAUTH_URL}/verify-email?token=${verificationToken.token}`
-        }
-      );
+      // Email sending is disabled
+      return;
     } catch (error) {
       console.error('Failed to send welcome email:', error);
       throw new Error('Failed to send welcome email');
@@ -66,7 +38,8 @@ export class EmailService {  static async sendOrderConfirmationEmail(order: Orde
 
   static async sendReport(to: string, type: string, data: any) {
     try {
-      await sendEmail(to, type as any, data);
+      // Email sending is disabled
+      return;
     } catch (error) {
       console.error('Failed to send report:', error);
       throw new Error('Failed to send report email');
