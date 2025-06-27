@@ -1,24 +1,23 @@
-import type { Order, OrderItem, Product, User } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 
-// EmailService: All email functionality is disabled (SendGrid removed)
+// EmailService: All email functionality is disabled (SendGrid and Prisma removed)
 export class EmailService {
-  static async sendOrderConfirmationEmail(order: Order & { items: OrderItem[] }, customer: User) {
+  static async sendOrderConfirmationEmail(order: any, customer: any) {
     // Email sending is disabled
     return;
   }
 
-  static async sendLowStockNotification(product: Product) {
+  static async sendLowStockNotification(product: any) {
     // Email sending is disabled
     return;
   }
 
-  static async sendShippingUpdateEmail(order: Order, customer: User, trackingInfo: any) {
+  static async sendShippingUpdateEmail(order: any, customer: any, trackingInfo: any) {
     // Email sending is disabled
     return;
   }
-  static async sendWelcomeEmail(user: User) {
+  static async sendWelcomeEmail(user: any) {
     try {
       const verificationToken = await prisma.verificationToken.create({
         data: {
