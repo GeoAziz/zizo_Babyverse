@@ -7,8 +7,7 @@ declare namespace NodeJS {
     PAYPAL_CLIENT_SECRET: string;
     PAYPAL_WEBHOOK_ID: string;
     PAYPAL_MODE: 'sandbox' | 'live';
-    REDIS_URL: string;
-    SENDGRID_API_KEY: string;
+    REDIS_URL?: string;
     NEXTAUTH_URL: string;
     NEXTAUTH_SECRET: string;
     CLOUDINARY_CLOUD_NAME?: string;
