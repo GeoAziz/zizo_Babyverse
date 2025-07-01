@@ -1,0 +1,354 @@
+```plaintext
+// ARCHIVED: Prisma schema is no longer used. Firestore is now the database.
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PARENT
+  ADMIN
+}
+
+enum OrderStatus {
+  Pending
+  Processing
+  PodPacked
+  Dispatched
+  InTransit
+  Delivered
+  Cancelled
+}
+
+enum PromoType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum PromoTarget {
+  ALL_PRODUCTS
+  SPECIFIC_PRODUCTS
+  SPECIFIC_CATEGORIES
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String? // Optional for Firebase Auth
+  role          Role      @default(PARENT)
+  firebaseUid   String?   @unique // For Firebase Auth integration
+  emailVerificationToken String?
+
+  accounts      Account[]
+  sessions      Session[]
+  orders        Order[]
+  cart          Cart?
+  cartItems     CartItem[]
+  wishlist      WishlistItem[]
+  babies        Baby[]
+  notifications Notification[]
+  userActions   UserAction[]
+  preferences    UserPreference?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  name           String
+  description    String
+  price          Float
+  category       String
+  imageUrl       String?
+  dataAiHint     String?
+  stock          Int      @default(0)
+  tags           String[] @default([])
+  ageGroup       String?
+  ecoTag         Boolean  @default(false)
+  averageRating  Float?   @default(4.5) // Default average rating if needed
+  features       String?
+  targetAudience String?
+  keywords       String?
+  arModelUrl     String?  // AR model URL for 3D previews
+
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
+  orderItems    OrderItem[]
+  promotions    Promotion[]    @relation("ProductPromotions")
+  media         Media[] // Add relation to Media model
+  userActions   UserAction[]
+  recommendations ProductRecommendation?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id])
+  items             OrderItem[]
+  totalAmount       Float
+  status            OrderStatus @default(Pending)
+  shippingAddress   Json
+  paymentMethod     String?
+  paymentStatus     String?     @default("Pending")
+  trackingNumber    String?
+  estimatedDelivery DateTime?
+
+  payment       Payment?
+  notifications Notification[]
+  fulfillment   Fulfillment?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  name      String
+  price     Float
+  quantity  Int
+
+  // Optional: If you want to ensure a product appears only once per order,
+  // you might consider this, but typically orders can have multiple line items for the same product
+  // if added at different times or with different variants (not modeled here).
+  // For simplicity, I'll remove this unique constraint as it's often not desired.
+  // @@unique([orderId, productId]) 
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id])
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+}
+
+model WishlistItem {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Baby {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User         @relation(fields: [userId], references: [id])
+  name              String
+  ageInMonths       Int
+  weightInKilograms Float?
+  allergies         String?
+  preferences       String?
+  milestones        Milestone[]
+  growthRecords     GrowthRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Milestone {
+  id          String   @id @default(cuid())
+  babyId      String
+  baby        Baby     @relation(fields: [babyId], references: [id])
+  category    String   // e.g., "Motor", "Language", "Social"
+  name        String
+  description String
+  achieved    Boolean  @default(false)
+  targetAge   Int      // Target age in months
+  achievedAt  DateTime?
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GrowthRecord {
+  id          String   @id @default(cuid())
+  babyId      String
+  baby        Baby     @relation(fields: [babyId], references: [id])
+  date        DateTime
+  weight      Float?   // in kilograms
+  height      Float?   // in centimeters
+  headCirc    Float?   // head circumference in centimeters
+  notes       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model UserAction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  timestamp DateTime @default(now())
+}
+
+model ProductRecommendation {
+  id            String    @id @default(cuid())
+  productId     String    @unique
+  score         Float
+  totalFeedback Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  product       Product   @relation(fields: [productId], references: [id])
+}
+
+model Promotion {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  description String?
+  type        PromoType
+  value       Float
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean   @default(true)
+  usageLimit  Int?
+  timesUsed   Int       @default(0)
+  minSpend    Float?
+
+  appliesTo     PromoTarget? @default(ALL_PRODUCTS)
+  productIds    String[]     @default([])
+  categoryNames String[]     @default([])
+
+  products Product[] @relation("ProductPromotions")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id])
+  amount    Float
+  currency  String   @default("USD")
+  provider  String
+  status    String
+  paymentId String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  url       String
+  type      String
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  title     String
+  message   String
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id])
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Fulfillment {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id])
+  status    String
+  carrier   String?
+  tracking  String?
+  updates   Json[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  preferredCategories String[]
+  preferAR        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+```

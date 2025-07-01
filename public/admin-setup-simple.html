@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Admin Setup - Zizo BabyVerse</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-purple-600 to-blue-600 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-8">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">🚀 Admin Setup</h1>
+            <p class="text-gray-600">Zizo BabyVerse Admin Account</p>
+        </div>
+        
+        <div class="space-y-4">
+            <!-- Step 1: Manual Signup -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 class="font-semibold text-blue-800 flex items-center">
+                    <span class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">1</span>
+                    Manual Signup Required
+                </h3>
+                <p class="text-sm text-blue-600 mt-2 mb-3">
+                    First, create an account with: <code class="bg-blue-100 px-2 py-1 rounded">admin@babyverse.com</code>
+                </p>
+                <a href="/" class="inline-block bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                    🏠 Go to App & Sign Up
+                </a>
+            </div>
+
+            <!-- Step 2: Upgrade to Admin -->
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h3 class="font-semibold text-green-800 flex items-center">
+                    <span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">2</span>
+                    Upgrade to Admin
+                </h3>
+                <p class="text-sm text-green-600 mt-2 mb-3">
+                    After creating the account, upgrade it to admin role:
+                </p>
+                <button 
+                    onclick="upgradeToAdmin()" 
+                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                    🔧 Upgrade to Admin
+                </button>
+            </div>
+
+            <!-- Check Status -->
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 class="font-semibold text-gray-800 mb-2">📊 Check Status</h3>
+                <button 
+                    onclick="checkStatus()" 
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                    Check Admin Status
+                </button>
+            </div>
+
+            <!-- Result Display -->
+            <div id="result" class="hidden rounded-lg p-4"></div>
+        </div>
+
+        <!-- Admin Credentials Info -->
+        <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h4 class="font-semibold text-yellow-800 mb-2">🔐 Default Credentials</h4>
+            <div class="text-sm text-yellow-700 space-y-1">
+                <p><strong>Email:</strong> admin@babyverse.com</p>
+                <p><strong>Password:</strong> <em>Your choice during signup</em></p>
+                <p><strong>⚠️ Note:</strong> Use any password you want during signup</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            const colors = {
+                success: 'bg-green-50 border-green-200 text-green-800',
+                error: 'bg-red-50 border-red-200 text-red-800',
+                info: 'bg-blue-50 border-blue-200 text-blue-800',
+                warning: 'bg-yellow-50 border-yellow-200 text-yellow-800'
+            };
+            
+            resultDiv.className = `border rounded-lg p-4 ${colors[type]}`;
+            resultDiv.innerHTML = message;
+            resultDiv.classList.remove('hidden');
+        }
+
+        async function checkStatus() {
+            showResult('🔍 Checking admin status...', 'info');
+            
+            try {
+                const response = await fetch('/api/admin/upgrade-to-admin', {
+                    method: 'GET'
+                });
+                
+                const data = await response.json();
+                
+                if (data.canUpgrade === false && data.message.includes('No user found')) {
+                    showResult(`
+                        <strong>❌ User Not Found</strong><br>
+                        Please create an account with <code>admin@babyverse.com</code> first.<br>
+                        <a href="/" class="text-blue-600 hover:underline">Go to app →</a>
+                    `, 'warning');
+                } else if (data.canUpgrade === false) {
+                    showResult(`
+                        <strong>✅ Already Admin!</strong><br>
+                        Current role: <code>${data.currentRole}</code><br>
+                        Email: <code>${data.adminEmail}</code>
+                    `, 'success');
+                } else {
+                    showResult(`
+                        <strong>🔄 Ready to Upgrade</strong><br>
+                        Current role: <code>${data.currentRole}</code><br>
+                        Email: <code>${data.adminEmail}</code><br>
+                        Click "Upgrade to Admin" button above.
+                    `, 'info');
+                }
+            } catch (error) {
+                showResult(`❌ Error checking status: ${error.message}`, 'error');
+            }
+        }
+
+        async function upgradeToAdmin() {
+            showResult('🔄 Upgrading to admin...', 'info');
+            
+            try {
+                const response = await fetch('/api/admin/upgrade-to-admin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    let userDetails = '';
+                    if (data.user) {
+                        userDetails = `
+                            <br><strong>User Details:</strong><br>
+                            • Email: <code>${data.user.email || 'N/A'}</code><br>
+                            • Name: <code>${data.user.name || 'N/A'}</code><br>
+                            • Role: <code>${data.user.role || 'N/A'}</code><br>
+                            • UID: <code>${data.user.firebaseUid || 'N/A'}</code>
+                        `;
+                    }
+                    
+                    let instructions = '';
+                    if (data.instructions && Array.isArray(data.instructions)) {
+                        instructions = `<br><br>${data.instructions.map(inst => `• ${inst}`).join('<br>')}`;
+                    }
+                    
+                    showResult(`
+                        <strong>🎉 ${data.message}</strong>
+                        ${userDetails}
+                        ${instructions}
+                        <br><br>
+                        <strong>✅ You can now login with admin privileges!</strong>
+                    `, 'success');
+                } else {
+                    let instructions = '';
+                    if (data.instructions && Array.isArray(data.instructions)) {
+                        instructions = `<br><br><strong>Instructions:</strong><br>${data.instructions.map(inst => `• ${inst}`).join('<br>')}`;
+                    }
+                    
+                    showResult(`
+                        <strong>❌ ${data.message}</strong>
+                        ${instructions}
+                    `, 'warning');
+                }
+            } catch (error) {
+                showResult(`❌ Network Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-check status on page load
+        window.addEventListener('load', () => {
+            setTimeout(checkStatus, 1000);
+        });
+    </script>
+</body>
+</html>

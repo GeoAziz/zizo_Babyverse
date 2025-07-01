@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: var(--font-inter), sans-serif; /* Default to Inter, Space Grotesk will be applied via utility class */
+}
+
+@layer base {
+  :root {
+    --background: 213 27% 95%; /* Lighter variant of D0D8E0 for main background */
+    --foreground: 210 29% 18%; /* Darker version of #2C3E50 for text */
+
+    --card: 213 27% 100%; /* White cards for contrast */
+    --card-foreground: 210 29% 18%;
+
+    --popover: 213 27% 100%;
+    --popover-foreground: 210 29% 18%;
+
+    --primary: 210 29% 24%; /* #2C3E50 */
+    --primary-foreground: 0 0% 98%; /* Light gray/off-white */
+
+    --secondary: 210 25% 50%; /* A mid-tone blue-gray */
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 213 27% 88%; /* Slightly lighter for muted backgrounds */
+    --muted-foreground: 210 25% 45%; /* Muted text */
+
+    --accent: 283 44% 47%; /* #8E44AD */
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 72% 51%; /* A slightly softer red */
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 210 20% 75%; /* Border that stands out on background/card */
+    --input: 213 27% 90%; 
+    --ring: 283 44% 52%; /* Accent color for focus rings */
+
+    --radius: 0.5rem;
+
+    /* Sidebar specific vars (can be adjusted if a distinct sidebar theme is needed) */
+    --sidebar-background: 210 29% 18%; /* Darker background for sidebar */
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 283 44% 52%; /* Accent as primary in sidebar */
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 210 29% 28%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 210 29% 24%;
+    --sidebar-ring: 283 44% 52%;
+
+    --chart-1: 210 29% 34%;
+    --chart-2: 283 44% 57%;
+    --chart-3: 173 58% 39%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --background: 210 29% 10%; /* Dark blue-black */
+    --foreground: 213 27% 90%; /* Light gray-blue text */
+
+    --card: 210 29% 15%; /* Slightly lighter dark for cards */
+    --card-foreground: 213 27% 90%;
+
+    --popover: 210 29% 15%;
+    --popover-foreground: 213 27% 90%;
+
+    --primary: 210 29% 34%; /* Lighter shade of #2C3E50 for dark mode */
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 210 25% 25%; 
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 210 29% 20%;
+    --muted-foreground: 213 27% 60%;
+
+    --accent: 283 44% 57%; /* Lighter shade of #8E44AD for dark mode */
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 210 29% 25%;
+    --input: 210 29% 20%;
+    --ring: 283 44% 57%;
+    
+    --sidebar-background: 210 29% 8%; 
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 283 44% 57%; 
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 210 29% 18%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 210 29% 15%;
+    --sidebar-ring: 283 44% 57%;
+
+    --chart-1: 210 29% 44%;
+    --chart-2: 283 44% 67%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}

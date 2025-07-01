@@ -1,0 +1,60 @@
+
+# Settings to manage and configure a Firebase App Hosting backend.
+# https://firebase.google.com/docs/app-hosting/configure
+
+runConfig:
+  # Increase this value if you'd like to automatically spin up
+  # more instances in response to increased traffic.
+  maxInstances: 1
+# Firebase App Hosting automatically detects Next.js and uses appropriate build/run commands.
+# If you need custom build steps, you can add a `build` section.
+# https://firebase.google.com/docs/app-hosting/configure-backend#build
+
+# Environment variables sourced from Google Secret Manager
+# Create these secrets in Secret Manager (in the same region as your App Hosting backend)
+# and grant the App Hosting service account the "Secret Manager Secret Accessor" role for each.
+env:
+  - variable: DATABASE_URL
+    secret: PROD_DATABASE_URL # Secret name in Secret Manager for your production PostgreSQL connection string
+  - variable: NEXTAUTH_SECRET
+    secret: PROD_NEXTAUTH_SECRET # Secret name in Secret Manager for your NEXTAUTH_SECRET
+  - variable: NEXTAUTH_URL
+    secret: PROD_NEXTAUTH_URL # Secret name in Secret Manager for your deployed app's URL (e.g., https://your-app-id.web.app)
+  
+  # NextAuth Google Provider Credentials
+  - variable: GOOGLE_CLIENT_ID
+    secret: PROD_GOOGLE_CLIENT_ID
+  - variable: GOOGLE_CLIENT_SECRET
+    secret: PROD_GOOGLE_CLIENT_SECRET
+
+  # Firebase Client SDK Configuration Secrets
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    secret: PROD_NEXT_PUBLIC_FIREBASE_API_KEY
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    secret: PROD_NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    secret: PROD_NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    secret: PROD_NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    secret: PROD_NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    secret: PROD_NEXT_PUBLIC_FIREBASE_APP_ID
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    secret: PROD_NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+
+  # Firebase Admin SDK Service Account Key JSON (as a stringified JSON)
+  # This is an alternative to using Application Default Credentials if needed.
+  # Ensure the App Hosting service account has 'Vertex AI User' or 'AI Platform User' for Genkit with ADC.
+  # If you must use a service account key for Firebase Admin, store the entire JSON string as a secret.
+  - variable: FIREBASE_SERVICE_ACCOUNT_KEY_JSON
+    secret: PROD_FIREBASE_SERVICE_ACCOUNT_KEY_JSON 
+
+  # Genkit Google AI API Key (if needed explicitly and not using ADC)
+  - variable: GOOGLE_API_KEY
+    secret: PROD_GOOGLE_AI_API_KEY # Renamed from PROD_GOOGLE_API_KEY to be more specific for Genkit
+  
+  # Add any other production environment variables your application requires here.
+  # Example:
+  # - variable: SOME_OTHER_API_KEY
+  #   secret: PROD_SOME_OTHER_API_KEY

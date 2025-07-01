@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Setup - Zizo BabyVerse</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        h1 {
+            color: #4c51bf;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .btn {
+            background: #4c51bf;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #3c41a0;
+        }
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .success {
+            background: #10b981;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .error {
+            background: #ef4444;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .info {
+            background: #3b82f6;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .credentials {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #4c51bf;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4c51bf;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🚀 Admin Setup - Zizo BabyVerse</h1>
+        
+        <div class="info">
+            <strong>📋 Admin Setup Instructions:</strong><br>
+            This will create an admin user with full access to manage orders, update order statuses, and access admin-only features.
+        </div>
+
+        <div class="credentials">
+            <h3>👤 Admin Credentials (Default)</h3>
+            <p><strong>Email:</strong> admin@babyverse.com</p>
+            <p><strong>Password:</strong> Admin123!@#</p>
+            <p><strong>⚠️ Important:</strong> Change the password after first login!</p>
+        </div>
+
+        <div style="text-align: center;">
+            <button class="btn" onclick="checkAdminStatus()">📊 Check Admin Status</button>
+            <button class="btn" onclick="createAdmin()">🔧 Create Admin User</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').innerHTML = '';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showResult(html) {
+            document.getElementById('result').innerHTML = html;
+        }
+
+        async function checkAdminStatus() {
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/admin/setup', {
+                    method: 'GET',
+                });
+                
+                const data = await response.json();
+                hideLoading();
+                
+                if (data.adminExists) {
+                    showResult(`
+                        <div class="success">
+                            <h3>✅ Admin User Exists</h3>
+                            <p><strong>Email:</strong> ${data.adminEmail}</p>
+                            <p><strong>UID:</strong> ${data.adminData.uid}</p>
+                            <p><strong>Name:</strong> ${data.adminData.name}</p>
+                            <p><strong>Role:</strong> ${data.adminData.role}</p>
+                            <p><strong>Created:</strong> ${new Date(data.adminData.createdAt.seconds * 1000).toLocaleString()}</p>
+                        </div>
+                    `);
+                } else {
+                    showResult(`
+                        <div class="info">
+                            <h3>ℹ️ Admin User Not Found</h3>
+                            <p>No admin user exists yet. Click "Create Admin User" to set up the admin account.</p>
+                        </div>
+                    `);
+                }
+            } catch (error) {
+                hideLoading();
+                showResult(`
+                    <div class="error">
+                        <h3>❌ Error Checking Admin Status</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `);
+            }
+        }
+
+        async function createAdmin() {
+            if (!confirm('Are you sure you want to create/update the admin user?')) {
+                return;
+            }
+
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/admin/setup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                hideLoading();
+                
+                if (data.success) {
+                    let instructionsHtml = '';
+                    if (data.instructions && Array.isArray(data.instructions)) {
+                        instructionsHtml = `
+                            <div class="credentials">
+                                <h4>📧 Login Credentials:</h4>
+                                ${data.instructions.map(instruction => `<p>${instruction}</p>`).join('')}
+                            </div>
+                        `;
+                    }
+
+                    let userDetailsHtml = '';
+                    if (data.user) {
+                        userDetailsHtml = `
+                            <div class="credentials">
+                                <h4>👤 Admin User Details:</h4>
+                                <p>Email: ${data.user.email || 'N/A'}</p>
+                                <p>Name: ${data.user.name || 'N/A'}</p>
+                                <p>Role: ${data.user.role || 'N/A'}</p>
+                                <p>UID: ${data.user.firebaseUid || 'N/A'}</p>
+                            </div>
+                        `;
+                    }
+
+                    showResult(`
+                        <div class="success">
+                            <h3>${data.message}</h3>
+                            ${userDetailsHtml}
+                            ${instructionsHtml}
+                        </div>
+                    `);
+                } else {
+                    let instructionsHtml = '';
+                    if (data.instructions && Array.isArray(data.instructions)) {
+                        instructionsHtml = `
+                            <div class="credentials">
+                                <h4>📋 Next Steps:</h4>
+                                ${data.instructions.map(instruction => `<p>${instruction}</p>`).join('')}
+                            </div>
+                        `;
+                    }
+
+                    showResult(`
+                        <div class="error">
+                            <h3>❌ Failed to Create Admin</h3>
+                            <p><strong>Error:</strong> ${data.message}</p>
+                            ${data.error ? `<p><strong>Details:</strong> ${data.error}</p>` : ''}
+                            ${instructionsHtml}
+                        </div>
+                    `);
+                }
+            } catch (error) {
+                hideLoading();
+                showResult(`
+                    <div class="error">
+                        <h3>❌ Network Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `);
+            }
+        }
+
+        // Auto-check admin status on page load
+        window.addEventListener('load', () => {
+            setTimeout(checkAdminStatus, 1000);
+        });
+    </script>
+</body>
+</html>
