@@ -1,14 +1,37 @@
 const admin = require('firebase-admin');
-const bcrypt = require('bcryptjs');
 
 // Initialize Firebase Admin (if not already initialized)
 if (!admin.apps.length) {
-  const serviceAccount = require('../serviceaccountkey.json');
-  
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'bverse-19ee7',
-  });
+  try {
+    // Use environment variables for production deployment
+    if (process.env.FIREBASE_ADMIN_PRIVATE_KEY) {
+      // Production: Use environment variables
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_ADMIN_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        }),
+        projectId: process.env.FIREBASE_ADMIN_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      });
+    } else {
+      // Development: Try to use service account file
+      try {
+        const serviceAccount = require('../serviceaccountkey.json');
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount),
+          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'bverse-19ee7',
+        });
+      } catch (fileError) {
+        console.error('❌ Firebase service account file not found. Using environment variables.');
+        throw new Error('Firebase Admin initialization failed: No service account file or environment variables found');
+      }
+    }
+    console.log('✅ Firebase Admin SDK initialized successfully');
+  } catch (error) {
+    console.error('❌ Firebase Admin SDK initialization error:', error?.message || error);
+    throw error;
+  }
 }
 
 async function createAdminUser() {

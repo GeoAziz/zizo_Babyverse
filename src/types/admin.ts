@@ -34,15 +34,16 @@ export interface AdminOrder {
 
 export interface AdminUser {
   id: string;
-  name: string | null;
-  email: string;
-  role: string;
+  name?: string | null;
+  email?: string | null;
+  role?: string;
   image?: string | null;
   createdAt: string | Date;
-  updatedAt: string | Date;
+  updatedAt?: string | Date;
   totalOrders?: number;
   totalSpent?: number;
   lastOrderDate?: string | Date | null;
+  joinDate?: string;
 }
 
 export interface DashboardData {
@@ -76,6 +77,26 @@ export interface DashboardData {
   };
 }
 
+export interface AdminDashboardData {
+  totalOrders: number;
+  totalRevenue: number;
+  totalUsers: number;
+  totalProducts: number;
+  ordersByStatus: Record<string, number>;
+  recentOrders: AdminOrder[];
+  recentUsers: AdminUser[];
+  monthlyRevenue: Array<{
+    month: string;
+    revenue: number;
+    orders: number;
+  }>;
+  averageOrderValue: number;
+  topProducts: any[];
+  lowStockProducts: number;
+}
+
+export type OrderStatus = "Pending" | "Processing" | "PodPacked" | "Dispatched" | "InTransit" | "Delivered" | "Cancelled";
+
 // Utility function to safely format dates
 export function safeFormatDate(date: string | Date | null | undefined, formatStr: string = 'PPpp'): string {
   if (!date) return 'N/A';
@@ -84,7 +105,7 @@ export function safeFormatDate(date: string | Date | null | undefined, formatStr
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(dateObj.getTime())) return 'Invalid Date';
     
-    // Import format dynamically to avoid issues
+    // Import format from date-fns
     const { format } = require('date-fns');
     return format(dateObj, formatStr);
   } catch (error) {

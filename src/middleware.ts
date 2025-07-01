@@ -1,16 +1,16 @@
 import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import type { NextRequestWithAuth } from "next-auth/middleware";
 
 export default withAuth(
-  function middleware(request: NextRequest) {
-    const { pathname } = request.nextUrl;
-    const token = (request as any).nextauth?.token;
+  function middleware(req: NextRequestWithAuth) {
+    const { pathname } = req.nextUrl;
+    const token = req.nextauth.token;
 
-    // Admin routes protection
+    // Protect admin routes
     if (pathname.startsWith("/admin")) {
-      if (!token || token.role !== "ADMIN") {
-        return NextResponse.redirect(new URL("/login", request.url));
+      if (!token || (token as any).role !== "ADMIN") {
+        return NextResponse.redirect(new URL("/login", req.url));
       }
     }
 
@@ -18,11 +18,16 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token }: { token: any }) => {
+        return true; // Let the middleware function handle authorization
+      },
     },
   }
 );
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/api/admin/:path*",
+  ],
 };
