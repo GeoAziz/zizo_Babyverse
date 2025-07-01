@@ -1,5 +1,5 @@
 
-# Settings to manage and configure a Firebase App Hosting backend.
+# Settings to configure a Firebase App Hosting backend.
 # https://firebase.google.com/docs/app-hosting/configure
 
 runConfig:
@@ -21,11 +21,10 @@ env:
   - variable: NEXTAUTH_URL
     secret: PROD_NEXTAUTH_URL # Secret name in Secret Manager for your deployed app's URL (e.g., https://your-app-id.web.app)
   
-  # NextAuth Google Provider Credentials
-  - variable: GOOGLE_CLIENT_ID
+  # NextAuth Google Provider Credentials   - variable: GOOGLE_CLIENT_ID
     secret: PROD_GOOGLE_CLIENT_ID
   - variable: GOOGLE_CLIENT_SECRET
-    secret: PROD_GOOGLE_CLIENT_SECRET
+    secret: PROD_GOOGLE_CLIENT_SECRET_SECRET
 
   # Firebase Client SDK Configuration Secrets
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
