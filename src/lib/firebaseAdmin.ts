@@ -17,13 +17,18 @@ function parsePrivateKey(key: string | undefined) {
 
 if (!getApps().length) {
   try {
+    console.log('DEBUG: Firebase Admin ENV VARS:', {
+      SERVICE_ACCOUNT_KEY: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
+      ADMIN_PRIVATE_KEY: !!process.env.FIREBASE_ADMIN_PRIVATE_KEY,
+      ADMIN_CLIENT_EMAIL: !!process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+      ADMIN_PROJECT_ID: !!process.env.FIREBASE_ADMIN_PROJECT_ID,
+    });
     if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      // Prefer full JSON if available
       const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-      // Fix private key if needed
       if (serviceAccount.private_key) {
         serviceAccount.private_key = parsePrivateKey(serviceAccount.private_key);
       }
+      console.log('DEBUG: Using FIREBASE_SERVICE_ACCOUNT_KEY for Firebase Admin init');
       app = initializeApp({
         credential: cert(serviceAccount),
         projectId: serviceAccount.project_id,
@@ -33,6 +38,7 @@ if (!getApps().length) {
       process.env.FIREBASE_ADMIN_CLIENT_EMAIL &&
       process.env.FIREBASE_ADMIN_PROJECT_ID
     ) {
+      console.log('DEBUG: Using individual FIREBASE_ADMIN_* vars for Firebase Admin init');
       app = initializeApp({
         credential: cert({
           projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
@@ -42,12 +48,16 @@ if (!getApps().length) {
         projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
       });
     } else {
+      console.error('DEBUG: Missing Firebase Admin credentials. Vars:', {
+        SERVICE_ACCOUNT_KEY: process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
+        ADMIN_PRIVATE_KEY: process.env.FIREBASE_ADMIN_PRIVATE_KEY,
+        ADMIN_CLIENT_EMAIL: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+        ADMIN_PROJECT_ID: process.env.FIREBASE_ADMIN_PROJECT_ID,
+      });
       throw new Error('Missing Firebase Admin credentials. Set FIREBASE_SERVICE_ACCOUNT_KEY or all of FIREBASE_ADMIN_PRIVATE_KEY, FIREBASE_ADMIN_CLIENT_EMAIL, FIREBASE_ADMIN_PROJECT_ID.');
     }
-    // eslint-disable-next-line no-console
     console.log('✅ Firebase Admin SDK initialized');
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('❌ Firebase admin initialization error:', error);
     throw error;
   }
