@@ -7,7 +7,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: { productId: string } }
 ) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions, request, {});
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -19,7 +19,6 @@ export async function DELETE(
   }
 
   try {
-    const db = admin.firestore();
     // Remove the wishlist item from wishlists/{userId}/items/{productId}
     const wishlistItemRef = db.collection('wishlists')
       .doc(session.user.id)

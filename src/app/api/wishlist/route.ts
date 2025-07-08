@@ -9,13 +9,14 @@ const AddToWishlistSchema = z.object({
 });
 
 export async function GET(request: Request) {
-  const session = await getServerSession(authOptions);
+  // @ts-ignore: Next.js API route context does not provide req/res, so pass undefined
+  const session = await getServerSession(undefined, undefined, authOptions);
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const snapshot = await admin.firestore()
+    const snapshot = await db
       .collection('wishlists')
       .doc(session.user.id)
       .collection('items')
@@ -23,9 +24,9 @@ export async function GET(request: Request) {
       .get();
 
     // Fetch product details for each wishlist item
-    const wishlistItems = await Promise.all(snapshot.docs.map(async doc => {
+    const wishlistItems = await Promise.all(snapshot.docs.map(async (doc: FirebaseFirestore.QueryDocumentSnapshot) => {
       const data = doc.data();
-      const productSnap = await admin.firestore().collection('products').doc(data.productId).get();
+      const productSnap = await db.collection('products').doc(data.productId).get();
       if (!productSnap.exists) return null;
       return { id: productSnap.id, ...productSnap.data() };
     }));
@@ -39,7 +40,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
+  // @ts-ignore: Next.js API route context does not provide req/res, so pass undefined
+  const session = await getServerSession(undefined, undefined, authOptions);
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -55,13 +57,13 @@ export async function POST(request: Request) {
     const { productId } = validation.data;
 
     // Check if product exists
-    const productSnapshot = await admin.firestore().collection('products').doc(productId).get();
+    const productSnapshot = await db.collection('products').doc(productId).get();
     const product = productSnapshot.data();
     if (!product) {
       return NextResponse.json({ message: "Product not found" }, { status: 404 });
     }
 
-    const wishlistItemRef = admin.firestore()
+    const wishlistItemRef = db
       .collection('wishlists')
       .doc(session.user.id)
       .collection('items')
@@ -76,7 +78,7 @@ export async function POST(request: Request) {
     const wishlistItem = {
       userId: session.user.id,
       productId: productId,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: db.FieldValue ? db.FieldValue.serverTimestamp() : undefined,
     };
 
     await wishlistItemRef.set(wishlistItem);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, auth } from '@/lib/firebaseAdmin';
+import { db } from '@/lib/firebaseAdmin';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
@@ -12,7 +12,10 @@ const AddToCartSchema = z.object({
 
 // GET cart items for the logged-in user
 export async function GET(request: NextRequest) {
-  const session = await getServerSession(request, null, authOptions);
+  // Use correct getServerSession signature: (req, res, options)
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
@@ -33,10 +36,7 @@ export async function GET(request: NextRequest) {
         if (!productSnap.exists) return null;
         const product = productSnap.data();
         if (!product) return null;
-        return {
-          product: { id: productSnap.id, ...product },
-          quantity: item.quantity,
-        };
+        return { ...item, product };
       })
     );
     return NextResponse.json({ items: items.filter(Boolean) });

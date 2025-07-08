@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, auth } from '@/lib/firebaseAdmin';
+import { db } from '@/lib/firebaseAdmin';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
@@ -34,16 +34,16 @@ interface FirestoreProduct {
   stock: number;
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    
+  export async function GET(request: NextRequest) {
+    // Fix getServerSession: pass req, res, options
+    const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+    const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+    try {
+      const session = await getServerSession(req, res, authOptions);
     if (!session || (session.user as any).role !== 'ADMIN') {
       return NextResponse.json({ message: "Forbidden: Admins only" }, { status: 403 });
     }
 
-    const db = admin.firestore();
-    
     // Fetch all data in parallel
     const [ordersSnapshot, usersSnapshot, productsSnapshot] = await Promise.all([
       db.collection('orders').get(),
@@ -51,19 +51,19 @@ export async function GET(request: NextRequest) {
       db.collection('products').get()
     ]);
 
-    const orders: FirestoreOrder[] = ordersSnapshot.docs.map(doc => ({
+    const orders: FirestoreOrder[] = ordersSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot<any>) => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate?.() || new Date()
     })) as FirestoreOrder[];
 
-    const users: FirestoreUser[] = usersSnapshot.docs.map(doc => ({
+    const users: FirestoreUser[] = usersSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot<any>) => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate?.() || new Date()
     })) as FirestoreUser[];
 
-    const products: FirestoreProduct[] = productsSnapshot.docs.map(doc => ({
+    const products: FirestoreProduct[] = productsSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot<any>) => ({
       id: doc.id,
       ...doc.data()
     })) as FirestoreProduct[];
@@ -80,14 +80,14 @@ export async function GET(request: NextRequest) {
     for (let i = 11; i >= 0; i--) {
       const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
-      
+
       const monthOrders = orders.filter((order: FirestoreOrder) => {
         const orderDate = new Date(order.createdAt);
         return orderDate >= monthStart && orderDate <= monthEnd;
       });
-      
+
       const monthRevenue = monthOrders.reduce((sum: number, order: FirestoreOrder) => sum + (order.totalAmount || 0), 0);
-      
+
       revenueByMonth.push({
         month: monthStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
         revenue: monthRevenue,
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
           const productId = item.productId || item.product?.id || 'unknown';
           const productName = item.product?.name || item.name || 'Unknown Product';
           const quantity = item.quantity || 1;
-          
+
           if (!productSales[productId]) {
             productSales[productId] = {
               name: productName,
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
               revenue: 0
             };
           }
-          
+
           productSales[productId].quantity += quantity;
           productSales[productId].orders += 1;
           productSales[productId].revenue += (item.product?.price || item.price || 0) * quantity;
@@ -129,14 +129,14 @@ export async function GET(request: NextRequest) {
     const userActivity = users.map((user: FirestoreUser) => {
       const userOrders = orders.filter((order: FirestoreOrder) => order.userId === user.id);
       const totalSpent = userOrders.reduce((sum: number, order: FirestoreOrder) => sum + (order.totalAmount || 0), 0);
-      
+
       return {
         userId: user.id,
         name: user.name || 'Unknown User',
         email: user.email || 'No email',
         totalOrders: userOrders.length,
         totalSpent,
-        lastOrderDate: userOrders.length > 0 
+        lastOrderDate: userOrders.length > 0
           ? userOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0].createdAt
           : null,
         joinDate: user.createdAt
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
               quantity: 0
             };
           }
-          
+
           categoryAnalysis[category].orders += 1;
           categoryAnalysis[category].revenue += (item.product?.price || item.price || 0) * (item.quantity || 1);
           categoryAnalysis[category].quantity += item.quantity || 1;
