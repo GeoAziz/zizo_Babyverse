@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import admin from '@/lib/firebaseAdmin';
+import { db, auth } from '@/lib/firebaseAdmin';
 
 // Define mock product type for testing
 type MockProduct = {
@@ -78,13 +78,12 @@ describe('Product Management', () => {
         get: () => ({ data: () => mockProduct })
       } as unknown);
 
-      const mockRequest = new NextRequest(
-        new URL('http://localhost'),
-        {
-          method: 'POST',
-          body: JSON.stringify(mockProduct)
-        }
-      );
+      const mockRequest = {
+        method: 'POST',
+        url: 'http://localhost',
+        body: JSON.stringify(mockProduct),
+        headers: {},
+      };
 
       // Note: Replace with your actual product creation endpoint
       // const response = await POST(mockRequest);

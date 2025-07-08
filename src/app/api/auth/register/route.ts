@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import admin from '@/lib/firebaseAdmin';
+import { db, auth } from '@/lib/firebaseAdmin';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 

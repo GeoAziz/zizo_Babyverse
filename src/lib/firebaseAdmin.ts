@@ -1,19 +1,17 @@
 
 
 
-import { initializeApp, getApps, cert, App, getApp } from 'firebase-admin/app';
+import { initializeApp, getApps, cert, getApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 
-let app: App;
-
-// Try to use FIREBASE_SERVICE_ACCOUNT_KEY (stringified JSON) if available
+// Singleton pattern for admin app
+let app;
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
 if (!getApps().length) {
   try {
     if (serviceAccountJson) {
-      // Use the full service account JSON (preferred for serverless)
       const serviceAccount = JSON.parse(serviceAccountJson);
       app = initializeApp({
         credential: cert(serviceAccount),
@@ -24,7 +22,6 @@ if (!getApps().length) {
       process.env.FIREBASE_ADMIN_CLIENT_EMAIL &&
       process.env.FIREBASE_ADMIN_PROJECT_ID
     ) {
-      // Use individual env vars (legacy)
       app = initializeApp({
         credential: cert({
           projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
@@ -51,3 +48,4 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 export { app, db, auth };
+export default { app, db, auth };

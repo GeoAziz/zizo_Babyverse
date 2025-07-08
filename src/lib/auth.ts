@@ -1,7 +1,7 @@
 import type { NextAuthOptions, User as NextAuthUser } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
-import admin from '@/lib/firebaseAdmin';
+import { db, auth } from '@/lib/firebaseAdmin';
 
 // Define the Role type for user roles
 export type Role = 'ADMIN' | 'PARENT';

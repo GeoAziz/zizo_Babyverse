@@ -1,4 +1,4 @@
-import admin from '@/lib/firebaseAdmin';
+import { db, auth } from '@/lib/firebaseAdmin';
 const db = admin.firestore();
 import { AICache } from '@/lib/cache/aiCache';
 import type { Product, Baby, User, Order } from '@prisma/client';

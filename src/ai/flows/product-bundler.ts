@@ -8,10 +8,12 @@
  * - ProductBundlerOutput - The return type for the productBundler function.
  */
 
-import admin from '@/lib/firebaseAdmin';
-const db = admin.firestore();
+import { auth } from '@/lib/firebaseAdmin';
+import * as admin from 'firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
+const db = getFirestore();
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import { Product } from '@/lib/types';
 
 interface ProductScore {
@@ -51,14 +53,17 @@ const ProductBundlerOutputSchema = z.object({
   })),
 });
 
-export type ProductBundlerInput = z.infer<typeof ProductBundlerInputSchema>;
-export type ProductBundlerOutput = z.infer<typeof ProductBundlerOutputSchema>;
+// Use typeof z as any to satisfy the global.d.ts override for zod
+// Use 'any' for z.infer due to global.d.ts override for zod
+export type ProductBundlerInput = any;
+export type ProductBundlerOutput = any;
 
 async function updateRecommendationScores(productId: string, feedback: number) {
   try {
     const recRef = db.collection('productRecommendations').doc(productId);
-    await db.runTransaction(async (transaction) => {
-      const recDoc = await transaction.get(recRef);
+    await db.runTransaction(async (transaction: FirebaseFirestore.Transaction) => {
+      const recDoc = await transaction.get(recRef as FirebaseFirestore.DocumentReference) as FirebaseFirestore.DocumentSnapshot;
+      // recDoc is DocumentSnapshot
       if (recDoc.exists) {
         const data = recDoc.data()!;
         transaction.update(recRef, {
@@ -122,7 +127,7 @@ function calculateProductScore(product: Product, input: ProductBundlerInput): Pr
 
   // Preference matching (20 points)
   const preferences = input.preferences?.toLowerCase().split(',') || [];
-  const matches = preferences.filter(pref => 
+  const matches = preferences.filter((pref: string) => 
     product.description?.toLowerCase().includes(pref.trim()) ||
     product.features?.toLowerCase().includes(pref.trim())
   );
@@ -156,7 +161,7 @@ function calculateProductScore(product: Product, input: ProductBundlerInput): Pr
 
   // Category match (15 points)
   if (input.categories && input.categories.length > 0) {
-    const categoryMatches = input.categories.filter(cat => 
+    const categoryMatches = input.categories.filter((cat: string) => 
       product.category?.toLowerCase().includes(cat.toLowerCase())
     );
     scores.categoryMatch = Math.min(15, categoryMatches.length * 5);
@@ -220,9 +225,19 @@ export async function productBundler(input: ProductBundlerInput): Promise<Produc
     const productsSnap = await db.collection('products')
       .where('stock', '>', 0)
       .get();
+    if (productsSnap.empty) {
+      return {
+        bundleDescription: '',
+        productIds: [],
+        productNames: [],
+        reasoning: 'No products available',
+        totalPrice: 0,
+        matchDetails: []
+      };
+    }
     const products: BundleProduct[] = productsSnap.docs
-      .map(doc => ({ id: doc.id, ...doc.data() } as BundleProduct))
-      .filter(product =>
+      .map((doc: FirebaseFirestore.QueryDocumentSnapshot<any>) => ({ id: doc.id, ...doc.data() } as BundleProduct))
+      .filter((product: BundleProduct) =>
         product.ageGroup === 'All Ages' ||
         (product.ageGroup && product.ageGroup.includes(`${Math.floor(input.ageInMonths / 12)}Y`)) ||
         (product.ageGroup && product.ageGroup.includes(`${input.ageInMonths}M`))
@@ -240,10 +255,10 @@ export async function productBundler(input: ProductBundlerInput): Promise<Produc
 
     // Sort by score and select top products
     const selectedProducts = scoredProducts
-      .sort((a, b) => b.matchScore - a.matchScore)
+      .sort((a: BundleProduct, b: BundleProduct) => b.matchScore - a.matchScore)
       .slice(0, 4);
 
-    const totalPrice = selectedProducts.reduce((sum, p) => sum + p.price, 0);
+    const totalPrice = selectedProducts.reduce((sum: number, p: BundleProduct) => sum + p.price, 0);
     const discountedPrice = totalPrice * 0.9; // 10% bundle discount
 
     return {
@@ -275,8 +290,8 @@ export const productBundlerFlow = ai.defineFlow({
       .where('stock', '>', 0)
       .get();
     const products: BundleProduct[] = productsSnap.docs
-      .map(doc => ({ id: doc.id, ...doc.data() } as BundleProduct))
-      .filter(product =>
+      .map((doc: FirebaseFirestore.QueryDocumentSnapshot<any>) => ({ id: doc.id, ...doc.data() } as BundleProduct))
+      .filter((product: BundleProduct) =>
         product.ageGroup === 'All Ages' ||
         (product.ageGroup && product.ageGroup.includes(`${Math.floor(input.ageInMonths / 12)}Y`)) ||
         (product.ageGroup && product.ageGroup.includes(`${input.ageInMonths}M`))
@@ -294,10 +309,10 @@ export const productBundlerFlow = ai.defineFlow({
 
     // Sort by score and select top products
     const selectedProducts = scoredProducts
-      .sort((a, b) => b.matchScore - a.matchScore)
+      .sort((a: BundleProduct, b: BundleProduct) => b.matchScore - a.matchScore)
       .slice(0, 4);
 
-    const totalPrice = selectedProducts.reduce((sum, p) => sum + p.price, 0);
+    const totalPrice = selectedProducts.reduce((sum: number, p: BundleProduct) => sum + p.price, 0);
     const discountedPrice = totalPrice * 0.9; // 10% bundle discount
 
     return {

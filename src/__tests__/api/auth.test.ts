@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import admin from '@/lib/firebaseAdmin';
+import { db, auth } from '@/lib/firebaseAdmin';
 import bcrypt from 'bcryptjs';
 
 // Mock next-auth with types

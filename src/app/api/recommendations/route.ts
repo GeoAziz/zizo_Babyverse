@@ -1,4 +1,4 @@
-import admin from '@/lib/firebaseAdmin';
+import { db, auth } from '@/lib/firebaseAdmin';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { RecommendationService } from '@/lib/services/RecommendationService';
