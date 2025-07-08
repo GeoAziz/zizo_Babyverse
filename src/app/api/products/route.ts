@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const limitParam = searchParams.get('limit');
     const limit = limitParam ? parseInt(limitParam, 10) : undefined;
     const category = searchParams.get('category');
-    let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = admin.firestore().collection('products');
+    let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = db.collection('products');
     if (category) query = query.where('category', '==', category);
     query = query.orderBy('createdAt', 'desc');
     if (limit) query = query.limit(limit);
@@ -47,7 +47,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  // Fix getServerSession signature
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
 
   if (!session || (session.user as any).role !== 'ADMIN') {
     return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
@@ -61,7 +64,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ errors: validation.error.flatten().fieldErrors }, { status: 400 });
     }
 
-    const docRef = await admin.firestore().collection('products').add({
+    const docRef = await db.collection('products').add({
       ...validation.data,
       createdAt: new Date(),
     });

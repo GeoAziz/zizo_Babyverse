@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, auth } from '@/lib/firebaseAdmin';
+import { db } from '@/lib/firebaseAdmin';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
@@ -14,7 +14,10 @@ export async function PUT(
   context: { params: Promise<{ cartItemId: string }> }
 ) {
   const { cartItemId } = await context.params;
-  const session = await getServerSession(authOptions);
+  // Fix getServerSession signature
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
@@ -26,7 +29,7 @@ export async function PUT(
     }
     const { quantity } = validation.data;
     // Fetch product to check stock
-    const productSnap = await admin.firestore().collection('products').doc(cartItemId).get();
+    const productSnap = await db.collection('products').doc(cartItemId).get();
     if (!productSnap.exists) {
       return NextResponse.json({ message: 'Product not found' }, { status: 404 });
     }
@@ -37,7 +40,7 @@ export async function PUT(
     if (typeof product.stock === 'number' && quantity > product.stock) {
       return NextResponse.json({ message: `Only ${product.stock} in stock.` }, { status: 400 });
     }
-    const cartRef = admin.firestore().collection('carts').doc(session.user.id);
+    const cartRef = db.collection('carts').doc(session.user.id);
     const cartSnap = await cartRef.get();
     if (!cartSnap.exists) {
       return NextResponse.json({ message: 'Cart not found' }, { status: 404 });
@@ -73,12 +76,15 @@ export async function DELETE(
   context: { params: Promise<{ cartItemId: string }> }
 ) {
   const { cartItemId } = await context.params;
-  const session = await getServerSession(authOptions);
+  // Fix getServerSession signature
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
   try {
-    const cartRef = admin.firestore().collection('carts').doc(session.user.id);
+    const cartRef = db.collection('carts').doc(session.user.id);
     const cartSnap = await cartRef.get();
     if (!cartSnap.exists) {
       return NextResponse.json({ message: 'Cart not found' }, { status: 404 });

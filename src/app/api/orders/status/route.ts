@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, auth } from '@/lib/firebaseAdmin';
+import { db } from '@/lib/firebaseAdmin';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    // Fix getServerSession signature
+    const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+    const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+    const session = await getServerSession(req, res, authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
@@ -36,7 +39,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Get order from Firestore
-    const orderDoc = await admin.firestore().collection('orders').doc(orderId).get();
+    const orderDoc = await db.collection('orders').doc(orderId).get();
     if (!orderDoc.exists) {
       return NextResponse.json({ message: "Order not found" }, { status: 404 });
     }
@@ -129,7 +132,10 @@ export async function PATCH(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    // Fix getServerSession signature
+    const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+    const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+    const session = await getServerSession(req, res, authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
@@ -142,7 +148,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get order from Firestore
-    const orderDoc = await admin.firestore().collection('orders').doc(orderId).get();
+    const orderDoc = await db.collection('orders').doc(orderId).get();
     if (!orderDoc.exists) {
       return NextResponse.json({ message: "Order not found" }, { status: 404 });
     }

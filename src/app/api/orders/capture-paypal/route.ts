@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, auth } from '@/lib/firebaseAdmin';
+import { db } from '@/lib/firebaseAdmin';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import * as paypal from '@paypal/checkout-server-sdk';
@@ -12,8 +12,9 @@ const paypalClient = new paypal.core.PayPalHttpClient(paypalEnv);
 
 export async function POST(request: NextRequest) {
   console.log('PayPal capture request received');
-  
-  const session = await getServerSession(authOptions);
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (!session?.user?.id) {
     console.log('Unauthorized capture attempt');
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get order from Firestore
-    const orderDoc = await admin.firestore().collection('orders').doc(orderId).get();
+    const orderDoc = await db.collection('orders').doc(orderId).get();
     if (!orderDoc.exists) {
       return NextResponse.json({ message: "Order not found" }, { status: 404 });
     }
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
 
       // Clear user's cart
       try {
-        await admin.firestore().collection('carts').doc(session.user.id).delete();
+        await db.collection('carts').doc(session.user.id).delete();
       } catch (cartError) {
         console.warn('Failed to clear cart:', cartError);
         // Don't fail the whole operation if cart clearing fails
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     if (body.orderId) {
       try {
-        const orderDoc = await admin.firestore().collection('orders').doc(body.orderId).get();
+        const orderDoc = await db.collection('orders').doc(body.orderId).get();
         if (orderDoc.exists) {
           await orderDoc.ref.update({
             status: 'PaymentFailed',

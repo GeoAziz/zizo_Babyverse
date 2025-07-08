@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, auth } from '@/lib/firebaseAdmin';
+import { db } from '@/lib/firebaseAdmin';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import nodemailer from 'nodemailer';
@@ -12,7 +12,10 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    // Fix getServerSession signature
+    const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+    const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+    const session = await getServerSession(req, res, authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
@@ -24,7 +27,7 @@ export async function GET(
     }
 
     // Get order from Firestore
-    const orderDoc = await admin.firestore().collection('orders').doc(orderId).get();
+    const orderDoc = await db.collection('orders').doc(orderId).get();
     
     if (!orderDoc.exists) {
       return NextResponse.json({ message: "Order not found" }, { status: 404 });
@@ -67,7 +70,10 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
+  // Fix getServerSession signature
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (
     !session ||
     (session.user as { role: 'ADMIN' | 'USER' | string }).role !== 'ADMIN'
@@ -90,7 +96,7 @@ export async function PUT(
     }
 
     // Update order in Firestore
-    const orderDoc = await admin.firestore().collection('orders').doc(orderId).get();
+    const orderDoc = await db.collection('orders').doc(orderId).get();
     
     if (!orderDoc.exists) {
       return NextResponse.json({ message: "Order not found" }, { status: 404 });

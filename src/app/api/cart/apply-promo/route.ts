@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, auth } from '@/lib/firebaseAdmin';
+import { db } from '@/lib/firebaseAdmin';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
@@ -14,7 +14,10 @@ function isPromo(obj: any): obj is { type: string; value: number; expiresAt?: an
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  // Fix getServerSession signature
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
@@ -26,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
     const { code } = validation.data;
     // Fetch promo from Firestore (collection: promos, doc id: code.toUpperCase())
-    const promoSnap = await admin.firestore().collection('promos').doc(code.toUpperCase()).get();
+    const promoSnap = await db.collection('promos').doc(code.toUpperCase()).get();
     if (!promoSnap.exists) {
       return NextResponse.json({ message: 'Promo code not found.' }, { status: 404 });
     }
@@ -39,14 +42,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Promo code has expired.' }, { status: 400 });
     }
     // Fetch user's cart to calculate discount
-    const cartRef = admin.firestore().collection('carts').doc(session.user.id);
+    const cartRef = db.collection('carts').doc(session.user.id);
     const cartSnap = await cartRef.get();
     if (!cartSnap.exists) {
       return NextResponse.json({ message: 'Cart not found.' }, { status: 404 });
     }
     const cartData = cartSnap.data();
     const items = Array.isArray(cartData?.items) ? cartData.items : [];
-    const subtotal = items.reduce((sum, item) => sum + (item.product?.price || 0) * (item.quantity || 1), 0);
+    const subtotal = items.reduce((sum: number, item: any) => sum + (item.product?.price || 0) * (item.quantity || 1), 0);
     // Check minimum cart value if required
     if (promo.minCartValue && subtotal < promo.minCartValue) {
       return NextResponse.json({ message: `Minimum cart value for this promo is KSH ${(promo.minCartValue * 100).toFixed(2)}.` }, { status: 400 });

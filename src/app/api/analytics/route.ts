@@ -36,13 +36,19 @@ interface FirestoreProduct {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const req = request as any;
+    const res = {
+      getHeader() {},
+      setCookie() {},
+      setHeader() {},
+    } as any;
+    const session = await getServerSession(req, res, authOptions);
     
     if (!session || (session.user as any).role !== 'ADMIN') {
       return NextResponse.json({ message: "Forbidden: Admins only" }, { status: 403 });
     }
 
-    const db = admin.firestore();
+    // Use the imported db instance from '@/lib/firebaseAdmin'
     
     // Fetch all data in parallel
     const [ordersSnapshot, usersSnapshot, productsSnapshot] = await Promise.all([
@@ -51,19 +57,19 @@ export async function GET(request: NextRequest) {
       db.collection('products').get()
     ]);
 
-    const orders: FirestoreOrder[] = ordersSnapshot.docs.map(doc => ({
+    const orders: FirestoreOrder[] = ordersSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate?.() || new Date()
     })) as FirestoreOrder[];
 
-    const users: FirestoreUser[] = usersSnapshot.docs.map(doc => ({
+    const users: FirestoreUser[] = usersSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate?.() || new Date()
     })) as FirestoreUser[];
 
-    const products: FirestoreProduct[] = productsSnapshot.docs.map(doc => ({
+    const products: FirestoreProduct[] = productsSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => ({
       id: doc.id,
       ...doc.data()
     })) as FirestoreProduct[];

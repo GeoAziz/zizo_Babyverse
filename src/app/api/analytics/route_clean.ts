@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, auth } from '@/lib/firebaseAdmin';
+import { db } from '@/lib/firebaseAdmin';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
@@ -36,13 +36,16 @@ interface FirestoreProduct {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
+    // Fix getServerSession: pass req, res, options
+    const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+    const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+    const session = await getServerSession(req, res, authOptions);
+
     if (!session || (session.user as any).role !== 'ADMIN') {
       return NextResponse.json({ message: "Forbidden: Admins only" }, { status: 403 });
     }
 
-    const db = admin.firestore();
+    // Use db directly (already Firestore instance)
     
     // Fetch all data in parallel
     const [ordersSnapshot, usersSnapshot, productsSnapshot] = await Promise.all([
@@ -51,19 +54,19 @@ export async function GET(request: NextRequest) {
       db.collection('products').get()
     ]);
 
-    const orders: FirestoreOrder[] = ordersSnapshot.docs.map(doc => ({
+    const orders: FirestoreOrder[] = ordersSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate?.() || new Date()
     })) as FirestoreOrder[];
 
-    const users: FirestoreUser[] = usersSnapshot.docs.map(doc => ({
+    const users: FirestoreUser[] = usersSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate?.() || new Date()
     })) as FirestoreUser[];
 
-    const products: FirestoreProduct[] = productsSnapshot.docs.map(doc => ({
+    const products: FirestoreProduct[] = productsSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => ({
       id: doc.id,
       ...doc.data()
     })) as FirestoreProduct[];

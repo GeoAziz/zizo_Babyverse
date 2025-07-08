@@ -150,7 +150,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
           <button
             aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-            aria-pressed={inWishlist ? 'true' : 'false'}
+            aria-pressed={inWishlist ? "true" : "false"}
             onClick={handleToggleWishlist}
             disabled={isWishlisting}
             className={`absolute top-3 right-3 z-20 rounded-full p-2 transition-colors duration-300 border-2 border-white shadow-md focus:outline-none focus:ring-2 focus:ring-accent ${inWishlist ? 'bg-red-700/90 text-white hover:bg-red-800 animate-pulse' : 'bg-white/80 text-accent hover:bg-accent/20'} ${wishlistAnim ? 'animate-pulse' : ''}`}
@@ -171,7 +171,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <span className="text-xl font-bold text-accent">${product.price.toFixed(2)}</span>
             <button
               aria-label={inCart ? 'Remove from cart' : 'Add to cart'}
-              aria-pressed={inCart ? 'true' : 'false'}
+              aria-pressed={inCart ? "true" : "false"}
               onClick={handleToggleCart}
               disabled={isAddingToCart || product.stock < 1}
               className={`rounded-full p-2 transition-colors duration-300 border-2 border-white shadow-md focus:outline-none focus:ring-2 focus:ring-accent z-10

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, auth } from '@/lib/firebaseAdmin';
+import { db } from '@/lib/firebaseAdmin';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
@@ -22,26 +22,28 @@ const profileUpdateSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const db = admin.firestore();
+    // Use db from firebaseAdmin
     const userRef = db.collection('users').doc(session.user.id);
     const userSnap = await userRef.get();
     if (!userSnap.exists) {
       return NextResponse.json({ message: "Profile not found" }, { status: 404 });
     }
     // Fetch last 5 orders
-    const ordersSnap = await admin.firestore()
+    const ordersSnap = await db
       .collection('orders')
       .where('userId', '==', session.user.id)
       .orderBy('createdAt', 'desc')
       .limit(5)
       .get();
-    const orders: Order[] = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Order[];
+    const orders: Order[] = ordersSnap.docs.map((doc: FirebaseFirestore.DocumentSnapshot) => ({ id: doc.id, ...doc.data() })) as Order[];
     return NextResponse.json({ id: userSnap.id, ...userSnap.data(), orders });
   } catch (error) {
     console.error("Error fetching profile:", error);
@@ -49,8 +51,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+export async function POST(request: NextRequest) {
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -63,7 +67,34 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-    const userRef = admin.firestore().collection('users').doc(session.user.id);
+    const userRef = db.collection('users').doc(session.user.id);
+    await userRef.set(validation.data, { merge: true });
+    const updatedSnap = await userRef.get();
+    const updatedProfile = updatedSnap.data();
+    return NextResponse.json(updatedProfile);
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    return NextResponse.json({ message: "Failed to update profile" }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+  try {
+    const body = await request.json();
+    const validation = profileUpdateSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { message: "Invalid profile data", errors: validation.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const userRef = db.collection('users').doc(session.user.id);
     await userRef.set(validation.data, { merge: true });
     const updatedSnap = await userRef.get();
     const updatedProfile = updatedSnap.data();
