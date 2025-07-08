@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, auth } from '@/lib/firebaseAdmin';
+import admin from 'firebase-admin'; // <-- Add this import
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
@@ -39,7 +40,10 @@ function getBaseUrl(request: NextRequest): string {
 
 // --- STRIPE CHECKOUT SESSION CREATION ---
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  // Fix: getServerSession expects (req, res, authOptions)
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (!session || !('user' in session) || !session.user || !(session.user as any).id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -61,7 +65,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Your cart is empty." }, { status: 400 });
     }
     // Ensure all cart items have product data
-    const fullCartItems = [];
+    const fullCartItems: any[] = [];
     for (const item of cart.items) {
       let product = item.product;
       let productId = product?.id || item.productId;
@@ -103,8 +107,8 @@ export async function POST(request: NextRequest) {
     // Stripe flow
     if (paymentMethod === 'stripe') {
       const baseUrl = getBaseUrl(request);
-      
-      const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = fullCartItems.map((item: any) => ({
+
+      const line_items: typeof stripe.checkout.sessions.create extends (params: { line_items: (infer T)[] } & any) => any ? T[] : any[] = fullCartItems.map((item: any) => ({
         price_data: {
           currency: 'kes',
           product_data: {
@@ -123,7 +127,7 @@ export async function POST(request: NextRequest) {
         },
         quantity: 1,
       });
-      const stripeSession: Stripe.Checkout.Session = await stripe.checkout.sessions.create({
+      const stripeSession = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items,
         mode: 'payment',
@@ -141,7 +145,7 @@ export async function POST(request: NextRequest) {
     // PayPal flow
     if (paymentMethod === 'paypal') {
       const baseUrl = getBaseUrl(request);
-      
+
       const paypalRequest = new paypal.orders.OrdersCreateRequest();
       paypalRequest.prefer("return=representation");
       paypalRequest.requestBody({
@@ -174,17 +178,18 @@ export async function POST(request: NextRequest) {
 }
 
 // --- STRIPE WEBHOOK HANDLER (for payment confirmation) ---
-export async function POST_webhook(request: NextRequest) {
+export async function POST_webhook(request: Request) {
+  // Use native Request, not NextRequest, for .text()
   const sig = request.headers.get('stripe-signature');
   const rawBody = await request.text();
   let event;
   try {
-    event = stripe.webhooks.constructEvent(rawBody, sig!, process.env.STRIPE_WEBHOOK_SECRET!);
+    event = (stripe as any).webhooks.constructEvent(rawBody, sig!, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err) {
     return NextResponse.json({ message: 'Webhook signature verification failed.' }, { status: 400 });
   }
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session;
+    const session = event.data.object as any;
     const orderId = session.metadata?.orderId;
     const userId = session.metadata?.userId;
     if (orderId && userId) {
@@ -221,7 +226,10 @@ async function sendOrderConfirmationEmail(email: string, order: any, orderId: st
 }
 
 export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  // Fix: getServerSession expects (req, res, authOptions)
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -232,7 +240,7 @@ export async function GET(request: NextRequest) {
       .where('userId', '==', session.user.id)
       .orderBy('createdAt', 'desc')
       .get();
-    const orders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const orders = ordersSnap.docs.map((doc: FirebaseFirestore.DocumentSnapshot) => ({ id: doc.id, ...doc.data() }));
     return NextResponse.json(orders);
   } catch (error) {
     console.error("Error fetching orders:", error);
