@@ -79,78 +79,11 @@ declare module 'next/image' {
   }>;
   export default Image;
 }
-
-declare module 'react' {
-  export * from '@types/react';
-  export namespace React {
-    interface HTMLAttributes<T> {
-      className?: string;
-      onClick?: (event: MouseEvent<T>) => void;
-      children?: ReactNode;
-      [key: string]: any;
-    }
-    interface MouseEvent<T = Element> {
-      preventDefault(): void;
-      stopPropagation(): void;
-      target: EventTarget & T;
-    }
-    type ReactNode = string | number | boolean | ReactElement | ReactFragment | ReactPortal | null | undefined;
-    interface ReactElement {
-      type: any;
-      props: any;
-      key: string | number | null;
-    }
-    type ReactFragment = {};
-    type ReactPortal = {};
-  }
-}
-
+// declare module 'react' {
 declare module 'lucide-react' {
-  export const CheckCircle: any;
-  export const Clock: any;
-  export const Package: any;
-  export const Truck: any;
-  export const XCircle: any;
-  export const Eye: any;
-  export const Edit: any;
-  export const Trash2: any;
-  export const Plus: any;
-  export const Search: any;
-  export const Filter: any;
-  export const Download: any;
-  export const Upload: any;
-  export const User: any;
-  export const Mail: any;
-  export const Calendar: any;
-  export const DollarSign: any;
-  export const ShoppingCart: any;
-  export const TrendingUp: any;
-  export const TrendingDown: any;
-  export const AlertTriangle: any;
-  export const Star: any;
-  export const Heart: any;
-  export const Share2: any;
-  export const Minus: any;
-  export const MapPin: any;
-  export const Phone: any;
-  export const Globe: any;
-  export const CreditCard: any;
-  export const Lock: any;
-  export const Unlock: any;
-  export const Home: any;
-  export const Menu: any;
-  export const X: any;
-  export const ChevronDown: any;
-  export const ChevronUp: any;
-  export const ChevronLeft: any;
-  export const ChevronRight: any;
-  export const ArrowLeft: any;
-  export const ArrowRight: any;
-  export const Settings: any;
-  export const LogOut: any;
-  export const LogIn: any;
-  export const UserPlus: any;
+  // Add exports here if needed, or leave empty for now
 }
+
 
 declare module 'recharts' {
   export const LineChart: any;
@@ -260,9 +193,9 @@ declare global {
       limit(limit: number): Query;
       get(): Promise<QuerySnapshot>;
     }
-    interface QuerySnapshot {
-      docs: DocumentSnapshot[];
-      forEach(callback: (doc: DocumentSnapshot) => void): void;
+      interface QuerySnapshot {
+        docs: DocumentSnapshot[];
+        forEach(callback: (doc: DocumentSnapshot) => void): void;
+      }
     }
   }
-}

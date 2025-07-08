@@ -1,9 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import * as React from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ShoppingCart, CreditCard, PackagePlus, Lock, Loader2, CheckCircle, ArrowRight, MapPin, Trash2, Minus, Plus, Sparkles } from "lucide-react";
+import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart.js";
+import CreditCard from "lucide-react/dist/esm/icons/credit-card.js";
+import Package from "lucide-react/dist/esm/icons/package.js";
+import Lock from "lucide-react/dist/esm/icons/lock.js";
+import CheckCircle from "lucide-react/dist/esm/icons/check-circle.js";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right.js";
+import MapPin from "lucide-react/dist/esm/icons/map-pin.js";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2.js";
+import Minus from "lucide-react/dist/esm/icons/minus.js";
+import Plus from "lucide-react/dist/esm/icons/plus.js";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2.js";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles.js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { useCart } from '@/context/cart-context';
+import type { CartItem as LibCartItem } from '@/lib/types';
 
 const steps = [
   { label: "Cart Review", icon: <ShoppingCart className="h-5 w-5" /> },
@@ -29,14 +41,14 @@ export default function CheckoutPage() {
   const shipping = subtotal > 0 ? 5.99 : 0;
   const discount = 0; // Implement promo logic if needed
 
-  const [step, setStep] = useState(1);
-  const [shippingInfo, setShippingInfo] = useState({ name: '', phone: '', address: '', city: '', zone: '', method: 'FAST', date: '' });
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe');
-  const [orderLoading, setOrderLoading] = useState(false);
-  const [orderError, setOrderError] = useState('');
+  const [step, setStep] = React.useState(1);
+  const [shippingInfo, setShippingInfo] = React.useState({ name: '', phone: '', address: '', city: '', zone: '', method: 'FAST', date: '' });
+  const [paymentMethod, setPaymentMethod] = React.useState<'stripe' | 'paypal'>('stripe');
+  const [orderLoading, setOrderLoading] = React.useState(false);
+  const [orderError, setOrderError] = React.useState('');
 
   // Check for cancelled payment
-  useEffect(() => {
+  React.useEffect(() => {
     const cancelled = searchParams.get('cancelled');
     if (cancelled === '1') {
       toast({
@@ -45,17 +57,40 @@ export default function CheckoutPage() {
         variant: "destructive"
       });
       // Clear the URL parameter
-      router.replace('/checkout', undefined);
+      router.replace('/checkout');
     }
   }, [searchParams, toast, router]);
 
   // Auth-guard
-  useEffect(() => {
+  React.useEffect(() => {
     if (status === 'unauthenticated') router.push(`/login?callbackUrl=/checkout`);
   }, [status, router]);
 
-  // Step 1: Cart Review
-  const CartReview = () => (
+// Step 1: Cart Review
+// Remove local CartItem interface and use imported type
+// interface CartItem {
+//   id: string;
+//   quantity: number;
+//   product: {
+//     id: string;
+//     name: string;
+//     price: number;
+//     imageUrl: string;
+//     category?: string;
+//   };
+// }
+
+// Update CartReviewProps and PaymentAndConfirmProps to use LibCartItem
+interface CartReviewProps {
+  items: LibCartItem[];
+  subtotal: number;
+  updateQuantity: (productId: string, quantity: number) => void;
+  removeItem: (productId: string) => void;
+  setStep: (step: number) => void;
+}
+
+function CartReview({ items, subtotal, updateQuantity, removeItem, setStep }: CartReviewProps) {
+  return (
     <div className="space-y-6 animate-fade-in">
       <Card className="bg-gradient-to-br from-background to-muted/40 border-0 shadow-glow-md backdrop-blur-md">
         <CardHeader>
@@ -66,7 +101,7 @@ export default function CheckoutPage() {
         <CardContent>
           {items.length === 0 ? (
             <div className="text-center py-12">
-              <PackagePlus size={48} className="mx-auto text-muted-foreground mb-4 animate-pulse" />
+              <Package size={48} className="mx-auto text-muted-foreground mb-4 animate-pulse" />
               <p className="text-lg text-muted-foreground">Your cart is empty.</p>
               <Button asChild className="mt-4 bg-accent text-white" aria-label="Return to shop">
                 <Link href="/products">Shop Now</Link>
@@ -74,8 +109,9 @@ export default function CheckoutPage() {
             </div>
           ) : (
             <ul className="space-y-4">
-              {items.map((item: any) => (
-                <li key={item.id || item.product.id} className="flex items-center gap-4 bg-white/5 rounded-lg p-3 animate-slide-in">
+              {items.map((item: LibCartItem) => (
+                // Use item.product.id as key since item.id does not exist
+                <li key={item.product.id} className="flex items-center gap-4 bg-white/5 rounded-lg p-3 animate-slide-in">
                   <img src={item.product.imageUrl} alt={item.product.name} className="w-16 h-16 rounded-md object-cover border border-accent/30" />
                   <div className="flex-1">
                     <div className="font-semibold text-primary">{item.product.name}</div>
@@ -113,11 +149,29 @@ export default function CheckoutPage() {
       </Card>
     </div>
   );
+}
 
-  // Step 2: Shipping Info
-  const [shippingError, setShippingError] = useState("");
-  const ShippingInfo = () => (
-    <div className="space-y-6 animate-fade-in">
+// Step 2: Shipping Info
+interface ShippingInfoType {
+  name: string;
+  phone: string;
+  address: string;
+  city: string;
+  zone: string;
+  method: string;
+  date: string;
+}
+
+interface ShippingInfoProps {
+  shippingInfo: ShippingInfoType;
+  setShippingInfo: React.Dispatch<React.SetStateAction<ShippingInfoType>>;
+  setStep: (step: number) => void;
+}
+
+function ShippingInfo({ shippingInfo, setShippingInfo, setStep }: ShippingInfoProps) {
+  const [shippingError, setShippingError] = React.useState("");
+  return (
+    <div className="space-y-6">
       <Card className="bg-gradient-to-br from-background to-muted/40 border-0 shadow-glow-md backdrop-blur-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-accent"><MapPin className="h-7 w-7 text-accent" /> Shipping Info</CardTitle>
@@ -135,36 +189,78 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Full Name</Label>
-                <Input value={shippingInfo.name} onChange={e => setShippingInfo(s => ({ ...s, name: e.target.value }))} required />
+                <Input
+                  value={shippingInfo.name}
+                  onChange={e => {
+                    // Use functional update with previous value to avoid focus loss
+                    setShippingInfo(prev => ({ ...prev, name: e.target.value }));
+                  }}
+                  required
+                  autoComplete="name"
+                />
               </div>
               <div>
                 <Label>Phone Number</Label>
-                <Input value={shippingInfo.phone} onChange={e => setShippingInfo(s => ({ ...s, phone: e.target.value }))} required />
+                <Input
+                  value={shippingInfo.phone}
+                  onChange={e => {
+                    setShippingInfo(prev => ({ ...prev, phone: e.target.value }));
+                  }}
+                  required
+                  autoComplete="tel"
+                />
               </div>
               <div className="md:col-span-2">
                 <Label>Address</Label>
-                <Input value={shippingInfo.address} onChange={e => setShippingInfo(s => ({ ...s, address: e.target.value }))} required />
+                <Input
+                  value={shippingInfo.address}
+                  onChange={e => {
+                    setShippingInfo(prev => ({ ...prev, address: e.target.value }));
+                  }}
+                  required
+                  autoComplete="street-address"
+                />
               </div>
               <div>
                 <Label>City</Label>
-                <Input value={shippingInfo.city} onChange={e => setShippingInfo(s => ({ ...s, city: e.target.value }))} required />
+                <Input
+                  value={shippingInfo.city}
+                  onChange={e => {
+                    setShippingInfo(prev => ({ ...prev, city: e.target.value }));
+                  }}
+                  required
+                  autoComplete="address-level2"
+                />
               </div>
               <div>
                 <Label>Zone</Label>
-                <Input value={shippingInfo.zone} onChange={e => setShippingInfo(s => ({ ...s, zone: e.target.value }))} required />
+                <Input
+                  value={shippingInfo.zone}
+                  onChange={e => {
+                    setShippingInfo(prev => ({ ...prev, zone: e.target.value }));
+                  }}
+                  required
+                  autoComplete="postal-code"
+                />
               </div>
             </div>
             <div className="mt-4">
               <Label>Delivery Method</Label>
               <div className="flex gap-3 mt-2">
-                <Button type="button" variant={shippingInfo.method === "FAST" ? "default" : "outline"} onClick={() => setShippingInfo(s => ({ ...s, method: "FAST" }))}>🚀 Fast (1–2d)</Button>
-                <Button type="button" variant={shippingInfo.method === "STANDARD" ? "default" : "outline"} onClick={() => setShippingInfo(s => ({ ...s, method: "STANDARD" }))}>🛸 Standard (3–5d)</Button>
-                <Button type="button" variant={shippingInfo.method === "ECO" ? "default" : "outline"} onClick={() => setShippingInfo(s => ({ ...s, method: "ECO" }))}>🌿 Eco (pick date)</Button>
+                <Button type="button" variant={shippingInfo.method === "FAST" ? "default" : "outline"} onClick={() => setShippingInfo(prev => ({ ...prev, method: "FAST" }))}>🚀 Fast (1–2d)</Button>
+                <Button type="button" variant={shippingInfo.method === "STANDARD" ? "default" : "outline"} onClick={() => setShippingInfo(prev => ({ ...prev, method: "STANDARD" }))}>🛸 Standard (3–5d)</Button>
+                <Button type="button" variant={shippingInfo.method === "ECO" ? "default" : "outline"} onClick={() => setShippingInfo(prev => ({ ...prev, method: "ECO" }))}>🌿 Eco (pick date)</Button>
               </div>
               {shippingInfo.method === "ECO" && (
                 <div className="mt-2">
                   <Label>Delivery Date</Label>
-                  <Input type="date" value={shippingInfo.date} onChange={e => setShippingInfo(s => ({ ...s, date: e.target.value }))} />
+                  <Input
+                    type="date"
+                    value={shippingInfo.date}
+                    onChange={e => {
+                      setShippingInfo(prev => ({ ...prev, date: e.target.value }));
+                    }}
+                  />
                 </div>
               )}
             </div>
@@ -177,9 +273,39 @@ export default function CheckoutPage() {
       </Card>
     </div>
   );
+}
 
-  // Step 3: Payment & Confirmation
-  const PaymentAndConfirm = () => (
+// Step 3: Payment & Confirmation
+interface PaymentAndConfirmProps {
+  paymentMethod: 'stripe' | 'paypal';
+  setPaymentMethod: React.Dispatch<React.SetStateAction<'stripe' | 'paypal'>>;
+  orderLoading: boolean;
+  setOrderLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  orderError: string;
+  setOrderError: React.Dispatch<React.SetStateAction<string>>;
+  shippingInfo: ShippingInfoType;
+  session: any;
+  toast: any;
+  total: number;
+  shipping: number;
+  items: LibCartItem[];
+}
+
+function PaymentAndConfirm({
+  paymentMethod,
+  setPaymentMethod,
+  orderLoading,
+  setOrderLoading,
+  orderError,
+  setOrderError,
+  shippingInfo,
+  session,
+  toast,
+  total,
+  shipping,
+  items
+}: PaymentAndConfirmProps) {
+  return (
     <div className="space-y-6 animate-fade-in">
       <Card className="bg-gradient-to-br from-background to-muted/40 border-0 shadow-glow-md backdrop-blur-md">
         <CardHeader>
@@ -256,14 +382,14 @@ export default function CheckoutPage() {
                 
                 // If no URL returned, there's an issue
                 throw new Error('Payment URL not received');
-              } catch (err: any) {
+              } catch (err) {
                 console.error('Order creation error:', err);
-                setOrderError(err.message || 'Payment failed. Please try again.');
-                
+                const errorMsg = err instanceof Error ? err.message : 'Payment failed. Please try again.';
+                setOrderError(errorMsg);
                 // Show error toast
                 toast({
                   title: "Order Failed",
-                  description: err.message || 'Unable to create order. Please try again.',
+                  description: errorMsg,
                   variant: "destructive"
                 });
               } finally {
@@ -289,6 +415,7 @@ export default function CheckoutPage() {
       </Card>
     </div>
   );
+}
 
   // Sticky Order Summary
   const OrderSummary = () => (
@@ -341,9 +468,38 @@ export default function CheckoutPage() {
         <div className="md:col-span-2">
           <Progress />
           <div className="rounded-xl bg-glass shadow-glow-lg p-8 animate-fade-in">
-            {step === 1 && <CartReview />}
-            {step === 2 && <ShippingInfo />}
-            {step === 3 && <PaymentAndConfirm />}
+            {step === 1 && (
+              <CartReview
+                items={items}
+                subtotal={subtotal}
+                updateQuantity={updateQuantity}
+                removeItem={removeItem}
+                setStep={setStep}
+              />
+            )}
+            {step === 2 && (
+              <ShippingInfo
+                shippingInfo={shippingInfo}
+                setShippingInfo={setShippingInfo}
+                setStep={setStep}
+              />
+            )}
+            {step === 3 && (
+              <PaymentAndConfirm
+                paymentMethod={paymentMethod}
+                setPaymentMethod={setPaymentMethod}
+                orderLoading={orderLoading}
+                setOrderLoading={setOrderLoading}
+                orderError={orderError}
+                setOrderError={setOrderError}
+                shippingInfo={shippingInfo}
+                session={session}
+                toast={toast}
+                total={total}
+                shipping={shipping}
+                items={items}
+              />
+            )}
           </div>
         </div>
         <div className="md:col-span-1">

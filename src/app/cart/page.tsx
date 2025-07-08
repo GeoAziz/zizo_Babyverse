@@ -9,7 +9,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShoppingCart, Trash2, ArrowRight, PackagePlus, CreditCard, Minus, Plus, Loader2, AlertTriangle } from 'lucide-react';
+import ShoppingCart from 'lucide-react/dist/esm/icons/shopping-cart.js';
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2.js';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right.js';
+import PackagePlus from 'lucide-react/dist/esm/icons/package-plus.js';
+import CreditCard from 'lucide-react/dist/esm/icons/credit-card.js';
+import Minus from 'lucide-react/dist/esm/icons/minus.js';
+import Plus from 'lucide-react/dist/esm/icons/plus.js';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2.js';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle.js';
 import type { Product } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from 'next-auth/react';
@@ -44,7 +52,14 @@ function CartPageContent() {
       }
       let data = await response.json();
       // Always use data.items (API returns { items: [...] })
-      const items = Array.isArray(data?.items) ? data.items : [];
+      // Patch: add id and productId if missing (best practice for frontend resilience)
+      const items = Array.isArray(data?.items)
+        ? data.items.map((item: any) => ({
+            ...item,
+            id: item.id || item.product?.id || '',
+            productId: item.product?.id || '',
+          }))
+        : [];
       setCartItems(items);
     } catch (error) {
       console.error("Error fetching cart:", error);
@@ -114,31 +129,40 @@ function CartPageContent() {
     }
   };
 
+  // Remove item: only update UI after backend confirms removal
+  // Remove item: optimistically update UI, then confirm with backend
   const handleRemoveItem = async (cartItemId: string) => {
-    setActionLoading(prev => ({ ...prev, [cartItemId]: true }));
+    // Debug: log the cartItemId
+    console.log('handleRemoveItem called with cartItemId:', cartItemId);
+    if (!cartItemId) {
+      toast({ title: 'Error', description: 'Invalid cart item ID.', variant: 'destructive' });
+      return;
+    }
+    const originalItems = [...cartItems];
     const itemToRemove = cartItems.find(item => item.id === cartItemId);
     if (!itemToRemove) {
       setActionLoading(prev => ({ ...prev, [cartItemId]: false }));
       toast({ title: 'Error', description: 'Item not found in cart.', variant: 'destructive' });
       return;
     }
-    const originalItems = [...cartItems];
-    // Optimistic update
+    // Optimistically remove from UI
     setCartItems(prevItems => prevItems.filter(item => item.id !== cartItemId));
+    setActionLoading(prev => ({ ...prev, [cartItemId]: true }));
     try {
-      // Always use the cart item id for removal
-      const response = await fetch(`/api/cart/${cartItemId}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(`/api/cart/${cartItemId}`, { method: 'DELETE' });
       if (!response.ok) {
-        setCartItems(originalItems); // Revert on failure
-        const errorData = await response.json();
+        // Revert optimistic update
+        setCartItems(originalItems);
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || 'Failed to remove item from cart.');
       }
       toast({ title: `${itemToRemove.product.name} removed from cart`, variant: 'destructive' });
-      await fetchCartItems();
+      // Optionally, refetch cart to ensure sync (debounced to avoid flicker)
+      setTimeout(() => {
+        fetchCartItems();
+      }, 200);
     } catch (error: any) {
-      setCartItems(originalItems); // Revert on error
+      setCartItems(originalItems);
       toast({ title: 'Error', description: error.message || 'Could not remove item from cart.', variant: 'destructive' });
     } finally {
       setActionLoading(prev => ({ ...prev, [cartItemId]: false }));
@@ -227,77 +251,81 @@ function CartPageContent() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {cartItems.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          <Image
-                            src={item.product.imageUrl || 'https://placehold.co/80x80.png'}
-                            alt={item.product.name}
-                            width={60}
-                            height={60}
-                            className="rounded-md object-cover border"
-                            data-ai-hint={item.product.dataAiHint || item.product.category?.toLowerCase()}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Link href={`/products/${item.productId}`} className="font-medium hover:text-accent transition-colors">
-                            {item.product.name}
-                          </Link>
-                          <p className="text-xs text-muted-foreground">{item.product.category}</p>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex items-center justify-center border border-input rounded-md w-28 mx-auto">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Decrease quantity for ${item.product.name}`}
-                              onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                              disabled={actionLoading[item.id] || item.quantity <= 1}
-                              tabIndex={0}
-                            >
-                              {actionLoading[item.id] ? <Loader2 className="h-3 w-3 animate-spin" /> : <Minus className="h-3 w-3" />}
-                            </Button>
-                            <Input
-                              type="number"
-                              aria-label={`Quantity for ${item.product.name}`}
-                              value={item.quantity}
-                              min={1}
-                              max={item.product.stock}
-                              onChange={e => handleQuantityChange(item.id, Number(e.target.value))}
-                              disabled={actionLoading[item.id]}
-                              tabIndex={0}
+                    {cartItems && Array.isArray(cartItems) && cartItems.length > 0 ? (
+                      cartItems.filter(item => !!item && !!item.id && item.product && item.product.name).map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell>
+                            <Image
+                              src={item.product.imageUrl || 'https://placehold.co/80x80.png'}
+                              alt={item.product.name}
+                              width={60}
+                              height={60}
+                              className="rounded-md object-cover border"
+                              data-ai-hint={item.product.dataAiHint || item.product.category?.toLowerCase()}
                             />
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Increase quantity for ${item.product.name}`}
-                              onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                              disabled={actionLoading[item.id] || item.quantity >= item.product.stock}
-                              tabIndex={0}
-                            >
-                              {actionLoading[item.id] ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
-                            </Button>
-                          </div>
-                          {typeof item.product.stock === 'number' && item.quantity >= item.product.stock && (
-                            <div className="text-xs text-destructive mt-1 text-center">Max stock reached</div>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">KSH {(item.product.price * 100).toFixed(2)}</TableCell>
-                        <TableCell className="text-right font-semibold">KSH {(item.product.price * item.quantity * 100).toFixed(2)}</TableCell>
-                        <TableCell className="text-center">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Remove ${item.product.name} from cart`}
-                            onClick={() => handleRemoveItem(item.id)}
-                            disabled={actionLoading[item.id]}
-                            tabIndex={0}
-                          >
-                            {actionLoading[item.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell>
+                            <Link href={`/products/${item.productId}`} className="font-medium hover:text-accent transition-colors">
+                              {item.product.name}
+                            </Link>
+                            <p className="text-xs text-muted-foreground">{item.product.category}</p>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center border border-input rounded-md w-28 mx-auto">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Decrease quantity for ${item.product.name}`}
+                                onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                                disabled={actionLoading[item.id] || item.quantity <= 1}
+                                tabIndex={0}
+                              >
+                                {actionLoading[item.id] ? <Loader2 className="h-3 w-3 animate-spin" /> : <Minus className="h-3 w-3" />}
+                              </Button>
+                              <Input
+                                type="number"
+                                aria-label={`Quantity for ${item.product.name}`}
+                                value={item.quantity}
+                                min={1}
+                                max={item.product.stock}
+                                onChange={e => handleQuantityChange(item.id, Number(e.target.value))}
+                                disabled={actionLoading[item.id]}
+                                tabIndex={0}
+                              />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Increase quantity for ${item.product.name}`}
+                                onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                disabled={actionLoading[item.id] || item.quantity >= item.product.stock}
+                                tabIndex={0}
+                              >
+                                {actionLoading[item.id] ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                              </Button>
+                            </div>
+                            {typeof item.product.stock === 'number' && item.quantity >= item.product.stock && (
+                              <div className="text-xs text-destructive mt-1 text-center">Max stock reached</div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">KSH {(item.product.price * 100).toFixed(2)}</TableCell>
+                          <TableCell className="text-right font-semibold">KSH {(item.product.price * item.quantity * 100).toFixed(2)}</TableCell>
+                          <TableCell className="text-center">
+                            {item.id ? (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Remove ${item.product.name} from cart`}
+                                onClick={() => handleRemoveItem(item.id)}
+                                disabled={actionLoading[item.id]}
+                                tabIndex={0}
+                              >
+                                {actionLoading[item.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                              </Button>
+                            ) : null}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : null}
                   </TableBody>
                 </Table>
               </div>

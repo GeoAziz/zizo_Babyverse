@@ -156,7 +156,7 @@ export const authOptions: NextAuthOptions = {
           await userRef.set({
             email: user.email,
             name: user.name,
-            image: user.image,
+            image: user.image ?? null,
             role: user.email === 'admin@babyverse.com' ? 'ADMIN' : 'PARENT',
             firebaseUid: user.id,
             lastSignIn: admin.firestore.FieldValue.serverTimestamp(),
