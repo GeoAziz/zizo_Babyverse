@@ -7,12 +7,23 @@ import { getAuth } from 'firebase-admin/auth';
 
 // Singleton pattern for admin app
 let app;
-const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+
+// Helper to parse private key correctly
+function parsePrivateKey(key: string | undefined) {
+  if (!key) return undefined;
+  // Handles both escaped and real newlines
+  return key.replace(/\\n/g, '\n').replace(/\r\n|\r|\n/g, '\n');
+}
 
 if (!getApps().length) {
   try {
-    if (serviceAccountJson) {
-      const serviceAccount = JSON.parse(serviceAccountJson);
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+      // Prefer full JSON if available
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+      // Fix private key if needed
+      if (serviceAccount.private_key) {
+        serviceAccount.private_key = parsePrivateKey(serviceAccount.private_key);
+      }
       app = initializeApp({
         credential: cert(serviceAccount),
         projectId: serviceAccount.project_id,
@@ -26,7 +37,7 @@ if (!getApps().length) {
         credential: cert({
           projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
           clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY.replace(/\\n/g, '\n'),
+          privateKey: parsePrivateKey(process.env.FIREBASE_ADMIN_PRIVATE_KEY),
         }),
         projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
       });
