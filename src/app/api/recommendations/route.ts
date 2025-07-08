@@ -4,8 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { RecommendationService } from '@/lib/services/RecommendationService';
 
 export async function GET(request: Request) {
-  // Extract req and res from the request (for Next.js API routes)
-  // Since this is an Edge API route, you may need to create mock req/res objects
   const req = request as any;
   const res = {
     getHeader() {},
@@ -18,8 +16,6 @@ export async function GET(request: Request) {
   }
 
   try {
-    // db is already imported from firebaseAdmin
-    // Get user's active baby profile
     const babySnap = await db.collection('babies')
       .where('userId', '==', session.user.id)
       .orderBy('updatedAt', 'desc')
@@ -43,11 +39,9 @@ export async function GET(request: Request) {
           preferences: babySnap.docs[0].data().preferences ?? null,
         };
 
-    // Get user preferences (if stored in a separate collection)
     const userSnap = await db.collection('users').doc(session.user.id).get();
     const user = userSnap.exists ? userSnap.data() : null;
 
-    // Get order history
     const ordersSnap = await db.collection('orders')
       .where('userId', '==', session.user.id)
       .orderBy('createdAt', 'desc')
@@ -70,7 +64,6 @@ export async function GET(request: Request) {
       };
     });
 
-    // Generate contextual recommendations
     const recommendations = await RecommendationService.getContextualRecommendations(
       session.user.id,
       {
@@ -89,7 +82,6 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  // Create mock req and res objects as in GET
   const req = request as any;
   const res = {
     getHeader() {},
@@ -97,7 +89,7 @@ export async function POST(request: Request) {
     setHeader() {},
   } as any;
   const session = await getServerSession(authOptions, req, res);
-  
+
   if (!session?.user?.id) {
     return Response.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -106,21 +98,15 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { babyId, budget, preferences } = body;
 
-    // Use the imported db from firebaseAdmin
-    // const db = admin.firestore();
-
-    // Get specific baby profile if babyId provided and is a string
     let babyProfile: any = undefined;
     if (typeof babyId === 'string' && babyId) {
       const babyDoc = await db.collection('babies').doc(babyId).get();
       babyProfile = babyDoc.exists ? { id: babyDoc.id, ...babyDoc.data() } : undefined;
     }
 
-    // Get user preferences from users collection
     const userSnap = await db.collection('users').doc(session.user.id).get();
     const userPreferences = userSnap.exists ? userSnap.data() : undefined;
 
-    // Get order history
     const ordersSnap = await db.collection('orders')
       .where('userId', '==', session.user.id)
       .orderBy('createdAt', 'desc')
@@ -143,7 +129,6 @@ export async function POST(request: Request) {
       };
     });
 
-    // Generate recommendations with custom context
     const recommendations = await RecommendationService.getContextualRecommendations(
       session.user.id,
       {
