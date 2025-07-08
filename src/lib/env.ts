@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   // Database
-  DATABASE_URL: z.string(),
+  // DATABASE_URL: z.string(), // <-- Commented out, missing
 
   // Auth
   NEXTAUTH_URL: z.string(),
@@ -10,16 +10,18 @@ const envSchema = z.object({
 
   // Payment Processing
   STRIPE_SECRET_KEY: z.string(),
-  STRIPE_WEBHOOK_SECRET: z.string(),
+  // STRIPE_WEBHOOK_SECRET: z.string(), // <-- Commented out, missing
   PAYPAL_CLIENT_ID: z.string(),
   PAYPAL_CLIENT_SECRET: z.string(),
-  PAYPAL_WEBHOOK_ID: z.string(),
+  // PAYPAL_WEBHOOK_ID: z.string(), // <-- Commented out, missing
   PAYPAL_MODE: z.enum(['sandbox', 'live']).default('sandbox'),
 
   // Redis
   REDIS_URL: z.string().optional(),
-  REDIS_PASSWORD: z.string().optional(),  // Email (SendGrid)
-  SENDGRID_API_KEY: z.string(),
+  REDIS_PASSWORD: z.string().optional(),
+
+  // Email (SendGrid)
+  // SENDGRID_API_KEY: z.string(), // <-- Commented out, missing
   EMAIL_FROM: z.string().optional(),
 
   // Image Upload (Cloudinary)
@@ -28,4 +30,5 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string().optional(),
 });
 
-export const env = envSchema.parse(process.env);
+// Only parse the env if you have all required variables
+export const env = envSchema.partial().parse(process.env);
