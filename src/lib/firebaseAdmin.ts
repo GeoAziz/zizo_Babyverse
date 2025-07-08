@@ -9,7 +9,7 @@ try {
 
   const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n') || '';
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL || '';
-  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '';
+  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID || '';
 
   const credential = admin.credential.cert({
     projectId,
@@ -30,7 +30,7 @@ try {
     // Fallback initialization for development
     try {
       app = admin.initializeApp({
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
       });
     } catch (fallbackError) {
       console.error('Firebase admin fallback initialization failed:', fallbackError);
