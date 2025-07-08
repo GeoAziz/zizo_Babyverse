@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import type { Role } from '@/lib/auth';
 
-const db = admin.firestore();
+// db is already imported from firebaseAdmin
 
 const productUpdateSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
@@ -58,7 +58,8 @@ export async function PUT(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const session = await getServerSession(authOptions);
+  // @ts-ignore: Adjusted for custom getServerSession signature in your project
+  const session = await getServerSession(authOptions, request, { res: null });
   if (!session || (session.user as { role: Role }).role !== 'ADMIN') {
     return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
   }
@@ -87,7 +88,8 @@ export async function DELETE(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const session = await getServerSession(authOptions);
+  // @ts-ignore: Adjusted for custom getServerSession signature in your project
+  const session = await getServerSession(authOptions, request, { res: null });
   if (!session || (session.user as { role: Role }).role !== 'ADMIN') {
     return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
   }

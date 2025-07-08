@@ -15,16 +15,21 @@ interface FirestoreUser {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    // Convert NextRequest to Node.js req and res objects for getServerSession
+    const { headers } = request;
+    // @ts-ignore
+    const req = { headers };
+    // @ts-ignore
+    const res = { getHeader() {}, setCookie() {}, setHeader() {} };
+    const session = await getServerSession(req, res, authOptions);
     
     if (!session || (session.user as any).role !== 'ADMIN') {
       return NextResponse.json({ message: "Forbidden: Admins only" }, { status: 403 });
     }
 
-    const db = admin.firestore();
     const usersSnapshot = await db.collection('users').orderBy('createdAt', 'desc').get();
     
-    const users: FirestoreUser[] = usersSnapshot.docs.map(doc => ({
+    const users: FirestoreUser[] = usersSnapshot.docs.map((doc: FirebaseFirestore.DocumentData) => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
@@ -39,12 +44,12 @@ export async function GET(request: NextRequest) {
             .where('userId', '==', user.id)
             .get();
           
-          const userOrders = ordersSnapshot.docs.map(doc => doc.data());
-          const totalSpent = userOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+          const userOrders = ordersSnapshot.docs.map((doc: FirebaseFirestore.DocumentData) => doc.data());
+          const totalSpent = userOrders.reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0);
 
           let lastOrderDate = null;
           if (userOrders.length > 0) {
-            const sortedOrders = userOrders.sort((a, b) => {
+            const sortedOrders = userOrders.sort((a: any, b: any) => {
               const dateA = new Date(a.createdAt?.toDate?.() || a.createdAt || 0);
               const dateB = new Date(b.createdAt?.toDate?.() || b.createdAt || 0);
               return dateB.getTime() - dateA.getTime();

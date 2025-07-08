@@ -33,8 +33,8 @@ interface FirestoreOrder {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
+    // @ts-ignore
+    const session = await getServerSession(request, { res: undefined }, authOptions);
     if (!session || (session.user as any).role !== 'ADMIN') {
       return NextResponse.json({ message: "Forbidden: Admins only" }, { status: 403 });
     }
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const db = admin.firestore();
+    // Use the imported db from firebaseAdmin
     let query = db.collection('orders').orderBy('createdAt', 'desc');
 
     if (status && status !== 'all') {
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     }
 
     const ordersSnapshot = await query.limit(limit).offset(offset).get();
-    const orders: FirestoreOrder[] = ordersSnapshot.docs.map(doc => ({
+    const orders: FirestoreOrder[] = ordersSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),

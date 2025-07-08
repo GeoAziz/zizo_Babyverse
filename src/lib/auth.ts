@@ -13,8 +13,7 @@ interface User extends NextAuthUser {
   firebaseUid?: string;
 }
 
-export const db = admin.firestore();
-export const auth = admin.auth();
+// db and auth are already imported from firebaseAdmin
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -159,7 +158,7 @@ export const authOptions: NextAuthOptions = {
             image: user.image ?? null,
             role: user.email === 'admin@babyverse.com' ? 'ADMIN' : 'PARENT',
             firebaseUid: user.id,
-            lastSignIn: admin.firestore.FieldValue.serverTimestamp(),
+            lastSignIn: db.FieldValue.serverTimestamp(),
           }, { merge: true });
         }
       } catch (error) {

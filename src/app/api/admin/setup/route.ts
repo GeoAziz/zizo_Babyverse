@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const adminEmail = 'admin@babyverse.com';
     
     // Find user by email in Firestore
-    const db = admin.firestore();
+    // db is already imported from firebaseAdmin
     const usersSnapshot = await db.collection('users')
       .where('email', '==', adminEmail)
       .limit(1)
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
   try {
     const adminEmail = 'admin@babyverse.com';
     
-    const db = admin.firestore();
+    // db is already imported from firebaseAdmin
     const usersSnapshot = await db.collection('users')
       .where('email', '==', adminEmail)
       .limit(1)
