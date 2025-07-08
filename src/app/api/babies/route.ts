@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, auth } from '@/lib/firebaseAdmin';
+import { db } from '@/lib/firebaseAdmin';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { z } from 'zod';
@@ -7,7 +7,7 @@ import { z } from 'zod';
 const BabyProfileSchema = z.object({
   name: z.string().min(1, "Baby's name is required.")
     .max(50, "Name is too long")
-    .refine(name => /^[a-zA-Z\s-']+$/.test(name), "Name can only contain letters, spaces, hyphens, and apostrophes"),
+    .refine((name: string) => /^[a-zA-Z\s-']+$/.test(name), "Name can only contain letters, spaces, hyphens, and apostrophes"),
   ageInMonths: z.coerce.number().int()
     .min(0, "Age must be a non-negative integer.")
     .max(60, "Age must be 60 months or less"),
@@ -28,18 +28,20 @@ const BabyProfileSchema = z.object({
 });
 
 export async function GET(request: Request) {
-  const session = await getServerSession(authOptions);
+  // Fix getServerSession signature
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const db = admin.firestore();
     const babyProfiles = await db.collection('babies')
       .where('userId', '==', session.user.id)
       .orderBy('createdAt', 'desc')
       .get();
-    const babies = babyProfiles.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const babies = babyProfiles.docs.map((doc: FirebaseFirestore.DocumentSnapshot) => ({ id: doc.id, ...doc.data() }));
     return NextResponse.json(babies);
   } catch (error) {
     console.error("Error fetching baby profiles:", error);
@@ -48,7 +50,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
+  // Fix getServerSession signature
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -63,14 +68,14 @@ export async function POST(request: Request) {
 
     const { name, ageInMonths, weightInKilograms, allergies, preferences } = validation.data;
 
-    const newBabyProfile = await admin.firestore().collection('babies').add({
+    const newBabyProfile = await db.collection('babies').add({
       userId: session.user.id, // Always set userId for security rules
       name,
       ageInMonths,
       weightInKilograms: weightInKilograms || null,
       allergies: allergies || null,
       preferences: preferences || null,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: db.FieldValue ? db.FieldValue.serverTimestamp() : new Date(),
     });
 
     return NextResponse.json({ id: newBabyProfile.id, ...validation.data }, { status: 201 });

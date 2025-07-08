@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, auth } from '@/lib/firebaseAdmin';
-import admin from 'firebase-admin'; // <-- Add this import
+import { db } from '@/lib/firebaseAdmin';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
@@ -56,7 +55,7 @@ export async function POST(request: NextRequest) {
     const { shippingAddress, paymentMethod } = validation.data;
     const userId: string = (session.user as any).id;
     // Get cart
-    const cartSnap: FirebaseFirestore.DocumentSnapshot = await admin.firestore().collection('carts').doc(userId).get();
+    const cartSnap: FirebaseFirestore.DocumentSnapshot = await db.collection('carts').doc(userId).get();
     if (!cartSnap.exists) {
       return NextResponse.json({ message: "Your cart is empty." }, { status: 400 });
     }
@@ -74,7 +73,7 @@ export async function POST(request: NextRequest) {
       }
       if (!product) {
         // Fetch product from Firestore
-        const productSnap: FirebaseFirestore.DocumentSnapshot = await admin.firestore().collection('products').doc(productId).get();
+        const productSnap: FirebaseFirestore.DocumentSnapshot = await db.collection('products').doc(productId).get();
         if (!productSnap.exists) {
           return NextResponse.json({ message: `Product not found for cart item.` }, { status: 400 });
         }
@@ -89,7 +88,7 @@ export async function POST(request: NextRequest) {
     // Calculate total
     const totalAmount = fullCartItems.reduce((sum: number, item: any) => sum + item.product.price * item.quantity, 0) + 5.99;
     // Create order (status: Pending, cart not cleared yet)
-    const orderRef = await admin.firestore().collection('orders').add({
+    const orderRef = await db.collection('orders').add({
       userId,
       items: fullCartItems,
       totalAmount,
@@ -101,8 +100,8 @@ export async function POST(request: NextRequest) {
     });
     // Update stock (reserve)
     for (const item of fullCartItems) {
-      const productRef = admin.firestore().collection('products').doc(item.product.id);
-      await productRef.update({ stock: admin.firestore.FieldValue.increment(-item.quantity) });
+      const productRef = db.collection('products').doc(item.product.id);
+      await productRef.update({ stock: db.FieldValue.increment(-item.quantity) });
     }
     // Stripe flow
     if (paymentMethod === 'stripe') {
@@ -193,10 +192,10 @@ export async function POST_webhook(request: Request) {
     const orderId = session.metadata?.orderId;
     const userId = session.metadata?.userId;
     if (orderId && userId) {
-      const orderRef = admin.firestore().collection('orders').doc(orderId);
+      const orderRef = db.collection('orders').doc(orderId);
       await orderRef.update({ status: 'Paid', paymentIntentId: session.payment_intent });
       // Clear cart after payment
-      await admin.firestore().collection('carts').doc(userId).delete();
+      await db.collection('carts').doc(userId).delete();
       // Send confirmation email
       const orderSnap = await orderRef.get();
       const order = orderSnap.data();
@@ -235,8 +234,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const db = admin.firestore();
-    const ordersSnap = await db.collection('orders')
+    const dbInstance = db;
+    const ordersSnap = await dbInstance.collection('orders')
       .where('userId', '==', session.user.id)
       .orderBy('createdAt', 'desc')
       .get();

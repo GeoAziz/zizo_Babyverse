@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, auth } from '@/lib/firebaseAdmin';
+import { db } from '@/lib/firebaseAdmin';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
@@ -19,7 +19,6 @@ export async function POST(request: Request) {
     }
 
     const { name, email, password } = validation.data;
-    const db = admin.firestore();
     // Check if user already exists
     const userSnap = await db.collection('users').where('email', '==', email).limit(1).get();
     if (!userSnap.empty) {
@@ -40,6 +39,5 @@ export async function POST(request: Request) {
     return NextResponse.json(userWithoutPassword, { status: 201 });
   } catch (error) {
     console.error("Error registering user:", error);
-    return NextResponse.json({ message: "Failed to register user" }, { status: 500 });
-  }
+}
 }

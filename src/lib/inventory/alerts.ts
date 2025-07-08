@@ -1,8 +1,5 @@
 import { sendLowStockAlert } from '@/lib/email/sendgrid';
-import { getFirestore } from 'firebase-admin/firestore';
-import admin from '../firebaseAdmin'; // Use centralized Firebase Admin
-
-const db = getFirestore();
+import { db } from '@/lib/firebaseAdmin';
 
 export const LOW_STOCK_THRESHOLD = 10;
 export const CRITICAL_STOCK_THRESHOLD = 5;
@@ -10,7 +7,7 @@ export const CRITICAL_STOCK_THRESHOLD = 5;
 export async function checkInventoryLevels() {
   try {
     const lowStockProductsSnap = await db.collection('products').where('stock', '<=', LOW_STOCK_THRESHOLD).get();
-    const lowStockProducts = lowStockProductsSnap.docs.map(doc => doc.data());
+    const lowStockProducts = lowStockProductsSnap.docs.map((doc: any) => doc.data());
 
     for (const product of lowStockProducts) {
       if (product.stock <= CRITICAL_STOCK_THRESHOLD) {
@@ -21,7 +18,7 @@ export async function checkInventoryLevels() {
 
     return {
       lowStock: lowStockProducts.length,
-      criticalStock: lowStockProducts.filter(p => p.stock <= CRITICAL_STOCK_THRESHOLD).length,
+      criticalStock: lowStockProducts.filter((p: any) => p.stock <= CRITICAL_STOCK_THRESHOLD).length,
       products: lowStockProducts
     };
   } catch (error) {

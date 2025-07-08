@@ -1,8 +1,5 @@
-import { getFirestore } from 'firebase-admin/firestore';
-import admin from '../firebaseAdmin'; // Use centralized Firebase Admin
+import { db } from '@/lib/firebaseAdmin';
 import { MonitoringService } from '../monitoring';
-
-const db = getFirestore();
 
 export const OptimizedQueries = {
   async getProductWithRelations(productId: string) {
@@ -12,7 +9,7 @@ export const OptimizedQueries = {
       const product = productDoc.data();
       // Fetch reviews and category if needed
       const reviewsSnap = await db.collection('reviews').where('productId', '==', productId).limit(5).get();
-      const reviews = reviewsSnap.docs.map(doc => doc.data());
+      const reviews = reviewsSnap.docs.map((doc: any) => doc.data());
       // ...fetch category if needed
       return { ...product, reviews };
     } finally {
@@ -30,7 +27,7 @@ export const OptimizedQueries = {
         .limit(limit)
         .get();
 
-      const products = productsSnap.docs.map(doc => doc.data());
+      const products = productsSnap.docs.map((doc: any) => doc.data());
 
       const totalSnap = await db.collection('products').where('category', '==', category).get();
       const total = totalSnap.size;
@@ -57,7 +54,7 @@ export const OptimizedQueries = {
         .where('name', '<=', query + '\uf8ff')
         .get();
 
-      return productsSnap.docs.map(doc => doc.data());
+      return productsSnap.docs.map((doc: any) => doc.data());
     } finally {
       endTimer();
     }
@@ -72,7 +69,7 @@ export const OptimizedQueries = {
         .limit(limit)
         .get();
 
-      return productsSnap.docs.map(doc => doc.data());
+      return productsSnap.docs.map((doc: any) => doc.data());
     } finally {
       endTimer();
     }

@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import admin from '@/lib/firebaseAdmin';
+import { db } from '@/lib/firebaseAdmin';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { z } from 'zod';
@@ -18,7 +18,10 @@ export async function GET(
   context: { params: Promise<{ babyId: string }> }
 ) {
   const params = await context.params;
-  const session = await getServerSession(authOptions);
+  // Fix getServerSession signature
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -30,7 +33,6 @@ export async function GET(
 
   try {
     // Firestore: Fetch baby profile by babyId and userId
-    const db = admin.firestore();
     const babyRef = db.collection('babies').doc(babyId);
     const babySnap = await babyRef.get();
     const babyProfile = babySnap.exists ? babySnap.data() : null;
@@ -50,7 +52,10 @@ export async function DELETE(
   context: { params: Promise<{ babyId: string }> }
 ) {
   const params = await context.params;
-  const session = await getServerSession(authOptions);
+  // Fix getServerSession signature
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -62,7 +67,6 @@ export async function DELETE(
 
   try {
     // Firestore: Fetch baby profile by babyId and userId
-    const db = admin.firestore();
     const babyRef = db.collection('babies').doc(babyId);
     const babySnap = await babyRef.get();
     const babyProfile = babySnap.exists ? babySnap.data() : null;
@@ -83,7 +87,10 @@ export async function PUT(
   context: { params: Promise<{ babyId: string }> }
 ) {
   const params = await context.params;
-  const session = await getServerSession(authOptions);
+  // Fix getServerSession signature
+  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
+  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
+  const session = await getServerSession(req, res, authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -99,7 +106,7 @@ export async function PUT(
     if (!validation.success) {
       return NextResponse.json({ errors: validation.error.flatten().fieldErrors }, { status: 400 });
     }
-    const db = admin.firestore();
+    // Use imported db, not admin
     const babyRef = db.collection('babies').doc(babyId);
     const babySnap = await babyRef.get();
     const babyToUpdate = babySnap.exists ? babySnap.data() : null;

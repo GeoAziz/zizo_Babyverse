@@ -1,7 +1,4 @@
-import { getFirestore } from 'firebase-admin/firestore';
-import admin from '../firebaseAdmin'; // Use centralized Firebase Admin
-
-const db = getFirestore();
+import { db } from '@/lib/firebaseAdmin';
 
 export interface ProductQueryOptions {
   page?: number;
