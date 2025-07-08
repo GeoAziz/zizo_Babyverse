@@ -12,12 +12,12 @@ const AddToCartSchema = z.object({
 
 // GET cart items for the logged-in user
 export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(request, null, authOptions);
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
   try {
-    const cartRef = admin.firestore().collection('carts').doc(session.user.id);
+    const cartRef = db.collection('carts').doc(session.user.id);
     const cartSnap = await cartRef.get();
     if (!cartSnap.exists) {
       return NextResponse.json({ items: [] });
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     // Populate product details for each item
     const items = await Promise.all(
       (cart.items).map(async (item: any) => {
-        const productSnap = await admin.firestore().collection('products').doc(item.productId).get();
+        const productSnap = await db.collection('products').doc(item.productId).get();
         if (!productSnap.exists) return null;
         const product = productSnap.data();
         if (!product) return null;
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
 // Add item to cart
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(request, null, authOptions);
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
     const { productId, quantity } = validation.data;
     // Check if product exists and has enough stock
-    const productSnap = await admin.firestore().collection('products').doc(productId).get();
+    const productSnap = await db.collection('products').doc(productId).get();
     if (!productSnap.exists) {
       return NextResponse.json({ message: 'Product not found' }, { status: 404 });
     }
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     if (product.stock < quantity) {
       return NextResponse.json({ message: 'Not enough stock' }, { status: 400 });
     }
-    const cartRef = admin.firestore().collection('carts').doc(session.user.id);
+    const cartRef = db.collection('carts').doc(session.user.id);
     const cartSnap = await cartRef.get();
     let items: any[] = [];
     if (cartSnap.exists) {
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
 
 // Remove a single item from cart
 export async function PATCH(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(request, null, authOptions);
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
@@ -107,7 +107,7 @@ export async function PATCH(request: NextRequest) {
     if (!productId) {
       return NextResponse.json({ message: 'Product ID is required' }, { status: 400 });
     }
-    const cartRef = admin.firestore().collection('carts').doc(session.user.id);
+    const cartRef = db.collection('carts').doc(session.user.id);
     const cartSnap = await cartRef.get();
     if (!cartSnap.exists) {
       return NextResponse.json({ message: 'Cart not found' }, { status: 404 });
@@ -127,12 +127,12 @@ export async function PATCH(request: NextRequest) {
 
 // Remove all items from cart
 export async function DELETE(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(request, null, authOptions);
   if (!session || !session.user || !session.user.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
   try {
-    await admin.firestore().collection('carts').doc(session.user.id).delete();
+    await db.collection('carts').doc(session.user.id).delete();
     return NextResponse.json({ message: 'Cart cleared' }, { status: 200 });
   } catch (error) {
     console.error('Error clearing cart:', error);
