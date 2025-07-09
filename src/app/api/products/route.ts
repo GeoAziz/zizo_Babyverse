@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebaseAdmin';
+import firebaseAdmin from '@/lib/firebaseAdmin';
 import { z } from 'zod';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const limitParam = searchParams.get('limit');
     const limit = limitParam ? parseInt(limitParam, 10) : undefined;
     const category = searchParams.get('category');
-    let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = db.collection('products');
+    let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = firebaseAdmin.db.collection('products');
     if (category) query = query.where('category', '==', category);
     query = query.orderBy('createdAt', 'desc');
     if (limit) query = query.limit(limit);
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ errors: validation.error.flatten().fieldErrors }, { status: 400 });
     }
 
-    const docRef = await db.collection('products').add({
+    const docRef = await firebaseAdmin.db.collection('products').add({
       ...validation.data,
       createdAt: new Date(),
     });
