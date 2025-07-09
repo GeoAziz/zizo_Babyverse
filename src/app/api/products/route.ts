@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import firebaseAdmin from '@/lib/firebaseAdmin';
+// If you need Firestore serverTimestamp, import it from firebase-admin
+import { FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
@@ -66,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     const docRef = await firebaseAdmin.db.collection('products').add({
       ...validation.data,
-      createdAt: new Date(),
+      createdAt: FieldValue.serverTimestamp(),
     });
     const newProductSnap = await docRef.get();
 
