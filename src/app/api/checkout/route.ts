@@ -25,9 +25,8 @@ const checkoutSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session?.user?.id) {
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  if (!token || !token.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 

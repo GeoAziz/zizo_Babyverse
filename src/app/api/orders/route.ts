@@ -39,11 +39,9 @@ function getBaseUrl(request: NextRequest): string {
 
 // --- STRIPE CHECKOUT SESSION CREATION ---
 export async function POST(request: NextRequest) {
-  // Fix: getServerSession expects (req, res, authOptions)
-  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
-  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
-  const session = await getServerSession(req, res, authOptions);
-  if (!session || !('user' in session) || !session.user || !(session.user as any).id) {
+  // Use next-auth/jwt to extract session from cookies
+  const token = await import('next-auth/jwt').then(m => m.getToken({ req: request, secret: process.env.NEXTAUTH_SECRET }));
+  if (!token || !token.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
   try {
@@ -53,7 +51,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ errors: validation.error.flatten().fieldErrors }, { status: 400 });
     }
     const { shippingAddress, paymentMethod } = validation.data;
-    const userId: string = (session.user as any).id;
+    const userId: string = token.id;
     // Get cart
     const cartSnap: FirebaseFirestore.DocumentSnapshot = await db.collection('carts').doc(userId).get();
     if (!cartSnap.exists) {
@@ -101,7 +99,8 @@ export async function POST(request: NextRequest) {
     // Update stock (reserve)
     for (const item of fullCartItems) {
       const productRef = db.collection('products').doc(item.product.id);
-      await productRef.update({ stock: db.FieldValue.increment(-item.quantity) });
+      const { FieldValue } = await import('firebase-admin/firestore');
+      await productRef.update({ stock: FieldValue.increment(-item.quantity) });
     }
     // Stripe flow
     if (paymentMethod === 'stripe') {
@@ -225,18 +224,16 @@ async function sendOrderConfirmationEmail(email: string, order: any, orderId: st
 }
 
 export async function GET(request: NextRequest) {
-  // Fix: getServerSession expects (req, res, authOptions)
-  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
-  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
-  const session = await getServerSession(req, res, authOptions);
-  if (!session || !session.user || !session.user.id) {
+  // Use next-auth/jwt to extract session from cookies
+  const token = await import('next-auth/jwt').then(m => m.getToken({ req: request, secret: process.env.NEXTAUTH_SECRET }));
+  if (!token || !token.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const dbInstance = db;
     const ordersSnap = await dbInstance.collection('orders')
-      .where('userId', '==', session.user.id)
+      .where('userId', '==', token.id)
       .orderBy('createdAt', 'desc')
       .get();
     const orders = ordersSnap.docs.map((doc: FirebaseFirestore.DocumentSnapshot) => ({ id: doc.id, ...doc.data() }));

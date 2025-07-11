@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, auth } from '@/lib/firebaseAdmin';
-import { getServerSession } from "next-auth/next";
+import { getToken } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 
@@ -9,9 +9,8 @@ const AddToWishlistSchema = z.object({
 });
 
 export async function GET(request: Request) {
-  // @ts-ignore: Next.js API route context does not provide req/res, so pass undefined
-  const session = await getServerSession(undefined, undefined, authOptions);
-  if (!session || !session.user || !session.user.id) {
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  if (!token || !token.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
@@ -40,9 +39,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  // @ts-ignore: Next.js API route context does not provide req/res, so pass undefined
-  const session = await getServerSession(undefined, undefined, authOptions);
-  if (!session || !session.user || !session.user.id) {
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  if (!token || !token.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
@@ -78,7 +76,7 @@ export async function POST(request: Request) {
     const wishlistItem = {
       userId: session.user.id,
       productId: productId,
-      createdAt: db.FieldValue ? db.FieldValue.serverTimestamp() : undefined,
+      createdAt: (await import('firebase-admin/firestore')).FieldValue.serverTimestamp(),
     };
 
     await wishlistItemRef.set(wishlistItem);

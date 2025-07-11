@@ -6,10 +6,8 @@ import { authOptions } from '@/lib/auth';
 export async function PATCH(request: NextRequest) {
   try {
     // Fix getServerSession signature
-    const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
-    const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
-    const session = await getServerSession(req, res, authOptions);
-    if (!session?.user?.id) {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.id) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -133,10 +131,8 @@ export async function PATCH(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Fix getServerSession signature
-    const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
-    const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
-    const session = await getServerSession(req, res, authOptions);
-    if (!session?.user?.id) {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.id) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 

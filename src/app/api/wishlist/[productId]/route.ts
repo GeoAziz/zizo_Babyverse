@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import { db, auth } from '@/lib/firebaseAdmin';
-import { getServerSession } from "next-auth/next";
+import { getToken } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth';
 
 export async function DELETE(
   request: Request,
   { params }: { params: { productId: string } }
 ) {
-  const session = await getServerSession(authOptions, request, {});
-  if (!session || !session.user || !session.user.id) {
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  if (!token || !token.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 

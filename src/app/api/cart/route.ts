@@ -12,15 +12,13 @@ const AddToCartSchema = z.object({
 
 // GET cart items for the logged-in user
 export async function GET(request: NextRequest) {
-  // Use correct getServerSession signature: (req, res, options)
-  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
-  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
-  const session = await getServerSession(req, res, authOptions);
-  if (!session || !session.user || !session.user.id) {
+  // Use next-auth/jwt to extract session from cookies
+  const token = await import('next-auth/jwt').then(m => m.getToken({ req: request, secret: process.env.NEXTAUTH_SECRET }));
+  if (!token || !token.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
   try {
-    const cartRef = db.collection('carts').doc(session.user.id);
+    const cartRef = db.collection('carts').doc(token.id);
     const cartSnap = await cartRef.get();
     if (!cartSnap.exists) {
       return NextResponse.json({ items: [] });
@@ -48,8 +46,8 @@ export async function GET(request: NextRequest) {
 
 // Add item to cart
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(request, null, authOptions);
-  if (!session || !session.user || !session.user.id) {
+  const token = await import('next-auth/jwt').then(m => m.getToken({ req: request, secret: process.env.NEXTAUTH_SECRET }));
+  if (!token || !token.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
   try {
@@ -71,7 +69,7 @@ export async function POST(request: NextRequest) {
     if (product.stock < quantity) {
       return NextResponse.json({ message: 'Not enough stock' }, { status: 400 });
     }
-    const cartRef = db.collection('carts').doc(session.user.id);
+    const cartRef = db.collection('carts').doc(token.id);
     const cartSnap = await cartRef.get();
     let items: any[] = [];
     if (cartSnap.exists) {
@@ -97,8 +95,8 @@ export async function POST(request: NextRequest) {
 
 // Remove a single item from cart
 export async function PATCH(request: NextRequest) {
-  const session = await getServerSession(request, null, authOptions);
-  if (!session || !session.user || !session.user.id) {
+  const token = await import('next-auth/jwt').then(m => m.getToken({ req: request, secret: process.env.NEXTAUTH_SECRET }));
+  if (!token || !token.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
   try {
@@ -107,7 +105,7 @@ export async function PATCH(request: NextRequest) {
     if (!productId) {
       return NextResponse.json({ message: 'Product ID is required' }, { status: 400 });
     }
-    const cartRef = db.collection('carts').doc(session.user.id);
+    const cartRef = db.collection('carts').doc(token.id);
     const cartSnap = await cartRef.get();
     if (!cartSnap.exists) {
       return NextResponse.json({ message: 'Cart not found' }, { status: 404 });
@@ -127,12 +125,12 @@ export async function PATCH(request: NextRequest) {
 
 // Remove all items from cart
 export async function DELETE(request: NextRequest) {
-  const session = await getServerSession(request, null, authOptions);
-  if (!session || !session.user || !session.user.id) {
+  const token = await import('next-auth/jwt').then(m => m.getToken({ req: request, secret: process.env.NEXTAUTH_SECRET }));
+  if (!token || !token.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
   try {
-    await db.collection('carts').doc(session.user.id).delete();
+    await db.collection('carts').doc(token.id).delete();
     return NextResponse.json({ message: 'Cart cleared' }, { status: 200 });
   } catch (error) {
     console.error('Error clearing cart:', error);

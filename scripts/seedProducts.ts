@@ -1,5 +1,6 @@
 import admin from '../src/lib/firebaseAdmin';
 import { randomUUID } from 'crypto';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 // --- CATEGORY DEFINITIONS ---
 const categories: {
@@ -87,7 +88,7 @@ function randomImage(category: string) {
 }
 
 async function seedProducts() {
-  const db = admin.firestore();
+  const db = admin.db;
   for (const cat of categories) {
     for (let i = 0; i < 10; i++) {
       const sub = cat.subcategories[i % cat.subcategories.length];
@@ -100,8 +101,8 @@ async function seedProducts() {
         imageUrl: randomImage(sub),
         tags: [cat.name, sub],
         features: `Feature-rich ${sub.toLowerCase()} for comfort and safety.`,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
       };
       await db.collection('products').add(product);
       console.log(`Added product: ${product.name} (${cat.name})`);
@@ -111,27 +112,27 @@ async function seedProducts() {
 
 // --- ADMIN UI TEST DATA ---
 async function seedAdminTestData() {
-  const db = admin.firestore();
+  const db = admin.db;
   // Add a test user
   await db.collection('users').doc('test-admin').set({
     name: 'Test Admin',
     email: 'admin@babyverse.com',
     role: 'ADMIN',
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
   });
   // Add a test parent
   await db.collection('users').doc('test-parent').set({
     name: 'Test Parent',
     email: 'parent@babyverse.com',
     role: 'PARENT',
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
   });
   // Add a test order
   await db.collection('orders').add({
     userId: 'test-parent',
     status: 'PENDING',
     totalAmount: 5000,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
     items: [
       { productId: 'dummy-product-1', name: 'Onesie', quantity: 2, price: 800 },
       { productId: 'dummy-product-2', name: 'Baby Bottle', quantity: 1, price: 1200 },
@@ -151,8 +152,8 @@ async function seedAdminTestData() {
     type: 'PERCENTAGE',
     value: 10,
     target: 'ALL_PRODUCTS',
-    startDate: admin.firestore.Timestamp.fromDate(new Date()),
-    endDate: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)),
+    startDate: Timestamp.fromDate(new Date()),
+    endDate: Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)),
     isActive: true,
   });
   console.log('Admin UI test data seeded.');

@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from "next-auth/next";
+import { getToken } from 'next-auth/jwt';
 import { authOptions } from "@/lib/auth";
 import { subDays, subMonths, subYears } from 'date-fns';
 
 export async function GET(request: Request, { params }: { params: { type: string }}) {
-  const session = await getServerSession(authOptions);
-  if (!session || (session.user as any).role !== 'ADMIN') {
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  if (!token || token.role !== 'ADMIN') {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 

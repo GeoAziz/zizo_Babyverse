@@ -152,13 +152,15 @@ export const authOptions: NextAuthOptions = {
         // Always create or update user in Firestore on sign-in
         if (user && user.id) {
           const userRef = db.collection('users').doc(user.id);
+          // Use Firestore FieldValue from firebase-admin/firestore
+          const { FieldValue } = await import('firebase-admin/firestore');
           await userRef.set({
             email: user.email,
             name: user.name,
             image: user.image ?? null,
             role: user.email === 'admin@babyverse.com' ? 'ADMIN' : 'PARENT',
             firebaseUid: user.id,
-            lastSignIn: db.FieldValue.serverTimestamp(),
+            lastSignIn: FieldValue.serverTimestamp(),
           }, { merge: true });
         }
       } catch (error) {

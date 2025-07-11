@@ -1,6 +1,8 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseAdmin';
 import { getServerSession } from 'next-auth/next';
+import { getToken } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 import type { ShippingAddress, User, Order } from '@/lib/types';
@@ -21,17 +23,18 @@ const profileUpdateSchema = z.object({
   }).optional(),
 });
 
+
 export async function GET(request: NextRequest) {
-  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
-  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
-  const session = await getServerSession(req, res, authOptions);
-  if (!session || !session.user || !session.user.id) {
+  // Use next-auth/jwt to extract session from cookies
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  console.log('DEBUG /api/user/profile token:', token);
+  if (!token || !token.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   try {
     // Use db from firebaseAdmin
-    const userRef = db.collection('users').doc(session.user.id);
+    const userRef = db.collection('users').doc(token.id);
     const userSnap = await userRef.get();
     if (!userSnap.exists) {
       return NextResponse.json({ message: "Profile not found" }, { status: 404 });
@@ -39,7 +42,7 @@ export async function GET(request: NextRequest) {
     // Fetch last 5 orders
     const ordersSnap = await db
       .collection('orders')
-      .where('userId', '==', session.user.id)
+      .where('userId', '==', token.id)
       .orderBy('createdAt', 'desc')
       .limit(5)
       .get();
@@ -52,10 +55,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
-  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
-  const session = await getServerSession(req, res, authOptions);
-  if (!session?.user?.id) {
+  // Use next-auth/jwt to extract session from cookies
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  if (!token || !token.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
   try {
@@ -67,7 +69,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const userRef = db.collection('users').doc(session.user.id);
+    const userRef = db.collection('users').doc(token.id);
     await userRef.set(validation.data, { merge: true });
     const updatedSnap = await userRef.get();
     const updatedProfile = updatedSnap.data();
@@ -79,10 +81,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
-  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
-  const session = await getServerSession(req, res, authOptions);
-  if (!session?.user?.id) {
+  // Use next-auth/jwt to extract session from cookies
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  if (!token || !token.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
   try {
@@ -94,7 +95,7 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-    const userRef = db.collection('users').doc(session.user.id);
+    const userRef = db.collection('users').doc(token.id);
     await userRef.set(validation.data, { merge: true });
     const updatedSnap = await userRef.get();
     const updatedProfile = updatedSnap.data();

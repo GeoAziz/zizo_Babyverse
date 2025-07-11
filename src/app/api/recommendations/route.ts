@@ -1,17 +1,11 @@
 import { db, auth } from '@/lib/firebaseAdmin';
-import { getServerSession } from "next-auth/next";
+import { getToken } from 'next-auth/jwt';
 import { authOptions } from "@/lib/auth";
 import { RecommendationService } from '@/lib/services/RecommendationService';
 
 export async function GET(request: Request) {
-  const req = request as any;
-  const res = {
-    getHeader() {},
-    setCookie() {},
-    setHeader() {},
-  } as any;
-  const session = await getServerSession(authOptions, req, res);
-  if (!session?.user?.id) {
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  if (!token || !token.id) {
     return new Response(JSON.stringify({ message: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
   }
 
@@ -82,15 +76,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const req = request as any;
-  const res = {
-    getHeader() {},
-    setCookie() {},
-    setHeader() {},
-  } as any;
-  const session = await getServerSession(authOptions, req, res);
-
-  if (!session?.user?.id) {
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  if (!token || !token.id) {
     return Response.json({ message: "Unauthorized" }, { status: 401 });
   }
 

@@ -28,17 +28,15 @@ const BabyProfileSchema = z.object({
 });
 
 export async function GET(request: Request) {
-  // Fix getServerSession signature
-  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
-  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
-  const session = await getServerSession(req, res, authOptions);
-  if (!session || !session.user || !session.user.id) {
+  // Use next-auth/jwt to extract session from cookies
+  const token = await import('next-auth/jwt').then(m => m.getToken({ req: request, secret: process.env.NEXTAUTH_SECRET }));
+  if (!token || !token.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const babyProfiles = await db.collection('babies')
-      .where('userId', '==', session.user.id)
+      .where('userId', '==', token.id)
       .orderBy('createdAt', 'desc')
       .get();
     const babies = babyProfiles.docs.map((doc: FirebaseFirestore.DocumentSnapshot) => ({ id: doc.id, ...doc.data() }));
@@ -50,11 +48,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  // Fix getServerSession signature
-  const req = { headers: Object.fromEntries(request.headers.entries()) } as any;
-  const res = { getHeader() {}, setCookie() {}, setHeader() {} } as any;
-  const session = await getServerSession(req, res, authOptions);
-  if (!session || !session.user || !session.user.id) {
+  // Use next-auth/jwt to extract session from cookies
+  const token = await import('next-auth/jwt').then(m => m.getToken({ req: request, secret: process.env.NEXTAUTH_SECRET }));
+  if (!token || !token.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
@@ -69,13 +65,13 @@ export async function POST(request: Request) {
     const { name, ageInMonths, weightInKilograms, allergies, preferences } = validation.data;
 
     const newBabyProfile = await db.collection('babies').add({
-      userId: session.user.id, // Always set userId for security rules
+      userId: token.id, // Always set userId for security rules
       name,
       ageInMonths,
       weightInKilograms: weightInKilograms || null,
       allergies: allergies || null,
       preferences: preferences || null,
-      createdAt: db.FieldValue ? db.FieldValue.serverTimestamp() : new Date(),
+      createdAt: (await import('firebase-admin/firestore')).FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json({ id: newBabyProfile.id, ...validation.data }, { status: 201 });
